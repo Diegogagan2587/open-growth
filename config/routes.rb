@@ -56,7 +56,7 @@ Rails.application.routes.draw do
     resources :budget_periods do
       resources :budget_line_items
       resources :expenses, only: [ :new, :create ]
-      resources :income_events
+      resources :income_events, controller: "/income_events"
     end
   end
 
