@@ -1,4 +1,4 @@
-class BudgetPeriodsController < ApplicationController
+class Financial::BudgetPeriodsController < ApplicationController
   before_action :set_budget_period, only: [ :show, :edit, :update, :destroy ]
 
   def index
