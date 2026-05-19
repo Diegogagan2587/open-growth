@@ -40,7 +40,7 @@ Rails.application.routes.draw do
 
   namespace :finance do
     root to: "finance#index"
-    resources :categories, controller: "/categories"
+    resources :categories, controller: "/financial/categories"
     resources :financial_accounts, controller: "/financial/accounts"
     resources :financial_liabilities, controller: "/financial/liabilities" do
       member do
