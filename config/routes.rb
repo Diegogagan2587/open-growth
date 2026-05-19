@@ -52,11 +52,12 @@ Rails.application.routes.draw do
     end
     resources :financial_entries, only: [ :index, :show, :new, :create, :destroy ], controller: "/financial/entries"
   end
-
-  resources :budget_periods do
-    resources :budget_line_items
-    resources :expenses, only: [ :new, :create ]
-    resources :income_events
+  scope module: "financial" do
+    resources :budget_periods do
+      resources :budget_line_items
+      resources :expenses, only: [ :new, :create ]
+      resources :income_events, controller: "/income_events"
+    end
   end
 
   resources :income_events do
