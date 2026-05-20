@@ -4,6 +4,9 @@ export default class extends Controller {
   static targets = ["tab", "panel"]
   static values = { activeTab: String }
 
+  static ACTIVE_TAB_CLASSES = ["bg-primary", "text-primary-foreground"]
+  static INACTIVE_TAB_CLASSES = ["text-muted-foreground"]
+
   connect() {
     // Show first tab by default
     this.selectTab(this.tabTargets[0])
@@ -19,13 +22,13 @@ export default class extends Controller {
 
     // Deactivate all tabs
     this.tabTargets.forEach((t) => {
-      t.classList.remove("bg-accent", "text-accent-foreground")
-      t.classList.add("text-muted-foreground")
+      t.classList.remove(...this.constructor.ACTIVE_TAB_CLASSES)
+      t.classList.add(...this.constructor.INACTIVE_TAB_CLASSES)
     })
 
     // Activate clicked tab
-    tabElement.classList.remove("text-muted-foreground")
-    tabElement.classList.add("bg-accent", "text-accent-foreground")
+    tabElement.classList.remove(...this.constructor.INACTIVE_TAB_CLASSES)
+    tabElement.classList.add(...this.constructor.ACTIVE_TAB_CLASSES)
 
     // Show corresponding panel
     const panelId = tabElement.dataset.panel
