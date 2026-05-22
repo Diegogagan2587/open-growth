@@ -1,4 +1,7 @@
 {
+ "scripts": {
+    "herb:lint":"herb-lint"
+ },
   "devDependencies": {
     "@herb-tools/linter": "^0.10.1"
   }
