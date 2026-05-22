@@ -78,6 +78,12 @@ module PlannedExpenses
         entry.financial_liability = planned_expense.financial_liability
         entry.counterparty_financial_account = nil
         entry.counterparty_financial_liability = nil
+      elsif planned_expense.financial_liability.present?
+        entry.entry_type = "liability_charge"
+        entry.financial_account = nil
+        entry.financial_liability = planned_expense.financial_liability
+        entry.counterparty_financial_account = nil
+        entry.counterparty_financial_liability = nil
       else
         entry.entry_type = "outflow"
         entry.financial_account = planned_expense.financial_account
