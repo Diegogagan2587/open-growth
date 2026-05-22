@@ -37,7 +37,7 @@ module PlannedExpenses
 
     def expense_attributes
       {
-        date: entry_date,
+        date: resolved_entry_date,
         amount: planned_expense.amount,
         description: planned_expense.description,
         category: planned_expense.category,
