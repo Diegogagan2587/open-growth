@@ -6,7 +6,7 @@ module PlannedExpenses
       new(...).call
     end
 
-    def initialize(planned_expense:, entry_date: Date.current, target_status: nil)
+    def initialize(planned_expense:, entry_date: nil, target_status: nil)
       @planned_expense = planned_expense
       @entry_date = entry_date
       @target_status = target_status
