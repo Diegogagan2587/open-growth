@@ -20,6 +20,10 @@
       <label for="category_id" class="text-sm font-medium text-foreground"><%= t("expenses.index.category") %></label>
       <%= f.select :category_id, @categories.pluck(:name, :id), { include_blank: t("expenses.index.all_categories") }, id: "category_id", class: "rounded border border-input px-3 py-2 text-sm" %>
     </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <label for="account_ref" class="text-sm font-medium text-foreground">Account</label>
+      <%= f.select :account_ref, @account_filter_options, { include_blank: "All accounts", selected: @selected_account_ref }, id: "account_ref", class: "rounded border border-input px-3 py-2 text-sm" %>
+    </div>
     <div class="flex flex-wrap items-center gap-2 flex-grow min-w-0">
       <label for="q" class="text-sm font-medium text-foreground sr-only"><%= t("expenses.index.description_placeholder") %></label>
       <%= f.text_field :q, placeholder: t("expenses.index.description_placeholder"), value: params[:q], id: "q", class: "rounded border border-input px-3 py-2 text-sm flex-1 min-w-0" %>
