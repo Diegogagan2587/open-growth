@@ -108,6 +108,14 @@ module PlannedExpenses
       "paid"
     end
 
+    def resolved_entry_date
+      return entry_date if entry_date.present?
+      return planned_expense.applied_on if planned_expense.applied_on.present?
+      return planned_expense.due_date if planned_expense.due_date.present? && planned_expense.final_status?
+
+      Date.current
+    end
+
     def failure(message)
       Result.new(success?: false, error_message: message, planned_expense: planned_expense)
     end
