@@ -81,7 +81,8 @@ class QuickAddController < ApplicationController
     from_type, from_id = parse_financial_type(params.dig(:transfer, :from_type))
     to_type, to_id = parse_financial_type(params.dig(:transfer, :to_type))
 
-    if from_type.nil? || to_type.nil? || from_id == to_id
+    same_endpoint = from_type == to_type && from_id == to_id
+    if from_type.nil? || to_type.nil? || same_endpoint
       return render plain: "Please choose valid and different origin/destination accounts", status: :unprocessable_entity
     end
 
