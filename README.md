@@ -140,8 +140,7 @@ The Previous Balance feature provides visibility into how financial deficits car
 6. Navigate to `http://localhost:3000` in your browser.
 
 ### Frontend tools
-
-If you're using the Node-based frontend tooling, a couple of helper scripts are available in `package.json`:
+run and fix linterns for .html.erb files:
 
 ```bash
 # Run the herb linter
@@ -150,7 +149,7 @@ npm run herb:lint
 # Run the herb linter with automatic fixes
 npm run herb:lint-fix
 ```
-
+[herb docs here](https://herb-tools.dev/projects/linter)
 ## Usage
 
 * **Dashboard**: Homepage shows quick links to manage budgets, income events, expenses, categories, shopping list, and inventory.
