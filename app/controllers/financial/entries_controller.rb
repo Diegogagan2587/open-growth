@@ -2,8 +2,8 @@ module Financial
   class EntriesController < ApplicationController
     include Financial::AccountReferenceFiltering
 
-    before_action :set_financial_entry, only: [ :show, :destroy ]
-    before_action :load_form_collections, only: [ :new, :create ]
+    before_action :set_financial_entry, only: [ :show, :edit, :update, :destroy ]
+    before_action :load_form_collections, only: [ :new, :create, :edit, :update ]
     before_action :load_account_filter_options, only: [ :index ]
 
     def index
