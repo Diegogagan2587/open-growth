@@ -1,6 +1,7 @@
 {
  "scripts": {
-    "herb:lint":"herb-lint"
+    "herb:lint":"herb-lint",
+    "herb:lint-fix":"npx @herb-tools/linter --fix"
  },
   "devDependencies": {
     "@herb-tools/linter": "^0.10.1"
