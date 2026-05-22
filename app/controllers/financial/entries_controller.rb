@@ -1,10 +1,15 @@
 module Financial
   class EntriesController < ApplicationController
+    include Financial::AccountReferenceFiltering
+
     before_action :set_financial_entry, only: [ :show, :destroy ]
     before_action :load_form_collections, only: [ :new, :create ]
+    before_action :load_account_filter_options, only: [ :index ]
 
     def index
       @financial_entries = Financial::Entry.for_account(Current.account).by_date
+      @financial_entries = apply_account_ref_filter(@financial_entries)
+      @selected_account_ref = selected_account_ref
     end
 
     def show

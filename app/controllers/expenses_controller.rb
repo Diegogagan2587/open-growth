@@ -1,16 +1,22 @@
 class ExpensesController < ApplicationController
+  include Financial::AccountReferenceFiltering
+
   before_action :set_budget_period, only: [ :new, :create ]
   before_action :set_income_event_context, only: [ :quick_new, :quick_create ]
   before_action :set_expense, only: %i[ show edit update destroy ]
   before_action :load_finance_account_collections, only: [ :new, :create, :edit, :update, :quick_new, :quick_create ]
+  before_action :load_account_filter_options, only: [ :index ]
 
 
   def index
     @expenses = Expense.for_account(Current.account).all
+    @expenses = apply_account_ref_filter(@expenses)
     @expenses = @expenses.where("date >= ?", params[:date_from]) if params[:date_from].present?
     @expenses = @expenses.where("date <= ?", params[:date_to])   if params[:date_to].present?
     @expenses = @expenses.where(category_id: params[:category_id]) if params[:category_id].present?
     @expenses = @expenses.where("description ILIKE ?", "%#{params[:q]}%") if params[:q].present?
+    @selected_account_ref = selected_account_ref
+    @categories = Category.for_account(Current.account).order(:name)
   end
 
   # GET /expenses or /expenses.json

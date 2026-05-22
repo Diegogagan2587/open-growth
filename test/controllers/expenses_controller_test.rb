@@ -23,6 +23,28 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       account: @account,
       budget_period: @budget_period
     )
+
+    @asset_a = Financial::Asset.create!(
+      account: @account,
+      name: "Checking A",
+      account_type: "checking",
+      status: "active",
+      opening_balance: 0
+    )
+    @asset_b = Financial::Asset.create!(
+      account: @account,
+      name: "Savings B",
+      account_type: "savings",
+      status: "active",
+      opening_balance: 0
+    )
+    @liability_a = Financial::Liability.create!(
+      account: @account,
+      name: "Visa",
+      liability_type: "credit_card",
+      status: "active",
+      opening_balance: 0
+    )
   end
 
   def sign_in
@@ -251,5 +273,171 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "liability_payment", entry.entry_type
     assert_equal source_asset.id, entry.financial_account_id
     assert_equal destination_liability.id, entry.financial_liability_id
+  end
+
+  test "index filters expenses by asset account on source or counterparty side" do
+    sign_in
+
+    source_match = Expense.create!(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      financial_account: @asset_a,
+      date: Date.current,
+      amount: 10,
+      description: "source match"
+    )
+    counterparty_match = Expense.create!(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      financial_account: @asset_b,
+      counterparty_financial_account: @asset_a,
+      date: Date.current,
+      amount: 20,
+      description: "counterparty match"
+    )
+    non_match = Expense.create!(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      financial_account: @asset_b,
+      date: Date.current,
+      amount: 30,
+      description: "non match"
+    )
+
+    get expenses_path, params: { account_ref: "asset:#{@asset_a.id}" }
+
+    assert_response :success
+    assert_select "option[value='asset:#{@asset_a.id}'][selected]"
+    assert_includes response.body, source_match.description
+    assert_includes response.body, counterparty_match.description
+    assert_not_includes response.body, non_match.description
+  end
+
+  test "index filters expenses by liability account on source or counterparty side" do
+    sign_in
+
+    source_match = Expense.create!(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      financial_liability: @liability_a,
+      date: Date.current,
+      amount: 15,
+      description: "liability source match"
+    )
+    counterparty_match = Expense.create!(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      financial_account: @asset_a,
+      counterparty_financial_liability: @liability_a,
+      date: Date.current,
+      amount: 25,
+      description: "liability counterparty match"
+    )
+    non_match = Expense.create!(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      financial_account: @asset_a,
+      date: Date.current,
+      amount: 35,
+      description: "liability non match"
+    )
+
+    get expenses_path, params: { account_ref: "liability:#{@liability_a.id}" }
+
+    assert_response :success
+    assert_includes response.body, source_match.description
+    assert_includes response.body, counterparty_match.description
+    assert_not_includes response.body, non_match.description
+  end
+
+  test "index composes account filter with date category and description filters" do
+    sign_in
+
+    match = Expense.create!(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      financial_account: @asset_a,
+      date: Date.current,
+      amount: 22,
+      description: "target lunch"
+    )
+    wrong_description = Expense.create!(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      financial_account: @asset_a,
+      date: Date.current,
+      amount: 23,
+      description: "other text"
+    )
+    wrong_account = Expense.create!(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      financial_account: @asset_b,
+      date: Date.current,
+      amount: 24,
+      description: "target dinner"
+    )
+
+    get expenses_path, params: {
+      account_ref: "asset:#{@asset_a.id}",
+      date_from: Date.current,
+      date_to: Date.current,
+      category_id: @category.id,
+      q: "target"
+    }
+
+    assert_response :success
+    assert_includes response.body, match.description
+    assert_not_includes response.body, wrong_description.description
+    assert_not_includes response.body, wrong_account.description
+  end
+
+  test "index ignores malformed account_ref" do
+    sign_in
+
+    first = Expense.create!(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      financial_account: @asset_a,
+      date: Date.current,
+      amount: 11,
+      description: "first expense"
+    )
+    second = Expense.create!(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      financial_account: @asset_b,
+      date: Date.current,
+      amount: 12,
+      description: "second expense"
+    )
+
+    get expenses_path, params: { account_ref: "oops" }
+
+    assert_response :success
+    assert_includes response.body, first.description
+    assert_includes response.body, second.description
   end
 end
