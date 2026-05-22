@@ -10,6 +10,7 @@ class ExpensesController < ApplicationController
 
   def index
     @expenses = Expense.for_account(Current.account).all
+    @expenses = apply_account_ref_filter(@expenses)
     @expenses = @expenses.where("date >= ?", params[:date_from]) if params[:date_from].present?
     @expenses = @expenses.where("date <= ?", params[:date_to])   if params[:date_to].present?
     @expenses = @expenses.where(category_id: params[:category_id]) if params[:category_id].present?
