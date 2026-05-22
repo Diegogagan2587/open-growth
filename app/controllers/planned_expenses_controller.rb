@@ -73,12 +73,13 @@ class PlannedExpensesController < ApplicationController
     new_income_event_id = planned_expense_params[:income_event_id]
     requested_status = planned_expense_params[:status]
     final_status_requested = PlannedExpense.final_status?(requested_status)
+    should_execute_transaction = final_status_requested
     attrs = planned_expense_params
     attrs = attrs.except(:status) if final_status_requested
 
     respond_to do |format|
       if @planned_expense.update(attrs)
-        if final_status_requested
+        if should_execute_transaction
           execution = PlannedExpenses::ExecuteService.call(
             planned_expense: @planned_expense,
             target_status: requested_status
@@ -89,6 +90,7 @@ class PlannedExpensesController < ApplicationController
             @income_events = ordered_income_events_for_reference(@planned_expense.due_date)
             load_route_collections
             flash.now[:alert] = execution.error_message
+            format.turbo_stream { render :edit, status: :unprocessable_entity }
             format.html { render :edit, status: :unprocessable_entity }
             format.json { render json: { error: execution.error_message }, status: :unprocessable_entity }
             return
@@ -99,8 +101,10 @@ class PlannedExpensesController < ApplicationController
         if new_income_event_id.present? && new_income_event_id.to_i != old_income_event.id
           new_income_event = IncomeEvent.for_account(Current.account).find(new_income_event_id)
           move_planned_expense_to!(@planned_expense, new_income_event)
+          format.turbo_stream { redirect_to income_event_planned_expenses_path(new_income_event), notice: "Planned expense was successfully moved and updated." }
           format.html { redirect_to income_event_planned_expenses_path(new_income_event), notice: "Planned expense was successfully moved and updated." }
         else
+          format.turbo_stream { redirect_to income_event_planned_expenses_path(@income_event), notice: t("planned_expenses.flash.updated") }
           format.html { redirect_to income_event_planned_expenses_path(@income_event), notice: t("planned_expenses.flash.updated") }
         end
         format.json { render :show, status: :ok, location: [ @income_event, @planned_expense ] }
@@ -108,6 +112,7 @@ class PlannedExpensesController < ApplicationController
         @expense_templates = ExpenseTemplate.for_account(Current.account).includes(:category).all
         @income_events = ordered_income_events_for_reference(@planned_expense.due_date)
         load_route_collections
+        format.turbo_stream { render :edit, status: :unprocessable_entity }
         format.html { render :edit, status: :unprocessable_entity }
         format.json { render json: @planned_expense.errors, status: :unprocessable_entity }
       end
@@ -118,6 +123,7 @@ class PlannedExpensesController < ApplicationController
     @income_events = ordered_income_events_for_reference(@planned_expense.due_date)
     load_route_collections
     respond_to do |format|
+      format.turbo_stream { render :edit, status: :unprocessable_entity }
       format.html { render :edit, status: :unprocessable_entity }
       format.json { render json: @planned_expense.errors, status: :unprocessable_entity }
     end
