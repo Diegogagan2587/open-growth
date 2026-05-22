@@ -21,6 +21,9 @@ module PlannedExpenses
         entry = build_or_update_financial_entry!(expense: expense, execution_date: execution_date)
 
         planned_expense.update!(status: status_after_execution) unless planned_expense.status == status_after_execution
+        if PlannedExpense.final_status?(status_after_execution) && planned_expense.applied_on.blank?
+          planned_expense.update!(applied_on: execution_date)
+        end
 
         Result.new(success?: true, planned_expense: planned_expense, expense: expense, entry: entry)
       end
