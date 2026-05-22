@@ -16,6 +16,7 @@ class ExpensesController < ApplicationController
     @expenses = @expenses.where(category_id: params[:category_id]) if params[:category_id].present?
     @expenses = @expenses.where("description ILIKE ?", "%#{params[:q]}%") if params[:q].present?
     @selected_account_ref = selected_account_ref
+    @categories = Category.for_account(Current.account).order(:name)
   end
 
   # GET /expenses or /expenses.json
