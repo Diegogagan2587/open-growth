@@ -277,6 +277,42 @@ See `test/models/income_event_test.rb` for full test coverage.
 4. Push to the branch `git push origin feature/my-feature`.
 5. Open a pull request.
 
+### Commit messages
+
+Use conventional commits, and choose a scope that names the code surface you changed instead of the exact file path.
+
+In this repo, the most useful scopes are usually:
+
+```bash
+feat(Financial::EntriesController): ...
+fix(Financial::CategoriesController): ...
+feat(PlannedExpenses::ExecuteService#call): ...
+feat(PlannedExpenses::ExecuteService): ...
+fix(Career::JobApplicationsController#show): ...
+```
+
+Use controller or service class names for backend changes, add `#method` when the change is specific to a single method, and use component or view-area scopes for UI work.
+
+For views, prefer the page, route, partial, or component name over the raw `.html.erb` path:
+
+```bash
+feat(budget_periods#show): render income allocation summary
+feat(expenses#index): add category filter
+fix(expenses#new): preserve selected category after validation
+style(layout): adjust mobile navigation padding
+```
+
+For partials and reusable view pieces, scope by the partial or component name:
+
+```bash
+feat(planned_expenses/card): show execution status
+refactor(income_events/form): extract routing fields
+fix(expenses/form): keep validation errors visible
+style(Ui::CardComponent): adjust spacing
+```
+
+Use `feat` when the UI exposes new information or behavior, `fix` when it corrects a bug, `style` for visual-only changes, `refactor` for internal cleanup, `test` for test-only updates, and `chore` for maintenance work. If a file path is the clearest scope, use it sparingly.
+
 ## License
 
 MIT © Diego Vidal Lopez
