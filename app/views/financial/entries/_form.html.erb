@@ -1,4 +1,6 @@
-<%= form_with model: @financial_entry, url: finance_financial_entries_path, local: true do |form| %>
+<% form_url = @financial_entry.persisted? ? finance_financial_entry_path(@financial_entry) : finance_financial_entries_path %>
+<% form_method = @financial_entry.persisted? ? :patch : :post %>
+<%= form_with model: @financial_entry, url: form_url, method: form_method, local: true do |form| %>
   <% if @financial_entry.errors.any? %>
     <div class="bg-danger-soft border border-danger-soft text-danger px-4 py-3 rounded mb-4">
       <h2 class="font-bold"><%= pluralize(@financial_entry.errors.count, "error") %> prohibited this record from being saved:</h2>

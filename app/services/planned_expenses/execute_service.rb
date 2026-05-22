@@ -6,7 +6,7 @@ module PlannedExpenses
       new(...).call
     end
 
-    def initialize(planned_expense:, entry_date: Date.current, target_status: nil)
+    def initialize(planned_expense:, entry_date: nil, target_status: nil)
       @planned_expense = planned_expense
       @entry_date = entry_date
       @target_status = target_status
@@ -16,10 +16,14 @@ module PlannedExpenses
       return failure("Planned expense is required") if planned_expense.blank?
 
       ActiveRecord::Base.transaction do
+        execution_date = resolved_entry_date
         expense = build_or_update_expense_if_needed
-        entry = build_or_update_financial_entry!(expense: expense)
+        entry = build_or_update_financial_entry!(expense: expense, execution_date: execution_date)
 
         planned_expense.update!(status: status_after_execution) unless planned_expense.status == status_after_execution
+        if PlannedExpense.final_status?(status_after_execution) && planned_expense.applied_on.blank?
+          planned_expense.update!(applied_on: execution_date)
+        end
 
         Result.new(success?: true, planned_expense: planned_expense, expense: expense, entry: entry)
       end
@@ -33,7 +37,7 @@ module PlannedExpenses
 
     def expense_attributes
       {
-        date: entry_date,
+        date: resolved_entry_date,
         amount: planned_expense.amount,
         description: planned_expense.description,
         category: planned_expense.category,
@@ -56,13 +60,13 @@ module PlannedExpenses
       expense
     end
 
-    def build_or_update_financial_entry!(expense:)
+    def build_or_update_financial_entry!(expense:, execution_date:)
       entry = Financial::Entry.find_by(planned_expense_id: planned_expense.id) || planned_expense.financial_entry || Financial::Entry.new
       entry.account = planned_expense.account
       entry.income_event = planned_expense.income_event
       entry.planned_expense = planned_expense
       entry.expense = expense if expense.present?
-      entry.entry_date = entry_date
+      entry.entry_date = execution_date
       entry.amount = planned_expense.amount
       entry.description = planned_expense.description
 
@@ -106,6 +110,14 @@ module PlannedExpenses
       return "paid" if planned_expense.debt_payment?
 
       "paid"
+    end
+
+    def resolved_entry_date
+      return entry_date if entry_date.present?
+      return planned_expense.applied_on if planned_expense.applied_on.present?
+      return planned_expense.due_date if planned_expense.due_date.present? && planned_expense.final_status?
+
+      Date.current
     end
 
     def failure(message)

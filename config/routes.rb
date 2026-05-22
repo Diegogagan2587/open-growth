@@ -50,7 +50,7 @@ Rails.application.routes.draw do
         post :record_payment
       end
     end
-    resources :financial_entries, only: [ :index, :show, :new, :create, :destroy ], controller: "/financial/entries"
+    resources :financial_entries, only: [ :index, :show, :new, :create, :edit, :update, :destroy ], controller: "/financial/entries"
   end
   scope module: "financial" do
     resources :budget_periods do

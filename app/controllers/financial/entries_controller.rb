@@ -2,8 +2,8 @@ module Financial
   class EntriesController < ApplicationController
     include Financial::AccountReferenceFiltering
 
-    before_action :set_financial_entry, only: [ :show, :destroy ]
-    before_action :load_form_collections, only: [ :new, :create ]
+    before_action :set_financial_entry, only: [ :show, :edit, :update, :destroy ]
+    before_action :load_form_collections, only: [ :new, :create, :edit, :update ]
     before_action :load_account_filter_options, only: [ :index ]
 
     def index
@@ -27,6 +27,17 @@ module Financial
         redirect_to finance_financial_entry_path(@financial_entry), notice: "Entry created"
       else
         render :new, status: :unprocessable_entity
+      end
+    end
+
+    def edit
+    end
+
+    def update
+      if @financial_entry.update(financial_entry_params)
+        redirect_to finance_financial_entry_path(@financial_entry), notice: "Entry updated"
+      else
+        render :edit, status: :unprocessable_entity
       end
     end
 

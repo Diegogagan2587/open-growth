@@ -27,6 +27,11 @@
 
 <div class="mb-4 flex space-x-2">
   <%= render Ui::ButtonComponent.new(
+    href: edit_finance_financial_entry_path(@financial_entry),
+    label: "Edit",
+    variant: "outline"
+  ) %>
+  <%= render Ui::ButtonComponent.new(
     href: finance_financial_entry_path(@financial_entry),
     label: "Delete",
     variant: "destructive",
