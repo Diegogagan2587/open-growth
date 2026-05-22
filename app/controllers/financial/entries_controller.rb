@@ -30,6 +30,17 @@ module Financial
       end
     end
 
+    def edit
+    end
+
+    def update
+      if @financial_entry.update(financial_entry_params)
+        redirect_to finance_financial_entry_path(@financial_entry), notice: "Entry updated"
+      else
+        render :edit, status: :unprocessable_entity
+      end
+    end
+
     def destroy
       @financial_entry.destroy!
       redirect_to finance_financial_entries_path, status: :see_other, notice: "Entry removed"
