@@ -5,6 +5,7 @@ class ExpensesController < ApplicationController
   before_action :set_income_event_context, only: [ :quick_new, :quick_create ]
   before_action :set_expense, only: %i[ show edit update destroy ]
   before_action :load_finance_account_collections, only: [ :new, :create, :edit, :update, :quick_new, :quick_create ]
+  before_action :load_account_filter_options, only: [ :index ]
 
 
   def index
