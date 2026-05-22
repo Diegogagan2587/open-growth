@@ -18,7 +18,7 @@ module PlannedExpenses
       ActiveRecord::Base.transaction do
         execution_date = resolved_entry_date
         expense = build_or_update_expense_if_needed
-        entry = build_or_update_financial_entry!(expense: expense)
+        entry = build_or_update_financial_entry!(expense: expense, execution_date: execution_date)
 
         planned_expense.update!(status: status_after_execution) unless planned_expense.status == status_after_execution
 
