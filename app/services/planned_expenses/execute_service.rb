@@ -16,6 +16,7 @@ module PlannedExpenses
       return failure("Planned expense is required") if planned_expense.blank?
 
       ActiveRecord::Base.transaction do
+        execution_date = resolved_entry_date
         expense = build_or_update_expense_if_needed
         entry = build_or_update_financial_entry!(expense: expense)
 
