@@ -76,7 +76,7 @@
     </h3>
     <div class="bg-card rounded-lg p-4 border border-purple-200">
       <p class="text-sm text-muted-foreground mb-3">
-        <strong>Current:</strong> <%= @income_event.description %> - <%= number_to_currency(@income_event.expected_amount) %> 
+        <strong>Current:</strong> <%= @income_event.description %> - <%= number_to_currency(@income_event.expected_amount) %>
         (Expected: <%= @income_event.expected_date.strftime("%b %d, %Y") %>)
       </p>
       <div>

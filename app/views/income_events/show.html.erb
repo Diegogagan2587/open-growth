@@ -98,12 +98,12 @@
       </p>
     </div>
   </div>
-  
+
   <!-- Breakdown Section -->
   <% if prev_balance != 0 || prev_event %>
     <div class="mt-6 bg-muted/35 rounded-xl p-4 border border-border">
       <p class="text-muted-foreground text-sm">
-        <strong>Calculation:</strong> 
+        <strong>Calculation:</strong>
         <%= number_to_currency(@income_event.received_amount || @income_event.expected_amount) %> (Income)
         <% if prev_balance < 0 %>
           - <%= number_to_currency(prev_balance.abs) %> (Previous deficit)
@@ -192,7 +192,7 @@
               <%= t("activerecord.attributes.planned_expense.status_options.#{planned_expense.status}") %>
             </span>
           </div>
-          
+
           <div class="mb-3">
             <p class="text-2xl font-bold text-foreground"><%= number_to_currency(planned_expense.amount) %></p>
             <p class="text-xs text-muted-foreground mt-1"><%= planned_expense.percentage_of_income.round(1) %>% of income</p>
@@ -318,7 +318,7 @@
               Spent
             </span>
           </div>
-          
+
           <div class="mb-3">
             <p class="text-2xl font-bold text-foreground"><%= number_to_currency(expense.amount) %></p>
             <p class="text-xs text-muted-foreground mt-1"><%= expense.date.strftime("%b %d, %Y") %></p>

@@ -48,7 +48,7 @@
       <span class="text-xs font-medium uppercase tracking-wide text-muted-foreground"><%= t("reports.active_filters") %></span>
       <% active_filters.each do |filter| %>
         <%= render Ui::BadgeComponent.new(href: filter[:clear_url], variant: :secondary, css_class: "hover:bg-secondary/80") do %>
-          <span><%= "#{filter[:label]}: #{filter[:value]}" %></span>
+          <span><%= filter[:label] %>: <%= filter[:value] %></span>
           <span class="text-muted-foreground" aria-hidden="true">&times;</span>
         <% end %>
       <% end %>

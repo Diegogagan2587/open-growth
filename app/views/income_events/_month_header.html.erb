@@ -21,7 +21,7 @@
           <%= pluralize(event_count, 'income event') %>
         </p>
       </div>
-      
+
       <!-- Month Summary Stats -->
       <div class="flex flex-wrap gap-3 md:gap-4">
         <div class="flex items-center gap-2">
@@ -30,7 +30,7 @@
             <p class="text-sm font-semibold text-foreground"><%= number_to_currency(total_expected) %></p>
           </div>
         </div>
-        
+
         <% if total_received > 0 %>
           <div class="flex items-center gap-2">
             <div class="rounded-lg border border-border bg-secondary/45 px-3 py-2">
@@ -39,7 +39,7 @@
             </div>
           </div>
         <% end %>
-        
+
         <div class="flex items-center gap-2">
           <div class="flex gap-2">
             <% if pending_count > 0 %>

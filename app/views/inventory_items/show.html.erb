@@ -28,7 +28,7 @@
     <div>
       <p class="text-sm text-muted-foreground">Stock State</p>
       <p class="font-semibold">
-        <span class="px-2 py-1 rounded text-xs 
+        <span class="px-2 py-1 rounded text-xs
           <%= @inventory_item.stock_state == 'in_stock' ? 'bg-success-soft text-success' : 
               @inventory_item.stock_state == 'low' ? 'bg-warning-soft text-warning' : 
               'bg-danger-soft text-danger' %>">
@@ -78,4 +78,3 @@
     <p class="text-xs text-muted-foreground">Green = In Stock, Yellow = Low, Red = Empty</p>
   </div>
 </div>
-
