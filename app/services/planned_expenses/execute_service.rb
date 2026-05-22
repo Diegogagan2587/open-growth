@@ -56,13 +56,13 @@ module PlannedExpenses
       expense
     end
 
-    def build_or_update_financial_entry!(expense:)
+    def build_or_update_financial_entry!(expense:, execution_date:)
       entry = Financial::Entry.find_by(planned_expense_id: planned_expense.id) || planned_expense.financial_entry || Financial::Entry.new
       entry.account = planned_expense.account
       entry.income_event = planned_expense.income_event
       entry.planned_expense = planned_expense
       entry.expense = expense if expense.present?
-      entry.entry_date = entry_date
+      entry.entry_date = execution_date
       entry.amount = planned_expense.amount
       entry.description = planned_expense.description
 
