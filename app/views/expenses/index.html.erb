@@ -18,7 +18,7 @@
     </div>
     <div class="flex flex-wrap items-center gap-2">
       <label for="category_id" class="text-sm font-medium text-foreground"><%= t("expenses.index.category") %></label>
-      <%= f.select :category_id, Category.all.pluck(:name, :id), { include_blank: t("expenses.index.all_categories") }, id: "category_id", class: "rounded border border-input px-3 py-2 text-sm" %>
+      <%= f.select :category_id, @categories.pluck(:name, :id), { include_blank: t("expenses.index.all_categories") }, id: "category_id", class: "rounded border border-input px-3 py-2 text-sm" %>
     </div>
     <div class="flex flex-wrap items-center gap-2 flex-grow min-w-0">
       <label for="q" class="text-sm font-medium text-foreground sr-only"><%= t("expenses.index.description_placeholder") %></label>
