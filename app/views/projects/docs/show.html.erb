@@ -43,9 +43,9 @@
             data-action="input->doc-links#filterLinks"
             placeholder="<%= t('projects.links.search_placeholder') %>"
             class="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:ring-primary focus:border-primary" 
-          />
+>
         </div>
-        
+
         <div class="max-h-64 overflow-y-auto border border-border rounded-md bg-card">
           <% if Projects::Link.for_account(Current.account).any? %>
             <% Projects::Link.for_account(Current.account).order(:title).each do |link| %>
@@ -70,7 +70,7 @@
             </div>
           <% end %>
         </div>
-        
+
         <button type="button" data-action="click->doc-links#toggleForm" class="inline-flex items-center px-4 py-2 bg-card hover:bg-muted/35 text-foreground text-sm font-medium rounded-md border border-input transition-colors">
           <%= t('shared.cancel') %>
         </button>
