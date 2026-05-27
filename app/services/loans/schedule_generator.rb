@@ -1,7 +1,6 @@
-# frozen_string_literal: true
+  # frozen_string_literal: true
 
-module Loans
-  class ScheduleGenerator
+  class Loans::ScheduleGenerator
     PERIODS_PER_YEAR = {
       "weekly" => 52.0,
       "biweekly" => 26.0,
@@ -175,4 +174,3 @@ module Loans
 
     private_class_method :solve_periodic_rate, :payment_for_rate
   end
-end
