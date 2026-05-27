@@ -1,4 +1,4 @@
-class ExpensesController < ApplicationController
+class Financial::ExpensesController < ApplicationController
   include Financial::AccountReferenceFiltering
 
   before_action :set_budget_period, only: [ :new, :create ]
