@@ -1,6 +1,7 @@
 /* Shadcn Design System Variables and Theme */
 
 :root {
+  --font-sans: "Inter var";
   /*
     Day mode governance (60-30-10):
     - 60% base neutrals: background/card/popover
