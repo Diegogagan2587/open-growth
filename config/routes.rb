@@ -53,6 +53,7 @@ Rails.application.routes.draw do
     resources :financial_entries, only: [ :index, :show, :new, :create, :edit, :update, :destroy ], controller: "/financial/entries"
   end
   scope module: "financial" do
+    resources :expenses
     resources :budget_periods do
       resources :budget_line_items
       resources :expenses, only: [ :new, :create ]
@@ -61,8 +62,8 @@ Rails.application.routes.draw do
   end
 
   resources :income_events do
-    get "direct_expenses/new", to: "expenses#quick_new", as: :new_direct_expense
-    post "direct_expenses", to: "expenses#quick_create", as: :direct_expenses
+    get "direct_expenses/new", to: "financial/expenses#quick_new", as: :new_direct_expense
+    post "direct_expenses", to: "financial/expenses#quick_create", as: :direct_expenses
 
     resources :planned_expenses do
       member do
@@ -84,7 +85,6 @@ Rails.application.routes.draw do
   get "categories/new", to: redirect("/settings/finance/categories/new")
   get "categories/:id", to: redirect { |params, _request| "/settings/finance/categories/#{params[:id]}" }
   get "categories/:id/edit", to: redirect { |params, _request| "/settings/finance/categories/#{params[:id]}/edit" }
-  resources :expenses
 
   resources :shopping_items do
     member do
