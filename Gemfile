@@ -64,7 +64,7 @@ end
 
 gem "tailwindcss-rails", "~> 4.4"
 
-gem "view_component", "~> 4.8"
+gem "view_component", "~> 4.11"
 # redcarpet for parsing markdown format
 gem "redcarpet", "~> 3.6"
 # backgroun jobs monitoring errors
