@@ -4,8 +4,8 @@ class Financial::Entry < ApplicationRecord
   ENTRY_TYPES = %w[inflow outflow transfer liability_charge liability_payment loan_disbursement adjustment].freeze
 
   belongs_to :account, class_name: "::Account"
-  belongs_to :category
-  belongs_to :budget_period
+  belongs_to :category, optional: true
+  belongs_to :budget_period, optional: true
   belongs_to :financial_account, class_name: "Financial::Asset", optional: true
   belongs_to :counterparty_financial_account, class_name: "Financial::Asset", optional: true
   belongs_to :financial_liability, class_name: "Financial::Liability", optional: true
