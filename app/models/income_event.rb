@@ -11,6 +11,7 @@ class IncomeEvent < ApplicationRecord
   has_many :planned_expenses, dependent: :destroy
   has_many :originated_planned_expenses, class_name: "PlannedExpense", foreign_key: :origin_income_event_id, dependent: :nullify
   has_many :expenses, dependent: :nullify
+  has_many :financial_entries, class_name: "Financial::Entry", dependent: :nullify
   has_many :loan_payment_schedules, foreign_key: :loan_id, dependent: :destroy
   has_one :loan_disbursement_entry, -> { where(entry_type: "loan_disbursement") }, class_name: "Financial::Entry", inverse_of: :income_event
   has_one :regular_income_entry, -> { where(entry_type: "inflow", expense_id: nil, planned_expense_id: nil) }, class_name: "Financial::Entry", inverse_of: :income_event
