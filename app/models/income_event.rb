@@ -66,7 +66,7 @@ class IncomeEvent < ApplicationRecord
     return loan_total_spent if loan?
 
     # Total of all expenses (both from planned and direct)
-    expenses.sum(:amount)
+    financial_entries.where(entry_type: %w[outflow liability_charge]).sum(:amount)
   end
 
   def remaining_budget
