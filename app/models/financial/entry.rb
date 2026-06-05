@@ -53,6 +53,13 @@ class Financial::Entry < ApplicationRecord
     nil
   end
 
+  def destination_selection
+    return "asset:#{counterparty_financial_account_id}" if counterparty_financial_account_id.present?
+    return "liability:#{financial_liability_id}" if entry_type == "liability_payment" && financial_liability_id.present?
+
+    nil
+  end
+
   def account_delta_for(financial_account_id)
     if entry_type == "transfer"
       return -amount.to_d if self.financial_account_id == financial_account_id
