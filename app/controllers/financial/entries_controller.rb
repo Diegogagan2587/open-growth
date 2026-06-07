@@ -77,7 +77,8 @@ module Financial
       @financial_accounts = Financial::Asset.for_account(Current.account).order(:name)
       @financial_liabilities = Financial::Liability.for_account(Current.account).order(:name)
       @income_events = IncomeEvent.for_account(Current.account).by_date
-      @expenses = Expense.for_account(Current.account).order(date: :desc).limit(100)
+      @categories = Category.for_account(Current.account).order(:name)
+      @budget_periods = BudgetPeriod.for_account(Current.account).order(start_date: :desc)
     end
 
     def load_categories
