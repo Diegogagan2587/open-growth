@@ -68,7 +68,8 @@ module Financial
         :counterparty_financial_account_id,
         :financial_liability_id,
         :income_event_id,
-        :expense_id
+        :category_id,
+        :budget_period_id
       ])
     end
 
