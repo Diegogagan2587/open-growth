@@ -46,7 +46,7 @@ class IncomeEventsController < ApplicationController
     @planned_expenses = @income_event.planned_expenses
       .includes(:income_event)
       .order(Arel.sql("COALESCE(planned_expenses.loan_installment_number, 2147483647) ASC"), :due_date, :created_at)
-    @direct_expenses = @income_event.expenses.where(planned_expense_id: nil).order(date: :desc)
+    @direct_expenses = @income_event.financial_entries.where(planned_expense_id: nil, entry_type: %w[outflow liability_charge]).order(entry_date: :desc)
   end
 
   def new
