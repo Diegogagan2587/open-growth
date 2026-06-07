@@ -5,6 +5,7 @@ module Financial
     before_action :set_financial_entry, only: [ :show, :edit, :update, :destroy ]
     before_action :load_form_collections, only: [ :new, :create, :edit, :update ]
     before_action :load_account_filter_options, only: [ :index ]
+    before_action :load_categories, only: [ :index ]
 
     def index
       @financial_entries = Financial::Entry.for_account(Current.account).by_date
