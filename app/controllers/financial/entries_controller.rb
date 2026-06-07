@@ -73,5 +73,9 @@ module Financial
       @income_events = IncomeEvent.for_account(Current.account).by_date
       @expenses = Expense.for_account(Current.account).order(date: :desc).limit(100)
     end
+
+    def load_categories
+      @categories = Category.for_account(Current.account).order(:name)
+    end
   end
 end
