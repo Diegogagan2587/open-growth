@@ -27,15 +27,15 @@ class ReportsController < ApplicationController
     @date_from, @date_to = @date_to, @date_from if @date_from > @date_to
     range = @date_from..@date_to
 
-    expenses = Expense.for_account(Current.account).where(date: range)
+    expenses = Financial::Entry.for_account(Current.account).where(entry_date: range, entry_type: %w[outflow liability_charge ])
 
     # Expenses by month (labels and values for Chart.js)
-    by_month = expenses.group("DATE_TRUNC('month', date)").order(Arel.sql("DATE_TRUNC('month', date)")).sum(:amount)
+    by_month = expenses.group("DATE_TRUNC('month', entry_date)").order(Arel.sql("DATE_TRUNC('month', entry_date)")).sum(:amount)
     @expenses_by_month_labels = by_month.keys.map { |d| I18n.l(d.to_date, format: "%b %Y") }
     @expenses_by_month_values = by_month.values.map(&:to_f)
 
     # Expenses by category (con id para color estable por categoría)
-    by_category = expenses.joins(:category).group("categories.id", "categories.name").order(Arel.sql("SUM(expenses.amount) DESC")).sum(:amount)
+    by_category = expenses.joins(:category).group("categories.id", "categories.name").order(Arel.sql("SUM(financial_entries.amount) DESC")).sum(:amount)
     @expenses_by_category_labels = by_category.keys.map { |(_, name)| name }
     @expenses_by_category_values = by_category.values.map(&:to_f)
     @expenses_by_category_ids = by_category.keys.map { |(id, _)| id }
