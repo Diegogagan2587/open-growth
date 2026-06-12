@@ -180,45 +180,53 @@ class Financial::ExpensesController < ApplicationController
       @financial_liabilities = Financial::Liability.for_account(Current.account).active.order(:name)
     end
 
-    def synced_financial_entry_attributes(expense)
+    def mapped_entry_attributes(params_hash)
+      source = params_hash[:source_selection].presence
+      destination = params_hash[:destination_selection].presence
+
+      if source.blank?
+        source = "asset:#{params_hash[:financial_account_id]}" if params_hash[:financial_account_id].present?
+        source = "liability:#{params_hash[:financial_liability_id]}" if params_hash[:financial_liability_id].present?
+      end
+
+      source_kind, source_id = source.to_s.split(":", 2)
+      destination_kind, destination_id = destination.to_s.split(":", 2)
+
       attrs = {
-        amount: expense.amount,
-        entry_date: expense.date,
-        description: expense.description,
-        income_event_id: expense.income_event_id
+        entry_date: params_hash[:date],
+        amount: params_hash[:amount],
+        description: params_hash[:description],
+        category_id: params_hash[:category_id],
+        budget_period_id: params_hash[:budget_period_id],
+        income_event_id: params_hash[:income_event_id],
+        counterparty_financial_account_id: nil,
+        counterparty_financial_liability_id: nil
       }
 
-      if expense.transfer?
-        attrs.merge!(
-          entry_type: "transfer",
-          financial_account_id: expense.financial_account_id,
-          counterparty_financial_account_id: expense.counterparty_financial_account_id,
-          financial_liability_id: nil,
-          counterparty_financial_liability_id: nil
-        )
-      elsif expense.debt_payment?
-        attrs.merge!(
-          entry_type: "liability_payment",
-          financial_account_id: expense.financial_account_id,
-          financial_liability_id: expense.counterparty_financial_liability_id,
-          counterparty_financial_account_id: nil,
-          counterparty_financial_liability_id: nil
-        )
-      elsif expense.financial_liability.present?
+      if source_kind == "liability"
         attrs.merge!(
           entry_type: "liability_charge",
           financial_account_id: nil,
-          counterparty_financial_account_id: nil,
-          financial_liability_id: expense.financial_liability_id,
-          counterparty_financial_liability_id: nil
+          financial_liability_id: source_id
+        )
+      elsif destination_kind == "asset"
+        attrs.merge!(
+          entry_type: "transfer",
+          financial_account_id: source_id,
+          counterparty_financial_account_id: destination_id,
+          financial_liability_id: nil
+        )
+      elsif destination_kind == "liability"
+        attrs.merge!(
+          entry_type: "liability_payment",
+          financial_account_id: source_id,
+          financial_liability_id: destination_id
         )
       else
         attrs.merge!(
           entry_type: "outflow",
-          financial_account_id: expense.financial_account_id,
-          counterparty_financial_account_id: nil,
-          financial_liability_id: nil,
-          counterparty_financial_liability_id: nil
+          financial_account_id: source_id,
+          financial_liability_id: nil
         )
       end
 
