@@ -107,40 +107,31 @@ class Financial::ExpensesController < ApplicationController
 
   # PATCH/PUT /expenses/1 or /expenses/1.json
   def update
-    old_income_event_id = @expense.income_event_id
     new_income_event_id = expense_params[:income_event_id]
+    attrs = mapped_entry_attributes(expense_params)
+
+    ActiveRecord::Base.transaction do
+      legacy_expense = Expense.for_account(Current.account).find_by(id: params[:id])
+      target_entry = legacy_expense&.financial_entry || @expense
+      target_entry.update!(attrs)
+      @expense = target_entry
+
+      if @expense.planned_expense.present? && new_income_event_id.present?
+        @expense.planned_expense.update!(income_event_id: new_income_event_id)
+      end
+    end
 
     respond_to do |format|
-      begin
-        ActiveRecord::Base.transaction do
-          @expense.update!(expense_params)
-
-          # Keep related financial entry fully in sync with edited expense.
-          if @expense.financial_entry.present?
-            @expense.financial_entry.update!(synced_financial_entry_attributes(@expense))
-          end
-
-          # If income_event_id changed and expense has a planned_expense, sync it
-          if @expense.planned_expense.present?
-            old_id = old_income_event_id.to_i rescue 0
-            new_id = new_income_event_id.present? ? new_income_event_id.to_i : 0
-
-            if new_id != old_id && new_income_event_id.present?
-              @expense.planned_expense.update!(income_event_id: new_income_event_id)
-            end
-          end
-        end
-
-        format.html { redirect_to @expense, notice: t("expenses.flash.updated") }
-        format.json { render :show, status: :ok, location: @expense }
-      rescue ActiveRecord::RecordInvalid => e
-        @expense.errors.add(:base, e.record.errors.full_messages.to_sentence) unless e.record == @expense
-        # Load income events for form re-render on error
-        @income_events = IncomeEvent.for_account(Current.account).order(expected_date: :desc)
-        load_finance_account_collections
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @expense.errors, status: :unprocessable_entity }
-      end
+      format.html { redirect_to expense_path(params[:id]), notice: t("expenses.flash.updated") }
+      format.json { render :show, status: :ok, location: expense_path(params[:id]) }
+    end
+  rescue ActiveRecord::RecordInvalid => e
+    @expense.errors.add(:base, e.record.errors.full_messages.to_sentence) unless e.record == @expense
+    @income_events = IncomeEvent.for_account(Current.account).order(expected_date: :desc)
+    load_finance_account_collections
+    respond_to do |format|
+      format.html { render :edit, status: :unprocessable_entity }
+      format.json { render json: @expense.errors, status: :unprocessable_entity }
     end
   end
 
