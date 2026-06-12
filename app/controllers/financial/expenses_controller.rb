@@ -150,7 +150,12 @@ class Financial::ExpensesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_expense
-      @expense = Expense.for_account(Current.account).find(params.expect(:id))
+      id = params.expect(:id)
+      scope = Financial::Entry.for_account(Current.account)
+        .where(entry_type: %w[outflow liability_charge])
+      legacy_expense = Expense.for_account(Current.account).find_by(id: id)
+      @expense = legacy_expense&.financial_entry || scope.find_by(expense_id: id) || scope.find_by(id: id)
+      raise ActiveRecord::RecordNotFound if @expense.blank?
     end
 
     # Only allow a list of trusted parameters through.
