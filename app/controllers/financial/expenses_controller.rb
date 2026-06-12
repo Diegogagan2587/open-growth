@@ -68,9 +68,9 @@ class Financial::ExpensesController < ApplicationController
       )
 
       if result.success?
-        target = @expense.budget_period || @expense
+        target = @expense.budget_period || finance_financial_entries_path
         format.html { redirect_to target, notice: t("expenses.flash.created") }
-        format.json { render :show, status: :created, location: @expense }
+        format.json { render json: { id: result.entry.id }, status: :created, location: finance_financial_entry_path(result.entry) }
       else
         # Load income events for form re-render on error
         @income_events = IncomeEvent.for_account(Current.account).order(expected_date: :desc)
