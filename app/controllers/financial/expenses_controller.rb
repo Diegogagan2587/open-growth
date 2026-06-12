@@ -9,10 +9,10 @@ class Financial::ExpensesController < ApplicationController
 
 
   def index
-    @expenses = Expense.for_account(Current.account).all
+    @expenses = Financial::Entry.for_account(Current.account).where(entry_type: %w[outflow liability_charge ])
     @expenses = apply_account_ref_filter(@expenses)
-    @expenses = @expenses.where("date >= ?", params[:date_from]) if params[:date_from].present?
-    @expenses = @expenses.where("date <= ?", params[:date_to])   if params[:date_to].present?
+    @expenses = @expenses.where("entry_date >= ?", params[:date_from]) if params[:date_from].present?
+    @expenses = @expenses.where("entry_date <= ?", params[:date_to])   if params[:date_to].present?
     @expenses = @expenses.where(category_id: params[:category_id]) if params[:category_id].present?
     @expenses = @expenses.where("description ILIKE ?", "%#{params[:q]}%") if params[:q].present?
     @selected_account_ref = selected_account_ref
