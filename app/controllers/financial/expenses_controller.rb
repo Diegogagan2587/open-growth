@@ -137,7 +137,9 @@ class Financial::ExpensesController < ApplicationController
 
   # DELETE /expenses/1 or /expenses/1.json
   def destroy
+    legacy_expense = Expense.for_account(Current.account).find_by(id: params[:id])
     @expense.destroy!
+    legacy_expense&.destroy! if legacy_expense.present?
 
     respond_to do |format|
       format.html { redirect_to expenses_path, status: :see_other, notice: t("expenses.flash.destroyed") }
