@@ -39,17 +39,17 @@ module Financial::Liabilities
           description: description
         )
 
-        created_entry = Financial::Entry.create!(
-          account: Current.account,
-          financial_liability: liability,
-          expense: created_expense,
-          income_event: income_event,
-          entry_type: "liability_charge",
-          entry_date: entry_date,
-          amount: amount,
-          description: description
-        )
-      end
+      created_entry = Financial::Entry.create!(
+        account: Current.account,
+        financial_liability: liability,
+        income_event: income_event,
+        category: category,
+        budget_period: budget_period,
+        entry_type: "liability_charge",
+        entry_date: entry_date,
+        amount: amount,
+        description: description
+      )
 
       Result.new(success?: true, entry: created_entry)
     rescue ActiveRecord::RecordInvalid => e
