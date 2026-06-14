@@ -24,21 +24,6 @@ module Financial::Liabilities
       return failure("Category is required") if category.blank?
       return failure("Budget period is required") if budget_period.blank?
 
-      created_expense = nil
-      created_entry = nil
-
-      ActiveRecord::Base.transaction do
-        created_expense = Expense.create!(
-          account: Current.account,
-          category: category,
-          budget_period: budget_period,
-          income_event: income_event,
-          financial_liability: liability,
-          date: entry_date,
-          amount: amount,
-          description: description
-        )
-
       created_entry = Financial::Entry.create!(
         account: Current.account,
         financial_liability: liability,
