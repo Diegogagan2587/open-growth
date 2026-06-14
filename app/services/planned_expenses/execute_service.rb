@@ -17,15 +17,14 @@ module PlannedExpenses
 
       ActiveRecord::Base.transaction do
         execution_date = resolved_entry_date
-        expense = build_or_update_expense_if_needed
-        entry = build_or_update_financial_entry!(expense: expense, execution_date: execution_date)
+        entry = build_or_update_financial_entry!(execution_date: execution_date)
 
         planned_expense.update!(status: status_after_execution) unless planned_expense.status == status_after_execution
         if PlannedExpense.final_status?(status_after_execution) && planned_expense.applied_on.blank?
           planned_expense.update!(applied_on: execution_date)
         end
 
-        Result.new(success?: true, planned_expense: planned_expense, expense: expense, entry: entry)
+        Result.new(success?: true, planned_expense: planned_expense, expense: nil, entry: entry)
       end
     rescue ActiveRecord::RecordInvalid => e
       failure(e.record.errors.full_messages.to_sentence)
