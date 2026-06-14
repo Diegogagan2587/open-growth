@@ -53,56 +53,6 @@ module Expenses
       @liability ||= Financial::Liability.for_account(expense.account).find_by(id: financial_liability_id)
     end
 
-    def build_entry
-      if expense.transfer?
-        Financial::Entry.create!(
-          account: expense.account,
-          financial_account: expense.financial_account,
-          counterparty_financial_account: expense.counterparty_financial_account,
-          expense: expense,
-          income_event: expense.income_event,
-          entry_type: "transfer",
-          entry_date: expense.date,
-          amount: expense.amount,
-          description: expense.description
-        )
-      elsif expense.debt_payment?
-        Financial::Entry.create!(
-          account: expense.account,
-          financial_account: expense.financial_account,
-          financial_liability: expense.counterparty_financial_liability,
-          expense: expense,
-          income_event: expense.income_event,
-          entry_type: "liability_payment",
-          entry_date: expense.date,
-          amount: expense.amount,
-          description: expense.description
-        )
-      elsif expense.financial_liability.present?
-        Financial::Entry.create!(
-          account: expense.account,
-          financial_liability: expense.financial_liability,
-          expense: expense,
-          income_event: expense.income_event,
-          entry_type: "liability_charge",
-          entry_date: expense.date,
-          amount: expense.amount,
-          description: expense.description
-        )
-      elsif expense.financial_account.present?
-        Financial::Entry.create!(
-          account: expense.account,
-          financial_account: expense.financial_account,
-          expense: expense,
-          income_event: expense.income_event,
-          entry_type: "outflow",
-          entry_date: expense.date,
-          amount: expense.amount,
-          description: expense.description
-        )
-      end
-    end
-
     def failure(message)
       Result.new(success?: false, error_message: message)
     end
