@@ -1,6 +1,6 @@
 module Financial::Liabilities
   class RecordChargeService
-    Result = Struct.new(:success?, :error_message, :expense, :entry, keyword_init: true)
+    Result = Struct.new(:success?, :error_message, :entry, keyword_init: true)
 
     def self.call(...)
       new(...).call
