@@ -51,7 +51,7 @@ module Financial::Liabilities
         )
       end
 
-      Result.new(success?: true, expense: created_expense, entry: created_entry)
+      Result.new(success?: true, entry: created_entry)
     rescue ActiveRecord::RecordInvalid => e
       failure(e.record.errors.full_messages.to_sentence)
     end
