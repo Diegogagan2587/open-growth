@@ -34,30 +34,6 @@ module PlannedExpenses
 
     attr_reader :planned_expense, :entry_date, :target_status
 
-    def expense_attributes
-      {
-        date: resolved_entry_date,
-        amount: planned_expense.amount,
-        description: planned_expense.description,
-        category: planned_expense.category,
-        budget_period: planned_expense.income_event.budget_period,
-        income_event: planned_expense.income_event,
-        planned_expense: planned_expense,
-        account: planned_expense.account,
-        financial_account: planned_expense.financial_account,
-        financial_liability: planned_expense.financial_liability
-      }
-    end
-
-    def build_or_update_expense_if_needed
-      return nil if transaction_routing?
-      return nil if planned_expense.income_event.budget_period.blank?
-
-      expense = Expense.find_by(planned_expense_id: planned_expense.id) || planned_expense.expense || Expense.new
-      expense.assign_attributes(expense_attributes)
-      expense.save!
-      expense
-    end
 
     def build_or_update_financial_entry!(execution_date:)
       entry = Financial::Entry.find_by(planned_expense_id: planned_expense.id) || planned_expense.financial_entry || Financial::Entry.new
