@@ -25,6 +25,11 @@ export default class extends Controller {
     event.preventDefault()
     event.stopImmediatePropagation()
 
+    if (!form.checkValidity()) {
+      form.reportValidity()
+      return
+    }
+
     const body = Array.from(new FormData(form).entries())
     this.queue({
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
