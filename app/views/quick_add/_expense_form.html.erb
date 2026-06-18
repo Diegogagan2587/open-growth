@@ -1,4 +1,4 @@
-<%= form_with url: quick_add_create_expense_path, local: false, data: { turbo: true } do |f| %>
+<%= form_with url: quick_add_create_expense_path, local: false, data: { turbo: true, quick_add_offline: true } do |f| %>
   <div class="space-y-3">
     <div>
       <label class="block text-sm font-medium text-foreground mb-1">Description</label>
