@@ -95,6 +95,8 @@
           <div id="quick-add-modal-container"></div>
         <% end %>
 
+        <%= yield :overlays %>
+
         <main class="mx-auto w-full max-w-7xl px-4 pt-4 pb-8">
           <div class="rounded-3xl border border-border bg-[hsl(var(--shell-main-surface))] shadow-[var(--shell-main-shadow)] backdrop-blur-sm">
             <%= yield %>
