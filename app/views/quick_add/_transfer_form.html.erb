@@ -2,7 +2,7 @@
   <div class="space-y-3">
     <div>
       <label class="block text-sm font-medium text-foreground mb-1">Amount</label>
-      <%= render Ui::InputComponent.new(name: "transfer[amount]", type: "number", placeholder: "0.00", step: "0.01", value: @transfer&.amount) %>
+      <%= render Ui::InputComponent.new(name: "transfer[amount]", type: "number", placeholder: "0.00", step: "0.01", value: @transfer&.amount, required: true) %>
     </div>
 
     <div>
@@ -16,7 +16,8 @@
         name: "transfer[from_type]",
         options: from_options,
         selected: @transfer_from_type,
-        include_blank: "Select from account"
+        include_blank: "Select from account",
+        required: true
       ) %>
     </div>
 
@@ -29,7 +30,8 @@
         name: "transfer[to_type]",
         options: to_options,
         selected: @transfer_to_type,
-        include_blank: "Select to account"
+        include_blank: "Select to account",
+        required: true
       ) %>
     </div>
 
