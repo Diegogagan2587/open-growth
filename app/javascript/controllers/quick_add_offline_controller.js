@@ -46,17 +46,22 @@ export default class extends Controller {
     this.submitting = true
     const pending = this.pending()
     const failed = []
+    const invalid = []
 
     for (const item of pending) {
       const response = await this.post(item).catch(() => null)
-      if (!response?.ok) failed.push(item)
+      if (!response) failed.push(item)
+      else if (response.status === 422) invalid.push({ ...item, error: await response.text() })
+      else if (!response.ok) failed.push(item)
     }
 
     this.save(failed)
+    this.saveInvalid([...this.invalid(), ...invalid])
     this.submitting = false
 
     if (pending.length && !failed.length) this.flash("Offline transactions synced.")
-    if (failed.length) this.flash("Some offline transactions could not sync.")
+    if (failed.length) this.flash("Some offline transactions could not sync. Will retry when online.")
+    if (invalid.length) this.flash("Some offline transactions were invalid and will not be retried. Please enter them again.")
   }
 
   post(item) {
