@@ -121,7 +121,7 @@
     <div class="space-y-2">
       <% @documents.each do |document| %>
         <div class="rounded-md border border-border p-3">
-          <p class="font-medium"><%= document.title %></p>
+          <%= link_to document.title, doc_path(document), data: { turbo_frame: "career_doc_panel" }, class: "font-medium text-accent hover:underline" %>
           <p class="text-sm text-muted-foreground line-clamp-2"><%= document.content.to_s.truncate(160) %></p>
         </div>
       <% end %>
