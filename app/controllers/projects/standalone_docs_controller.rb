@@ -8,6 +8,7 @@ module Projects
     end
 
     def show
+      render partial: "career_doc_panel", layout: false if turbo_frame_request_id == "career_doc_panel"
     end
 
     def new

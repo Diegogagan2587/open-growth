@@ -90,4 +90,37 @@ class Career::JobApplicationsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to career_job_application_path(@job_application)
   end
+
+  test "show links documents to career doc panel" do
+    doc = Projects::Doc.create!(
+      account: @account,
+      documentable: @job_application,
+      title: "Interview notes",
+      doc_type: "note",
+      content: "Bring up **Rails** work."
+    )
+
+    get career_job_application_path(@job_application)
+
+    assert_response :success
+    assert_select "a[data-turbo-frame='career_doc_panel'][href='#{doc_path(doc)}']", text: "Interview notes"
+  end
+
+  test "career doc panel renders document content" do
+    doc = Projects::Doc.create!(
+      account: @account,
+      documentable: @job_application,
+      title: "Interview notes",
+      doc_type: "note",
+      content: "Bring up **Rails** work."
+    )
+
+    get doc_path(doc), headers: { "Turbo-Frame" => "career_doc_panel" }
+
+    assert_response :success
+    assert_select "turbo-frame#career_doc_panel"
+    assert_select "h2", "Interview notes"
+    assert_select "a[href='#{edit_doc_path(doc)}']", "Edit"
+    assert_select ".markdown-content strong", "Rails"
+  end
 end
