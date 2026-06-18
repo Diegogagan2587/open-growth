@@ -93,6 +93,18 @@ export default class extends Controller {
     localStorage.setItem(STORE_KEY, JSON.stringify(items))
   }
 
+  invalid() {
+    try {
+      return JSON.parse(localStorage.getItem(INVALID_KEY)) || []
+    } catch (_) {
+      return []
+    }
+  }
+
+  saveInvalid(items) {
+    localStorage.setItem(INVALID_KEY, JSON.stringify(items))
+  }
+
   flash(message) {
     const container = document.getElementById("flash-container")
     if (!container) return
