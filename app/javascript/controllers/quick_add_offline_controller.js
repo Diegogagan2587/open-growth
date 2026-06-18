@@ -1,6 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 const STORE_KEY = "quick_add_pending_transactions"
+const INVALID_KEY = "quick_add_invalid_transactions"
 
 export default class extends Controller {
   connect() {
