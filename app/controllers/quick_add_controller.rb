@@ -157,7 +157,7 @@ class QuickAddController < ApplicationController
   end
 
   def expense_params
-    params.require(:expense).permit(:description, :amount, :category_id, :date, :income_event_id)
+    params.require(:expense).except(:origin).permit(:description, :amount, :category_id, :date, :income_event_id)
   end
 
   def task_params

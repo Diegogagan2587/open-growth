@@ -1,13 +1,13 @@
-<%= form_with url: quick_add_create_expense_path, local: false, data: { turbo: true } do |f| %>
+<%= form_with url: quick_add_create_expense_path, local: false, data: { turbo: true, quick_add_offline: true } do |f| %>
   <div class="space-y-3">
     <div>
       <label class="block text-sm font-medium text-foreground mb-1">Description</label>
-      <%= render Ui::InputComponent.new(name: "expense[description]", placeholder: "Groceries", value: @expense&.description) %>
+      <%= render Ui::InputComponent.new(name: "expense[description]", placeholder: "Groceries", value: @expense&.description, required: true) %>
     </div>
 
     <div>
       <label class="block text-sm font-medium text-foreground mb-1">Amount</label>
-      <%= render Ui::InputComponent.new(name: "expense[amount]", type: "number", placeholder: "0.00", step: "0.01", value: @expense&.amount) %>
+      <%= render Ui::InputComponent.new(name: "expense[amount]", type: "number", placeholder: "0.00", step: "0.01", value: @expense&.amount, required: true) %>
     </div>
 
     <div>
@@ -19,7 +19,8 @@
           (Current.account&.financial_liabilities || []).map { |l| ["💳 #{l.name}", "liability_#{l.id}"] }
         ),
         selected: nil,
-        include_blank: "Select account"
+        include_blank: "Select account",
+        required: true
       ) %>
     </div>
 
@@ -29,7 +30,8 @@
         name: "expense[category_id]",
         options: Current.account&.categories&.pluck(:name, :id) || [],
         selected: @expense&.category_id,
-        include_blank: "Select category"
+        include_blank: "Select category",
+        required: true
       ) %>
     </div>
 
@@ -45,7 +47,7 @@
 
     <div>
       <label class="block text-sm font-medium text-foreground mb-1">Date</label>
-      <%= render Ui::InputComponent.new(name: "expense[date]", type: "date", value: @expense&.date || Date.today) %>
+      <%= render Ui::InputComponent.new(name: "expense[date]", type: "date", value: @expense&.date || Date.today, required: true) %>
     </div>
 
     <div class="flex justify-end gap-2 pt-2">
