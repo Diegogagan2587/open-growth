@@ -3,12 +3,13 @@
 class Ui::SelectComponent < ViewComponent::Base
   BASE_CLASSES = "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive".freeze
 
-  def initialize(name:, options:, selected: nil, id: nil, disabled: false, aria_invalid: false, include_blank: nil, data: {}, css_class: nil)
+  def initialize(name:, options:, selected: nil, id: nil, disabled: false, required: false, aria_invalid: false, include_blank: nil, data: {}, css_class: nil)
     @name = name
     @options = options
     @selected = selected
     @id = id
     @disabled = disabled
+    @required = required
     @aria_invalid = aria_invalid
     @include_blank = include_blank
     @data = data
@@ -25,6 +26,7 @@ class Ui::SelectComponent < ViewComponent::Base
     {
       id: @id,
       disabled: @disabled,
+      required: @required,
       "aria-invalid": @aria_invalid,
       data: @data.presence,
       class: [ BASE_CLASSES, @extra_class ].compact.join(" ")
