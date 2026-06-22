@@ -114,8 +114,8 @@
         </div>
         <div class="flex flex-wrap gap-2">
           <%= link_to t("shared.edit"), edit_expense_path(expense), class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 text-sm font-medium text-accent bg-muted/35 rounded hover:bg-muted", aria: { label: "#{t('shared.edit')} #{t('expenses.index.title')}" } %>
-          <%= link_to t("shared.delete"), expense, data: { turbo_method: :delete, turbo_confirm: t("expenses.index.confirm_destroy") }, class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 text-sm font-medium text-danger bg-danger-soft rounded hover:bg-danger-soft", aria: { label: "#{t('shared.delete')} #{t('expenses.index.title')}" } %>
-          <%= link_to t("shared.view"), expense, class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 text-sm font-medium text-muted-foreground bg-muted rounded hover:bg-muted", aria: { label: "#{t('shared.view')} #{t('expenses.index.title')}" } %>
+          <%= link_to t("shared.delete"), expense_path(expense), data: { turbo_method: :delete, turbo_confirm: t("expenses.index.confirm_destroy") }, class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 text-sm font-medium text-danger bg-danger-soft rounded hover:bg-danger-soft", aria: { label: "#{t('shared.delete')} #{t('expenses.index.title')}" } %>
+          <%= link_to t("shared.view"), expense_path(expense), class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 text-sm font-medium text-muted-foreground bg-muted rounded hover:bg-muted", aria: { label: "#{t('shared.view')} #{t('expenses.index.title')}" } %>
         </div>
       </div>
     <% end %>
