@@ -63,7 +63,7 @@
       <%= render Ui::ButtonComponent.new(href: edit_expense_path(@expense), label: t("shared.edit"), variant: "outline") %>
     </div>
     <div class="w-full sm:w-auto [&>a]:w-full [&>a]:sm:w-auto [&>a]:flex [&>a]:justify-center">
-      <%= render Ui::ButtonComponent.new(href: @expense, label: t("shared.delete"), variant: "destructive", method: :delete, data: { turbo_confirm: t("expenses.index.confirm_destroy") }) %>
+      <%= render Ui::ButtonComponent.new(href: expense_path(@expense.expense_id || @expense.id), label: t("shared.delete"), variant: "destructive", method: :delete, data: { turbo_confirm: t("expenses.index.confirm_destroy") }) %>
     </div>
     <div class="w-full sm:w-auto [&>a]:w-full [&>a]:sm:w-auto [&>a]:flex [&>a]:justify-center">
       <%= render Ui::ButtonComponent.new(href: expenses_path, label: t("expenses.show.back"), variant: "ghost") do %>
