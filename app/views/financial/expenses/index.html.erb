@@ -79,7 +79,7 @@
             <td class="px-4 py-2 text-center">
               <span class="inline-flex items-center gap-2">
                 <%= link_to t("shared.edit"), edit_expense_path(expense), class: "px-3 py-2 text-sm text-accent hover:underline rounded hover:bg-muted/35 min-h-[44px] inline-flex items-center", aria: { label: "#{t('shared.edit')} #{t('expenses.index.title')}" } %>
-                <%= link_to t("shared.delete"), expense, data: { turbo_method: :delete, turbo_confirm: t("expenses.index.confirm_destroy") }, class: "px-3 py-2 text-sm text-danger hover:underline rounded hover:bg-danger-soft min-h-[44px] inline-flex items-center", aria: { label: "#{t('shared.delete')} #{t('expenses.index.title')}" } %>
+                <%= link_to t("shared.delete"), expense_path(expense), data: { turbo_method: :delete, turbo_confirm: t("expenses.index.confirm_destroy") }, class: "px-3 py-2 text-sm text-danger hover:underline rounded hover:bg-danger-soft min-h-[44px] inline-flex items-center", aria: { label: "#{t('shared.delete')} #{t('expenses.index.title')}" } %>
               </span>
             </td>
           </tr>
