@@ -42,7 +42,7 @@
                   <td class="px-4 py-3 text-sm text-foreground"><%= cat[:category_name] %></td>
                   <td class="px-4 py-3 text-sm text-right font-medium"><%= number_to_currency(cat[:total]) %></td>
                   <td class="px-4 py-3 text-sm text-right">
-                    <%= link_to t("reports.view_expenses"), expenses_path(category_id: cat[:category_id], date_from: @date_from, date_to: @date_to), class: "text-accent hover:underline hover:text-accent-dark" %>
+                    <%= link_to t("reports.view_expenses"), finance_financial_entries_path(category_id: cat[:category_id], date_from: @date_from, date_to: @date_to), class: "text-accent hover:underline hover:text-accent-dark" %>
                   </td>
                 </tr>
               <% end %>
@@ -56,7 +56,7 @@
                 <span class="text-sm font-medium text-foreground"><%= cat[:category_name] %></span>
                 <span class="text-sm font-medium"><%= number_to_currency(cat[:total]) %></span>
               </div>
-              <%= link_to t("reports.view_expenses"), expenses_path(category_id: cat[:category_id], date_from: @date_from, date_to: @date_to), class: "inline-block py-2 px-4 text-sm text-accent hover:underline hover:text-accent-dark" %>
+              <%= link_to t("reports.view_expenses"), finance_financial_entries_path(category_id: cat[:category_id], date_from: @date_from, date_to: @date_to), class: "inline-block py-2 px-4 text-sm text-accent hover:underline hover:text-accent-dark" %>
             </div>
           <% end %>
         </div>
@@ -83,7 +83,7 @@
                     <td class="px-4 py-3 text-sm text-right whitespace-nowrap">
                       <% if bkt_data %>
                         <%= number_to_currency(bkt_data[:amount]) %>
-                        <%= link_to t("reports.view_expenses"), expenses_path(category_id: cat[:category_id], date_from: bkt_data[:date_from], date_to: bkt_data[:date_to]), class: "block text-accent hover:underline hover:text-accent-dark text-xs mt-1" %>
+                        <%= link_to t("reports.view_expenses"), finance_financial_entries_path(category_id: cat[:category_id], date_from: bkt_data[:date_from], date_to: bkt_data[:date_to]), class: "block text-accent hover:underline hover:text-accent-dark text-xs mt-1" %>
                       <% else %>
                         —
                       <% end %>
@@ -91,7 +91,7 @@
                   <% end %>
                   <td class="px-4 py-3 text-sm text-right font-medium">
                     <%= number_to_currency(cat[:total]) %>
-                    <%= link_to t("reports.view_expenses"), expenses_path(category_id: cat[:category_id], date_from: @date_from, date_to: @date_to), class: "block text-accent hover:underline hover:text-accent-dark text-xs mt-1" %>
+                    <%= link_to t("reports.view_expenses"), finance_financial_entries_path(category_id: cat[:category_id], date_from: @date_from, date_to: @date_to), class: "block text-accent hover:underline hover:text-accent-dark text-xs mt-1" %>
                   </td>
                 </tr>
               <% end %>
@@ -110,9 +110,9 @@
                   <span><%= bkt[:label] %></span>
                   <span><%= number_to_currency(bkt[:amount]) %></span>
                 </div>
-                <%= link_to t("reports.view_expenses"), expenses_path(category_id: cat[:category_id], date_from: bkt[:date_from], date_to: bkt[:date_to]), class: "text-accent hover:underline hover:text-accent-dark text-xs" %>
+                <%= link_to t("reports.view_expenses"), finance_financial_entries_path(category_id: cat[:category_id], date_from: bkt[:date_from], date_to: bkt[:date_to]), class: "text-accent hover:underline hover:text-accent-dark text-xs" %>
               <% end %>
-              <%= link_to t("reports.view_expenses"), expenses_path(category_id: cat[:category_id], date_from: @date_from, date_to: @date_to), class: "inline-block mt-2 py-2 px-4 text-sm text-accent hover:underline hover:text-accent-dark" %>
+              <%= link_to t("reports.view_expenses"), finance_financial_entries_path(category_id: cat[:category_id], date_from: @date_from, date_to: @date_to), class: "inline-block mt-2 py-2 px-4 text-sm text-accent hover:underline hover:text-accent-dark" %>
             </div>
           <% end %>
         </div>
