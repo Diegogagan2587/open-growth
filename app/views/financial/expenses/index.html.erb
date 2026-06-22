@@ -2,7 +2,7 @@
 
 <% content_for :title, t("expenses.index.title") %>
 
-<% ordered_expenses = @expenses.order(date: :desc) %>
+<% ordered_expenses = @expenses.order(entry_date: :desc) %>
 
 <div class="container mx-auto px-4 py-4">
   <h1 class="text-2xl font-bold mb-4"><%= t("expenses.index.title") %></h1>
