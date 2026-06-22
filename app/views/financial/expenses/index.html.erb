@@ -59,7 +59,7 @@
         <% ordered_expenses.each do |expense| %>
           <tr class="border-t">
             <td class="px-4 py-2"><%= expense.date.strftime("%d %b %Y") %></td>
-            <td class="px-4 py-2"><%= expense.category.name %></td>
+            <td class="px-4 py-2"><%= expense.category&.name || t("expenses.index.unassigned") %></td>
             <td class="px-4 py-2"><%= expense.description %></td>
             <td class="px-4 py-2">
               <% if expense.budget_period %>
@@ -102,11 +102,11 @@
     <% ordered_expenses.each do |expense| %>
       <div class="bg-card border rounded-lg p-4 shadow-sm">
         <div class="flex justify-between items-start gap-2 mb-2">
-          <span class="font-semibold text-foreground truncate flex-1"><%= expense.description.presence || expense.category.name %></span>
+          <span class="font-semibold text-foreground truncate flex-1"><%= expense.description.presence || expense.category&.name || t("expenses.index.unassigned") %></span>
           <span class="font-semibold text-foreground whitespace-nowrap"><%= number_to_currency(expense.amount) %></span>
         </div>
         <div class="text-sm text-muted-foreground mb-1">
-          <%= expense.date.strftime("%d %b %Y") %> · <%= expense.category.name %>
+          <%= expense.date.strftime("%d %b %Y") %> · <%= expense.category&.name || t("expenses.index.unassigned") %>
         </div>
         <div class="text-xs text-muted-foreground mb-3">
           <%= t("expenses.index.budget_period") %>: <%= expense.budget_period ? expense.budget_period.name : t("expenses.index.unassigned") %> ·
