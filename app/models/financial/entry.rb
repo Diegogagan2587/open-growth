@@ -24,7 +24,6 @@ class Financial::Entry < ApplicationRecord
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :description, presence: true
   validates :category, presence: true, if: :classification_required?
-  validates :budget_period, presence: true, if: :classification_required?
 
   validate :required_links_by_type
   validate :associations_belong_to_same_account
