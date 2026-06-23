@@ -25,7 +25,8 @@ class Financial::LiabilityTest < ActiveSupport::TestCase
       entry_type: "liability_charge",
       entry_date: Date.current,
       amount: 80,
-      description: "Groceries"
+      description: "Groceries",
+      category: Category.first
     )
 
     Financial::Entry.create!(
