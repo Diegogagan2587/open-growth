@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_22_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_27_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -223,6 +223,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_22_170000) do
   create_table "financial_entries", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.decimal "amount", precision: 12, scale: 2, null: false
+    t.bigint "budget_period_id"
+    t.bigint "category_id"
     t.bigint "counterparty_financial_account_id"
     t.bigint "counterparty_financial_liability_id"
     t.datetime "created_at", null: false
@@ -238,6 +240,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_22_170000) do
     t.datetime "updated_at", null: false
     t.index ["account_id", "entry_date"], name: "index_financial_entries_on_account_id_and_entry_date"
     t.index ["account_id"], name: "index_financial_entries_on_account_id"
+    t.index ["budget_period_id"], name: "index_financial_entries_on_budget_period_id"
+    t.index ["category_id"], name: "index_financial_entries_on_category_id"
     t.index ["counterparty_financial_account_id"], name: "index_financial_entries_on_counterparty_financial_account_id"
     t.index ["counterparty_financial_liability_id"], name: "index_financial_entries_on_counterparty_financial_liability_id"
     t.index ["entry_type"], name: "index_financial_entries_on_entry_type"
@@ -589,6 +593,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_22_170000) do
   add_foreign_key "expenses", "planned_expenses"
   add_foreign_key "financial_accounts", "accounts"
   add_foreign_key "financial_entries", "accounts"
+  add_foreign_key "financial_entries", "budget_periods"
+  add_foreign_key "financial_entries", "categories"
   add_foreign_key "financial_entries", "expenses"
   add_foreign_key "financial_entries", "financial_accounts"
   add_foreign_key "financial_entries", "financial_accounts", column: "counterparty_financial_account_id"
