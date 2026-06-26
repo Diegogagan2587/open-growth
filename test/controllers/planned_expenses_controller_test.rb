@@ -6,6 +6,14 @@ class PlannedExpensesControllerTest < ActionDispatch::IntegrationTest
     @account = accounts(:one)
     @income_event = income_events(:one)
     @category = categories(:one)
+    @budget_period = BudgetPeriod.create!(
+      name: "Planned Expense Test Period",
+      start_date: Date.current.beginning_of_month,
+      end_date: Date.current.end_of_month,
+      total_amount: 2000,
+      account: @account
+    )
+    @income_event.update!(budget_period: @budget_period)
 
     @source_account = Financial::Asset.create!(
       name: "Controller Checking",
