@@ -272,7 +272,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_equal destination_liability.id, entry.financial_liability_id
   end
 
-  test "index filters expenses by asset account on source or counterparty side" do
+  test "index filters expenses by asset account and excludes transfers" do
     sign_in
 
     source_match = Financial::Entry.create!(
@@ -315,11 +315,11 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "option[value='asset:#{@asset_a.id}'][selected]"
     assert_includes response.body, source_match.description
-    assert_includes response.body, counterparty_match.description
+    assert_not_includes response.body, counterparty_match.description
     assert_not_includes response.body, non_match.description
   end
 
-  test "index filters expenses by liability account on source or counterparty side" do
+  test "index filters expenses by liability account and excludes liability payments" do
     sign_in
 
     source_match = Financial::Entry.create!(
@@ -361,7 +361,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, source_match.description
-    assert_includes response.body, counterparty_match.description
+    assert_not_includes response.body, counterparty_match.description
     assert_not_includes response.body, non_match.description
   end
 
