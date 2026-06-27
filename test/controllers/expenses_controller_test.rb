@@ -92,7 +92,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       opening_balance: 0
     )
 
-    assert_difference("Expense.count", 1) do
+    assert_difference("Financial::Entry.count", 1) do
       post income_event_direct_expenses_path(@income_event), params: {
         expense: {
           amount: 48.75,
