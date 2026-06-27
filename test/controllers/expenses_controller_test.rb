@@ -280,7 +280,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
   test "index filters expenses by asset account on source or counterparty side" do
     sign_in
 
-    source_match = Expense.create!(
+    source_match = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
@@ -291,7 +291,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       amount: 10,
       description: "source match"
     )
-    counterparty_match = Expense.create!(
+    counterparty_match = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
@@ -303,7 +303,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       amount: 20,
       description: "counterparty match"
     )
-    non_match = Expense.create!(
+    non_match = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
@@ -327,7 +327,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
   test "index filters expenses by liability account on source or counterparty side" do
     sign_in
 
-    source_match = Expense.create!(
+    source_match = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
@@ -338,7 +338,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       amount: 15,
       description: "liability source match"
     )
-    counterparty_match = Expense.create!(
+    counterparty_match = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
@@ -349,7 +349,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       amount: 25,
       description: "liability counterparty match"
     )
-    non_match = Expense.create!(
+    non_match = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
@@ -372,7 +372,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
   test "index composes account filter with date category and description filters" do
     sign_in
 
-    match = Expense.create!(
+    match = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
@@ -383,7 +383,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       amount: 22,
       description: "target lunch"
     )
-    wrong_description = Expense.create!(
+    wrong_description = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
@@ -394,7 +394,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       amount: 23,
       description: "other text"
     )
-    wrong_account = Expense.create!(
+    wrong_account = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
@@ -423,7 +423,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
   test "index ignores malformed account_ref" do
     sign_in
 
-    first = Expense.create!(
+    first = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
@@ -434,7 +434,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       amount: 11,
       description: "first expense"
     )
-    second = Expense.create!(
+    second = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
