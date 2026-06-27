@@ -170,6 +170,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       financial_account: financial_account,
       expense: expense,
       income_event: @income_event,
+      category: @category,
+      budget_period: @budget_period,
       entry_type: "outflow",
       entry_date: expense.date,
       amount: expense.amount,
