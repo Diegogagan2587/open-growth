@@ -247,7 +247,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       description: expense.description
     )
 
-    patch expense_path(expense), params: {
+    patch expense_path(entry), params: {
       expense: {
         date: Date.current + 1.day,
         amount: 275.40,
