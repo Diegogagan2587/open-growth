@@ -1,6 +1,8 @@
 class Financial::ExpensesController < ApplicationController
   include Financial::AccountReferenceFiltering
 
+  EXPENSE_ENTRY_TYPES = %w[outflow liability_charge ].freeze
+
   before_action :set_budget_period, only: [ :new, :create ]
   before_action :set_income_event_context, only: [ :quick_new, :quick_create ]
   before_action :set_expense, only: %i[ show edit update destroy ]
