@@ -339,7 +339,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_a,
-      counterparty_financial_liability: @liability_a,
+      financial_liability: @liability_a,
       entry_date: Date.current,
       entry_type: "liability_payment",
       amount: 25,
