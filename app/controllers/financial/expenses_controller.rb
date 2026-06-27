@@ -9,7 +9,7 @@ class Financial::ExpensesController < ApplicationController
 
 
   def index
-    @expenses = Financial::Entry.for_account(Current.account).where(entry_type: %w[outflow liability_charge ])
+    @expenses = Financial::Entry.for_account(Current.account).where(entry_type: EXPENSE_ENTRY_TYPES)
     @expenses = apply_account_ref_filter(@expenses)
     @expenses = @expenses.where("entry_date >= ?", params[:date_from]) if params[:date_from].present?
     @expenses = @expenses.where("entry_date <= ?", params[:date_to])   if params[:date_to].present?
@@ -152,7 +152,7 @@ class Financial::ExpensesController < ApplicationController
     def set_expense
       id = params.expect(:id)
       scope = Financial::Entry.for_account(Current.account)
-        .where(entry_type: %w[outflow liability_charge])
+        .where(entry_type: EXPENSE_ENTRY_TYPES)
       legacy_expense = Expense.for_account(Current.account).find_by(id: id)
       @expense = legacy_expense&.financial_entry || scope.find_by(expense_id: id) || scope.find_by(id: id)
       raise ActiveRecord::RecordNotFound if @expense.blank?
