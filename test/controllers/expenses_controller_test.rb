@@ -105,10 +105,10 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    expense = Expense.order(:created_at).last
-    assert_equal @income_event.id, expense.income_event_id
-    assert_equal @budget_period.id, expense.budget_period_id
-    assert_equal @account.id, expense.account_id
+    entry = Financial::Entry.order(:created_at).last
+    assert_equal @income_event.id, entry.income_event_id
+    assert_equal @budget_period.id, entry.budget_period_id
+    assert_equal @account.id, entry.account_id
     assert_redirected_to income_event_path(@income_event)
   end
 
