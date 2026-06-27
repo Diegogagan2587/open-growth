@@ -286,7 +286,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_a,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 10,
       description: "source match"
     )
@@ -297,7 +298,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       income_event: @income_event,
       financial_account: @asset_b,
       counterparty_financial_account: @asset_a,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "transfer",
       amount: 20,
       description: "counterparty match"
     )
@@ -307,7 +309,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_b,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 30,
       description: "non match"
     )
@@ -330,7 +333,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       budget_period: @budget_period,
       income_event: @income_event,
       financial_liability: @liability_a,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "liability_charge",
       amount: 15,
       description: "liability source match"
     )
@@ -351,7 +355,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_a,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 35,
       description: "liability non match"
     )
@@ -373,7 +378,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_a,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 22,
       description: "target lunch"
     )
@@ -383,7 +389,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_a,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 23,
       description: "other text"
     )
@@ -393,7 +400,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_b,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 24,
       description: "target dinner"
     )
@@ -421,7 +429,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_a,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 11,
       description: "first expense"
     )
@@ -431,7 +440,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_b,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 12,
       description: "second expense"
     )
