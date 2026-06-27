@@ -260,15 +260,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to expense_path(expense)
-
-    expense.reload
+    assert_redirected_to expense_path(entry)
     entry.reload
-
-    assert_equal 275.40, expense.amount.to_f
-    assert_equal "Updated payment", expense.description
-    assert_equal second_income_event.id, expense.income_event_id
-    assert_equal destination_liability.id, expense.counterparty_financial_liability_id
 
     assert_equal 275.40, entry.amount.to_f
     assert_equal Date.current + 1.day, entry.entry_date
