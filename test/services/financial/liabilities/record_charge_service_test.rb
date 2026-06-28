@@ -31,9 +31,9 @@ class Financial::Liabilities::RecordChargeServiceTest < ActiveSupport::TestCase
     Current.account = nil
   end
 
-  test "creates expense and liability_charge entry" do
+  test "creates liability_charge entry without creating expense" do
     result = Financial::Liabilities::RecordChargeService.call(
-      liability: @liability,
+      liability: @liability, # Liability Account
       amount: 50,
       description: "Coca Cola",
       entry_date: Date.current,
@@ -42,8 +42,10 @@ class Financial::Liabilities::RecordChargeServiceTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_equal 1, Expense.for_account(@account).count
+    assert_equal 0, Expense.for_account(@account).count
     assert_equal 1, Financial::Entry.for_account(@account).where(entry_type: "liability_charge").count
+    assert_equal @category.id, result.entry.category_id
+    assert_equal @budget_period.id, result.entry.budget_period_id
     assert_equal 50.to_d, @liability.reload.current_balance
   end
 

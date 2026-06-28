@@ -92,7 +92,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       opening_balance: 0
     )
 
-    assert_difference("Expense.count", 1) do
+    assert_difference("Financial::Entry.count", 1) do
       post income_event_direct_expenses_path(@income_event), params: {
         expense: {
           amount: 48.75,
@@ -105,10 +105,10 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    expense = Expense.order(:created_at).last
-    assert_equal @income_event.id, expense.income_event_id
-    assert_equal @budget_period.id, expense.budget_period_id
-    assert_equal @account.id, expense.account_id
+    entry = Financial::Entry.order(:created_at).last
+    assert_equal @income_event.id, entry.income_event_id
+    assert_equal @budget_period.id, entry.budget_period_id
+    assert_equal @account.id, entry.account_id
     assert_redirected_to income_event_path(@income_event)
   end
 
@@ -170,6 +170,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       financial_account: financial_account,
       expense: expense,
       income_event: @income_event,
+      category: @category,
+      budget_period: @budget_period,
       entry_type: "outflow",
       entry_date: expense.date,
       amount: expense.amount,
@@ -237,13 +239,15 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       financial_account: source_asset,
       expense: expense,
       income_event: @income_event,
+      category: @category,
+      budget_period: @budget_period,
       entry_type: "outflow",
       entry_date: expense.date,
       amount: expense.amount,
       description: expense.description
     )
 
-    patch expense_path(expense), params: {
+    patch expense_path(entry), params: {
       expense: {
         date: Date.current + 1.day,
         amount: 275.40,
@@ -256,15 +260,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to expense_path(expense)
-
-    expense.reload
+    assert_redirected_to expense_path(entry)
     entry.reload
-
-    assert_equal 275.40, expense.amount.to_f
-    assert_equal "Updated payment", expense.description
-    assert_equal second_income_event.id, expense.income_event_id
-    assert_equal destination_liability.id, expense.counterparty_financial_liability_id
 
     assert_equal 275.40, entry.amount.to_f
     assert_equal Date.current + 1.day, entry.entry_date
@@ -275,37 +272,40 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_equal destination_liability.id, entry.financial_liability_id
   end
 
-  test "index filters expenses by asset account on source or counterparty side" do
+  test "index filters expenses by asset account and excludes transfers" do
     sign_in
 
-    source_match = Expense.create!(
+    source_match = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_a,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 10,
       description: "source match"
     )
-    counterparty_match = Expense.create!(
+    counterparty_match = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_b,
       counterparty_financial_account: @asset_a,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "transfer",
       amount: 20,
       description: "counterparty match"
     )
-    non_match = Expense.create!(
+    non_match = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_b,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 30,
       description: "non match"
     )
@@ -315,41 +315,44 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "option[value='asset:#{@asset_a.id}'][selected]"
     assert_includes response.body, source_match.description
-    assert_includes response.body, counterparty_match.description
+    assert_not_includes response.body, counterparty_match.description
     assert_not_includes response.body, non_match.description
   end
 
-  test "index filters expenses by liability account on source or counterparty side" do
+  test "index filters expenses by liability account and excludes liability payments" do
     sign_in
 
-    source_match = Expense.create!(
+    source_match = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
       income_event: @income_event,
       financial_liability: @liability_a,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "liability_charge",
       amount: 15,
       description: "liability source match"
     )
-    counterparty_match = Expense.create!(
+    counterparty_match = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_a,
-      counterparty_financial_liability: @liability_a,
-      date: Date.current,
+      financial_liability: @liability_a,
+      entry_date: Date.current,
+      entry_type: "liability_payment",
       amount: 25,
       description: "liability counterparty match"
     )
-    non_match = Expense.create!(
+    non_match = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_a,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 35,
       description: "liability non match"
     )
@@ -358,40 +361,43 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, source_match.description
-    assert_includes response.body, counterparty_match.description
+    assert_not_includes response.body, counterparty_match.description
     assert_not_includes response.body, non_match.description
   end
 
   test "index composes account filter with date category and description filters" do
     sign_in
 
-    match = Expense.create!(
+    match = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_a,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 22,
       description: "target lunch"
     )
-    wrong_description = Expense.create!(
+    wrong_description = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_a,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 23,
       description: "other text"
     )
-    wrong_account = Expense.create!(
+    wrong_account = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_b,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 24,
       description: "target dinner"
     )
@@ -413,23 +419,25 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
   test "index ignores malformed account_ref" do
     sign_in
 
-    first = Expense.create!(
+    first = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_a,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 11,
       description: "first expense"
     )
-    second = Expense.create!(
+    second = Financial::Entry.create!(
       account: @account,
       category: @category,
       budget_period: @budget_period,
       income_event: @income_event,
       financial_account: @asset_b,
-      date: Date.current,
+      entry_date: Date.current,
+      entry_type: "outflow",
       amount: 12,
       description: "second expense"
     )

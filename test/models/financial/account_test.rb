@@ -34,7 +34,8 @@ class Financial::AssetTest < ActiveSupport::TestCase
       entry_type: "outflow",
       entry_date: Date.current,
       amount: 20,
-      description: "Purchase"
+      description: "Purchase",
+      category: Category.first
     )
 
     assert_equal 130.to_d, financial_account.current_balance

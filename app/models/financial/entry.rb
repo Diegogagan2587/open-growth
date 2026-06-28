@@ -4,6 +4,8 @@ class Financial::Entry < ApplicationRecord
   ENTRY_TYPES = %w[inflow outflow transfer liability_charge liability_payment loan_disbursement adjustment].freeze
 
   belongs_to :account, class_name: "::Account"
+  belongs_to :category, optional: true
+  belongs_to :budget_period, optional: true
   belongs_to :financial_account, class_name: "Financial::Asset", optional: true
   belongs_to :counterparty_financial_account, class_name: "Financial::Asset", optional: true
   belongs_to :financial_liability, class_name: "Financial::Liability", optional: true
@@ -21,6 +23,7 @@ class Financial::Entry < ApplicationRecord
   validates :entry_date, presence: true
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :description, presence: true
+  validates :category, presence: true, if: :classification_required?
 
   validate :required_links_by_type
   validate :associations_belong_to_same_account
@@ -36,6 +39,36 @@ class Financial::Entry < ApplicationRecord
     else
       0.to_d
     end
+  end
+
+  def inflow?
+    entry_type == "inflow"
+  end
+
+  def classification_required?
+    entry_type.in?(%w[outflow liability_charge])
+  end
+
+  def date
+    entry_date
+  end
+
+  def date=(value)
+    self.entry_date = value
+  end
+
+  def source_selection
+    return "asset:#{financial_account_id}" if financial_account_id.present?
+    return "liability:#{financial_liability_id}" if financial_liability_id.present?
+
+    nil
+  end
+
+  def destination_selection
+    return "asset:#{counterparty_financial_account_id}" if counterparty_financial_account_id.present?
+    return "liability:#{financial_liability_id}" if entry_type == "liability_payment" && financial_liability_id.present?
+
+    nil
   end
 
   def account_delta_for(financial_account_id)

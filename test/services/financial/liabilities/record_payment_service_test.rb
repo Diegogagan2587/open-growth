@@ -27,7 +27,8 @@ class Financial::Liabilities::RecordPaymentServiceTest < ActiveSupport::TestCase
       entry_type: "liability_charge",
       entry_date: Date.current,
       amount: 50,
-      description: "Initial charge"
+      description: "Initial charge",
+      category: Category.first
     )
   end
 

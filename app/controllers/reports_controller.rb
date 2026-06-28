@@ -27,15 +27,15 @@ class ReportsController < ApplicationController
     @date_from, @date_to = @date_to, @date_from if @date_from > @date_to
     range = @date_from..@date_to
 
-    expenses = Expense.for_account(Current.account).where(date: range)
+    expenses = Financial::Entry.for_account(Current.account).where(entry_date: range, entry_type: %w[outflow liability_charge ])
 
     # Expenses by month (labels and values for Chart.js)
-    by_month = expenses.group("DATE_TRUNC('month', date)").order(Arel.sql("DATE_TRUNC('month', date)")).sum(:amount)
+    by_month = expenses.group("DATE_TRUNC('month', entry_date)").order(Arel.sql("DATE_TRUNC('month', entry_date)")).sum(:amount)
     @expenses_by_month_labels = by_month.keys.map { |d| I18n.l(d.to_date, format: "%b %Y") }
     @expenses_by_month_values = by_month.values.map(&:to_f)
 
     # Expenses by category (con id para color estable por categoría)
-    by_category = expenses.joins(:category).group("categories.id", "categories.name").order(Arel.sql("SUM(expenses.amount) DESC")).sum(:amount)
+    by_category = expenses.joins(:category).group("categories.id", "categories.name").order(Arel.sql("SUM(financial_entries.amount) DESC")).sum(:amount)
     @expenses_by_category_labels = by_category.keys.map { |(_, name)| name }
     @expenses_by_category_values = by_category.values.map(&:to_f)
     @expenses_by_category_ids = by_category.keys.map { |(id, _)| id }
@@ -83,8 +83,8 @@ class ReportsController < ApplicationController
     @period = "month" unless ReportPeriodBuckets::PERIODS.include?(@period)
     @buckets = report_buckets(date_from: @date_from, date_to: @date_to, period: @period)
 
-    expenses = Expense.for_account(Current.account).where(date: @date_from..@date_to)
-    group_sql = report_period_group_sql(@period)
+    expenses = Financial::Entry.for_account(Current.account).where(entry_date: @date_from..@date_to, entry_type: %w[outflow liability_charge])
+    group_sql = report_period_group_sql(@period, date_column: "entry_date")
     sums = expenses.group(group_sql).sum(:amount)
 
     @buckets.each do |b|
@@ -113,7 +113,7 @@ class ReportsController < ApplicationController
     report_set_date_range
     @period = params[:period].presence || "none"
     @period = "none" unless @period == "none" || ReportPeriodBuckets::PERIODS.include?(@period)
-    expenses = Expense.for_account(Current.account).where(date: @date_from..@date_to).joins(:category)
+    expenses = Financial::Entry.for_account(Current.account).where(entry_date: @date_from..@date_to, entry_type: %w[outflow liability_charge]).joins(:category)
 
     if @period == "none"
       by_cat = expenses.group("categories.id", "categories.name").sum(:amount)
@@ -125,7 +125,7 @@ class ReportsController < ApplicationController
     else
       @buckets = report_buckets(date_from: @date_from, date_to: @date_to, period: @period)
       @period_labels = @buckets.map { |b| b[:label] }
-      group_sql = report_period_group_sql(@period)
+      group_sql = report_period_group_sql(@period, date_column: "entry_date")
       # (bucket_key, category_id, category_name) -> sum
       rows = expenses.group(group_sql, "categories.id", "categories.name").sum(:amount)
       cat_data = {}
@@ -156,8 +156,8 @@ class ReportsController < ApplicationController
     @buckets = report_buckets(date_from: @date_from, date_to: @date_to, period: @period)
     @period_labels = @buckets.map { |b| b[:label] }
 
-    expenses = Expense.for_account(Current.account).where(date: @date_from..@date_to).joins(:category)
-    group_sql = report_period_group_sql(@period)
+    expenses = Financial::Entry.for_account(Current.account).where(entry_date: @date_from..@date_to, entry_type: %w[outflow liability_charge]).joins(:category)
+    group_sql = report_period_group_sql(@period, date_column: "entry_date")
     rows = expenses.group(group_sql, "categories.id", "categories.name").sum(:amount)
 
     # Per category: array of amounts in bucket order; and total

@@ -11,6 +11,7 @@ class IncomeEvent < ApplicationRecord
   has_many :planned_expenses, dependent: :destroy
   has_many :originated_planned_expenses, class_name: "PlannedExpense", foreign_key: :origin_income_event_id, dependent: :nullify
   has_many :expenses, dependent: :nullify
+  has_many :financial_entries, class_name: "Financial::Entry", dependent: :nullify
   has_many :loan_payment_schedules, foreign_key: :loan_id, dependent: :destroy
   has_one :loan_disbursement_entry, -> { where(entry_type: "loan_disbursement") }, class_name: "Financial::Entry", inverse_of: :income_event
   has_one :regular_income_entry, -> { where(entry_type: "inflow", expense_id: nil, planned_expense_id: nil) }, class_name: "Financial::Entry", inverse_of: :income_event
@@ -58,14 +59,14 @@ class IncomeEvent < ApplicationRecord
     # 2. Expenses directly assigned (without a planned_expense_id)
     # Note: Expenses created from planned expenses (with planned_expense_id) are NOT counted
     # to avoid double-counting, as they're already represented by the planned expense
-    planned_expenses.sum(:amount) + expenses.where(planned_expense_id: nil).sum(:amount)
+    planned_expenses.sum(:amount) + financial_entries.where(planned_expense_id: nil, entry_type: %w[outflow liability_charge]).sum(:amount)
   end
 
   def total_spent
     return loan_total_spent if loan?
 
     # Total of all expenses (both from planned and direct)
-    expenses.sum(:amount)
+    financial_entries.where(entry_type: %w[outflow liability_charge]).sum(:amount)
   end
 
   def remaining_budget

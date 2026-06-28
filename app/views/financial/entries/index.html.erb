@@ -4,6 +4,22 @@
 
 <%= form_with url: finance_financial_entries_path, method: :get, local: true, class: "mb-4 flex flex-col sm:flex-row sm:items-end gap-3" do |f| %>
   <div class="flex flex-col gap-1">
+    <label for="date_from" class="text-sm font-medium text-foreground">Date from</label>
+    <%= f.date_field :date_from, value: params[:date_from], class: "rounded border border-input px-3 py-2 text-sm" %>
+  </div>
+  <div class="flex flex-col gap-1">
+    <label for="date_to" class="text-sm font-medium text-foreground">Date to</label>
+    <%= f.date_field :date_to, value: params[:date_to], class: "rounded border border-input px-3 py-2 text-sm" %>
+  </div>
+  <div class="flex flex-col gap-1">
+    <label for="category_id" class="text-sm font-medium text-foreground">Category</label>
+    <%= f.select :category_id, @categories.pluck(:name, :id), { include_blank: "All categories", selected: params[:category_id] }, class: "rounded border border-input px-3 py-2 text-sm" %>
+  </div>
+  <div class="flex flex-col gap-1">
+    <label for="q" class="text-sm font-medium text-foreground">Description</label>
+    <%= f.text_field :q, value: params[:q], class: "rounded border border-input px-3 py-2 text-sm" %>
+  </div>
+  <div class="flex flex-col gap-1">
     <label for="account_ref" class="text-sm font-medium text-foreground">Account</label>
     <%= f.select :account_ref, @account_filter_options, { include_blank: "All accounts", selected: @selected_account_ref }, id: "account_ref", class: "rounded border border-input px-3 py-2 text-sm" %>
   </div>

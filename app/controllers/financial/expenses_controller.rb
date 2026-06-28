@@ -1,6 +1,8 @@
 class Financial::ExpensesController < ApplicationController
   include Financial::AccountReferenceFiltering
 
+  EXPENSE_ENTRY_TYPES = %w[outflow liability_charge ].freeze
+
   before_action :set_budget_period, only: [ :new, :create ]
   before_action :set_income_event_context, only: [ :quick_new, :quick_create ]
   before_action :set_expense, only: %i[ show edit update destroy ]
@@ -9,10 +11,10 @@ class Financial::ExpensesController < ApplicationController
 
 
   def index
-    @expenses = Expense.for_account(Current.account).all
+    @expenses = Financial::Entry.for_account(Current.account).where(entry_type: EXPENSE_ENTRY_TYPES)
     @expenses = apply_account_ref_filter(@expenses)
-    @expenses = @expenses.where("date >= ?", params[:date_from]) if params[:date_from].present?
-    @expenses = @expenses.where("date <= ?", params[:date_to])   if params[:date_to].present?
+    @expenses = @expenses.where("entry_date >= ?", params[:date_from]) if params[:date_from].present?
+    @expenses = @expenses.where("entry_date <= ?", params[:date_to])   if params[:date_to].present?
     @expenses = @expenses.where(category_id: params[:category_id]) if params[:category_id].present?
     @expenses = @expenses.where("description ILIKE ?", "%#{params[:q]}%") if params[:q].present?
     @selected_account_ref = selected_account_ref
@@ -68,9 +70,9 @@ class Financial::ExpensesController < ApplicationController
       )
 
       if result.success?
-        target = @expense.budget_period || @expense
+        target = @expense.budget_period || finance_financial_entries_path
         format.html { redirect_to target, notice: t("expenses.flash.created") }
-        format.json { render :show, status: :created, location: @expense }
+        format.json { render json: { id: result.entry.id }, status: :created, location: finance_financial_entry_path(result.entry) }
       else
         # Load income events for form re-render on error
         @income_events = IncomeEvent.for_account(Current.account).order(expected_date: :desc)
@@ -107,46 +109,39 @@ class Financial::ExpensesController < ApplicationController
 
   # PATCH/PUT /expenses/1 or /expenses/1.json
   def update
-    old_income_event_id = @expense.income_event_id
     new_income_event_id = expense_params[:income_event_id]
+    attrs = mapped_entry_attributes(expense_params)
+
+    ActiveRecord::Base.transaction do
+      legacy_expense = Expense.for_account(Current.account).find_by(id: params[:id])
+      target_entry = legacy_expense&.financial_entry || @expense
+      target_entry.update!(attrs)
+      @expense = target_entry
+
+      if @expense.planned_expense.present? && new_income_event_id.present?
+        @expense.planned_expense.update!(income_event_id: new_income_event_id)
+      end
+    end
 
     respond_to do |format|
-      begin
-        ActiveRecord::Base.transaction do
-          @expense.update!(expense_params)
-
-          # Keep related financial entry fully in sync with edited expense.
-          if @expense.financial_entry.present?
-            @expense.financial_entry.update!(synced_financial_entry_attributes(@expense))
-          end
-
-          # If income_event_id changed and expense has a planned_expense, sync it
-          if @expense.planned_expense.present?
-            old_id = old_income_event_id.to_i rescue 0
-            new_id = new_income_event_id.present? ? new_income_event_id.to_i : 0
-
-            if new_id != old_id && new_income_event_id.present?
-              @expense.planned_expense.update!(income_event_id: new_income_event_id)
-            end
-          end
-        end
-
-        format.html { redirect_to @expense, notice: t("expenses.flash.updated") }
-        format.json { render :show, status: :ok, location: @expense }
-      rescue ActiveRecord::RecordInvalid => e
-        @expense.errors.add(:base, e.record.errors.full_messages.to_sentence) unless e.record == @expense
-        # Load income events for form re-render on error
-        @income_events = IncomeEvent.for_account(Current.account).order(expected_date: :desc)
-        load_finance_account_collections
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @expense.errors, status: :unprocessable_entity }
-      end
+      format.html { redirect_to expense_path(params[:id]), notice: t("expenses.flash.updated") }
+      format.json { render :show, status: :ok, location: expense_path(params[:id]) }
+    end
+  rescue ActiveRecord::RecordInvalid => e
+    @expense.errors.add(:base, e.record.errors.full_messages.to_sentence) unless e.record == @expense
+    @income_events = IncomeEvent.for_account(Current.account).order(expected_date: :desc)
+    load_finance_account_collections
+    respond_to do |format|
+      format.html { render :edit, status: :unprocessable_entity }
+      format.json { render json: @expense.errors, status: :unprocessable_entity }
     end
   end
 
   # DELETE /expenses/1 or /expenses/1.json
   def destroy
+    legacy_expense = Expense.for_account(Current.account).find_by(id: params[:id])
     @expense.destroy!
+    legacy_expense&.destroy! if legacy_expense.present?
 
     respond_to do |format|
       format.html { redirect_to expenses_path, status: :see_other, notice: t("expenses.flash.destroyed") }
@@ -157,7 +152,12 @@ class Financial::ExpensesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_expense
-      @expense = Expense.for_account(Current.account).find(params.expect(:id))
+      id = params.expect(:id)
+      scope = Financial::Entry.for_account(Current.account)
+        .where(entry_type: EXPENSE_ENTRY_TYPES)
+      legacy_expense = Expense.for_account(Current.account).find_by(id: id)
+      @expense = legacy_expense&.financial_entry || scope.find_by(expense_id: id) || scope.find_by(id: id)
+      raise ActiveRecord::RecordNotFound if @expense.blank?
     end
 
     # Only allow a list of trusted parameters through.
@@ -189,45 +189,53 @@ class Financial::ExpensesController < ApplicationController
       @financial_liabilities = Financial::Liability.for_account(Current.account).active.order(:name)
     end
 
-    def synced_financial_entry_attributes(expense)
+    def mapped_entry_attributes(params_hash)
+      source = params_hash[:source_selection].presence
+      destination = params_hash[:destination_selection].presence
+
+      if source.blank?
+        source = "asset:#{params_hash[:financial_account_id]}" if params_hash[:financial_account_id].present?
+        source = "liability:#{params_hash[:financial_liability_id]}" if params_hash[:financial_liability_id].present?
+      end
+
+      source_kind, source_id = source.to_s.split(":", 2)
+      destination_kind, destination_id = destination.to_s.split(":", 2)
+
       attrs = {
-        amount: expense.amount,
-        entry_date: expense.date,
-        description: expense.description,
-        income_event_id: expense.income_event_id
+        entry_date: params_hash[:date],
+        amount: params_hash[:amount],
+        description: params_hash[:description],
+        category_id: params_hash[:category_id],
+        budget_period_id: params_hash[:budget_period_id],
+        income_event_id: params_hash[:income_event_id],
+        counterparty_financial_account_id: nil,
+        counterparty_financial_liability_id: nil
       }
 
-      if expense.transfer?
-        attrs.merge!(
-          entry_type: "transfer",
-          financial_account_id: expense.financial_account_id,
-          counterparty_financial_account_id: expense.counterparty_financial_account_id,
-          financial_liability_id: nil,
-          counterparty_financial_liability_id: nil
-        )
-      elsif expense.debt_payment?
-        attrs.merge!(
-          entry_type: "liability_payment",
-          financial_account_id: expense.financial_account_id,
-          financial_liability_id: expense.counterparty_financial_liability_id,
-          counterparty_financial_account_id: nil,
-          counterparty_financial_liability_id: nil
-        )
-      elsif expense.financial_liability.present?
+      if source_kind == "liability"
         attrs.merge!(
           entry_type: "liability_charge",
           financial_account_id: nil,
-          counterparty_financial_account_id: nil,
-          financial_liability_id: expense.financial_liability_id,
-          counterparty_financial_liability_id: nil
+          financial_liability_id: source_id
+        )
+      elsif destination_kind == "asset"
+        attrs.merge!(
+          entry_type: "transfer",
+          financial_account_id: source_id,
+          counterparty_financial_account_id: destination_id,
+          financial_liability_id: nil
+        )
+      elsif destination_kind == "liability"
+        attrs.merge!(
+          entry_type: "liability_payment",
+          financial_account_id: source_id,
+          financial_liability_id: destination_id
         )
       else
         attrs.merge!(
           entry_type: "outflow",
-          financial_account_id: expense.financial_account_id,
-          counterparty_financial_account_id: nil,
-          financial_liability_id: nil,
-          counterparty_financial_liability_id: nil
+          financial_account_id: source_id,
+          financial_liability_id: nil
         )
       end
 

@@ -1,6 +1,6 @@
 module Financial::Liabilities
   class RecordChargeService
-    Result = Struct.new(:success?, :error_message, :expense, :entry, keyword_init: true)
+    Result = Struct.new(:success?, :error_message, :entry, keyword_init: true)
 
     def self.call(...)
       new(...).call
@@ -24,34 +24,19 @@ module Financial::Liabilities
       return failure("Category is required") if category.blank?
       return failure("Budget period is required") if budget_period.blank?
 
-      created_expense = nil
-      created_entry = nil
+      created_entry = Financial::Entry.create!(
+        account: Current.account,
+        financial_liability: liability,
+        income_event: income_event,
+        category: category,
+        budget_period: budget_period,
+        entry_type: "liability_charge",
+        entry_date: entry_date,
+        amount: amount,
+        description: description
+      )
 
-      ActiveRecord::Base.transaction do
-        created_expense = Expense.create!(
-          account: Current.account,
-          category: category,
-          budget_period: budget_period,
-          income_event: income_event,
-          financial_liability: liability,
-          date: entry_date,
-          amount: amount,
-          description: description
-        )
-
-        created_entry = Financial::Entry.create!(
-          account: Current.account,
-          financial_liability: liability,
-          expense: created_expense,
-          income_event: income_event,
-          entry_type: "liability_charge",
-          entry_date: entry_date,
-          amount: amount,
-          description: description
-        )
-      end
-
-      Result.new(success?: true, expense: created_expense, entry: created_entry)
+      Result.new(success?: true, entry: created_entry)
     rescue ActiveRecord::RecordInvalid => e
       failure(e.record.errors.full_messages.to_sentence)
     end

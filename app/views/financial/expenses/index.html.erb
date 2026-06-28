@@ -2,7 +2,7 @@
 
 <% content_for :title, t("expenses.index.title") %>
 
-<% ordered_expenses = @expenses.order(date: :desc) %>
+<% ordered_expenses = @expenses.order(entry_date: :desc) %>
 
 <div class="container mx-auto px-4 py-4">
   <h1 class="text-2xl font-bold mb-4"><%= t("expenses.index.title") %></h1>
@@ -59,7 +59,7 @@
         <% ordered_expenses.each do |expense| %>
           <tr class="border-t">
             <td class="px-4 py-2"><%= expense.date.strftime("%d %b %Y") %></td>
-            <td class="px-4 py-2"><%= expense.category.name %></td>
+            <td class="px-4 py-2"><%= expense.category&.name || t("expenses.index.unassigned") %></td>
             <td class="px-4 py-2"><%= expense.description %></td>
             <td class="px-4 py-2">
               <% if expense.budget_period %>
@@ -79,7 +79,7 @@
             <td class="px-4 py-2 text-center">
               <span class="inline-flex items-center gap-2">
                 <%= link_to t("shared.edit"), edit_expense_path(expense), class: "px-3 py-2 text-sm text-accent hover:underline rounded hover:bg-muted/35 min-h-[44px] inline-flex items-center", aria: { label: "#{t('shared.edit')} #{t('expenses.index.title')}" } %>
-                <%= link_to t("shared.delete"), expense, data: { turbo_method: :delete, turbo_confirm: t("expenses.index.confirm_destroy") }, class: "px-3 py-2 text-sm text-danger hover:underline rounded hover:bg-danger-soft min-h-[44px] inline-flex items-center", aria: { label: "#{t('shared.delete')} #{t('expenses.index.title')}" } %>
+                <%= link_to t("shared.delete"), expense_path(expense), data: { turbo_method: :delete, turbo_confirm: t("expenses.index.confirm_destroy") }, class: "px-3 py-2 text-sm text-danger hover:underline rounded hover:bg-danger-soft min-h-[44px] inline-flex items-center", aria: { label: "#{t('shared.delete')} #{t('expenses.index.title')}" } %>
               </span>
             </td>
           </tr>
@@ -102,11 +102,11 @@
     <% ordered_expenses.each do |expense| %>
       <div class="bg-card border rounded-lg p-4 shadow-sm">
         <div class="flex justify-between items-start gap-2 mb-2">
-          <span class="font-semibold text-foreground truncate flex-1"><%= expense.description.presence || expense.category.name %></span>
+          <span class="font-semibold text-foreground truncate flex-1"><%= expense.description.presence || expense.category&.name || t("expenses.index.unassigned") %></span>
           <span class="font-semibold text-foreground whitespace-nowrap"><%= number_to_currency(expense.amount) %></span>
         </div>
         <div class="text-sm text-muted-foreground mb-1">
-          <%= expense.date.strftime("%d %b %Y") %> · <%= expense.category.name %>
+          <%= expense.date.strftime("%d %b %Y") %> · <%= expense.category&.name || t("expenses.index.unassigned") %>
         </div>
         <div class="text-xs text-muted-foreground mb-3">
           <%= t("expenses.index.budget_period") %>: <%= expense.budget_period ? expense.budget_period.name : t("expenses.index.unassigned") %> ·
@@ -114,8 +114,8 @@
         </div>
         <div class="flex flex-wrap gap-2">
           <%= link_to t("shared.edit"), edit_expense_path(expense), class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 text-sm font-medium text-accent bg-muted/35 rounded hover:bg-muted", aria: { label: "#{t('shared.edit')} #{t('expenses.index.title')}" } %>
-          <%= link_to t("shared.delete"), expense, data: { turbo_method: :delete, turbo_confirm: t("expenses.index.confirm_destroy") }, class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 text-sm font-medium text-danger bg-danger-soft rounded hover:bg-danger-soft", aria: { label: "#{t('shared.delete')} #{t('expenses.index.title')}" } %>
-          <%= link_to t("shared.view"), expense, class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 text-sm font-medium text-muted-foreground bg-muted rounded hover:bg-muted", aria: { label: "#{t('shared.view')} #{t('expenses.index.title')}" } %>
+          <%= link_to t("shared.delete"), expense_path(expense), data: { turbo_method: :delete, turbo_confirm: t("expenses.index.confirm_destroy") }, class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 text-sm font-medium text-danger bg-danger-soft rounded hover:bg-danger-soft", aria: { label: "#{t('shared.delete')} #{t('expenses.index.title')}" } %>
+          <%= link_to t("shared.view"), expense_path(expense), class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 text-sm font-medium text-muted-foreground bg-muted rounded hover:bg-muted", aria: { label: "#{t('shared.view')} #{t('expenses.index.title')}" } %>
         </div>
       </div>
     <% end %>

@@ -34,26 +34,16 @@ class QuickAddController < ApplicationController
   def create_expense
     return render plain: "Not authenticated", status: :unauthorized unless Current.account
 
-    @expense = Current.account.expenses.new(expense_params)
-    @expense.budget_period = Current.account.budget_periods.first
-    if @expense.income_event_id.present?
-      valid_income_event = Current.account.income_events.exists?(id: @expense.income_event_id)
-      @expense.income_event_id = nil unless valid_income_event
-    end
-
     # Parse optional origin account (asset or liability)
     from_type, from_id = parse_financial_type(params.dig(:expense, :origin))
-    case from_type
-    when :asset
-      @expense.financial_account_id = from_id
-    when :liability
-      @expense.financial_liability_id = from_id
-    end
-
-    result = Expenses::RecordExecutionService.call(
-      expense: @expense,
-      financial_account_id: from_type == :asset ? from_id : nil,
-      financial_liability_id: from_type == :liability ? from_id : nil
+    result = Financial::Entries::RecordExpenseService.call(
+      account: Current.account,
+      amount: expense_params[:amount],
+      entry_date: expense_params[:date],
+      description: expense_params[:description],
+      category_id: expense_params[:category_id],
+      budget_period_id: Current.account.budget_periods.first&.id,
+      source_selection: from_type.present? ? "#{from_type}:#{from_id}" : nil
     )
 
     if result.success?
@@ -69,7 +59,7 @@ class QuickAddController < ApplicationController
     else
       respond_to do |format|
         format.turbo_stream { render turbo_stream: turbo_stream.replace("flash-container", partial: "shared/flash"), status: :unprocessable_entity }
-        format.html { render plain: @expense.errors.full_messages.join(", "), status: :unprocessable_entity }
+        format.html { render plain: result.error_message, status: :unprocessable_entity }
       end
     end
   end

@@ -44,7 +44,7 @@
                 <td class="px-4 py-3 text-sm text-foreground"><%= bucket[:label] %></td>
                 <td class="px-4 py-3 text-sm text-right font-medium"><%= number_to_currency(bucket[:total_expenses] || 0) %></td>
                 <td class="px-4 py-3 text-sm text-right">
-                  <%= link_to t("reports.view_expenses"), expenses_path(date_from: bucket[:date_from], date_to: bucket[:date_to]), class: "text-accent hover:underline" %>
+                  <%= link_to t("reports.view_expenses"), finance_financial_entries_path(date_from: bucket[:date_from], date_to: bucket[:date_to]), class: "text-accent hover:underline" %>
                 </td>
               </tr>
             <% end %>
@@ -58,7 +58,7 @@
               <span class="text-sm font-medium text-foreground"><%= bucket[:label] %></span>
               <span class="text-sm font-medium"><%= number_to_currency(bucket[:total_expenses] || 0) %></span>
             </div>
-            <%= link_to t("reports.view_expenses"), expenses_path(date_from: bucket[:date_from], date_to: bucket[:date_to]), class: "inline-block py-2 px-4 text-sm text-accent hover:underline" %>
+            <%= link_to t("reports.view_expenses"), finance_financial_entries_path(date_from: bucket[:date_from], date_to: bucket[:date_to]), class: "inline-block py-2 px-4 text-sm text-accent hover:underline" %>
           </div>
         <% end %>
       </div>

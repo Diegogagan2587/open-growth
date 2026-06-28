@@ -53,7 +53,8 @@ module Financial
         financial_account: @asset_a,
         entry_date: Date.current,
         amount: 10,
-        description: "entry source match"
+        description: "entry source match",
+        category: Category.first
       )
       counterparty_match = Financial::Entry.create!(
         account: @account,
@@ -70,7 +71,8 @@ module Financial
         financial_account: @asset_b,
         entry_date: Date.current,
         amount: 30,
-        description: "entry non match"
+        description: "entry non match",
+        category: Category.first
       )
 
       get finance_financial_entries_path, params: { account_ref: "asset:#{@asset_a.id}" }
@@ -91,7 +93,8 @@ module Financial
         financial_liability: @liability_a,
         entry_date: Date.current,
         amount: 40,
-        description: "liability source match"
+        description: "liability source match",
+        category: Category.first
       )
       counterparty_match = Financial::Entry.create!(
         account: @account,
@@ -107,7 +110,8 @@ module Financial
         financial_account: @asset_a,
         entry_date: Date.current,
         amount: 60,
-        description: "liability non match"
+        description: "liability non match",
+        category: Category.first
       )
 
       get finance_financial_entries_path, params: { account_ref: "liability:#{@liability_a.id}" }
@@ -127,7 +131,8 @@ module Financial
         financial_account: @asset_a,
         entry_date: Date.current,
         amount: 10,
-        description: "first visible entry"
+        description: "first visible entry",
+        category: Category.first
       )
       second = Financial::Entry.create!(
         account: @account,
@@ -135,7 +140,8 @@ module Financial
         financial_account: @asset_b,
         entry_date: Date.current,
         amount: 10,
-        description: "second visible entry"
+        description: "second visible entry",
+        category: Category.first
       )
 
       get finance_financial_entries_path, params: { account_ref: "bad-value" }

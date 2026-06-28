@@ -17,15 +17,14 @@ module PlannedExpenses
 
       ActiveRecord::Base.transaction do
         execution_date = resolved_entry_date
-        expense = build_or_update_expense_if_needed
-        entry = build_or_update_financial_entry!(expense: expense, execution_date: execution_date)
+        entry = build_or_update_financial_entry!(execution_date: execution_date)
 
         planned_expense.update!(status: status_after_execution) unless planned_expense.status == status_after_execution
         if PlannedExpense.final_status?(status_after_execution) && planned_expense.applied_on.blank?
           planned_expense.update!(applied_on: execution_date)
         end
 
-        Result.new(success?: true, planned_expense: planned_expense, expense: expense, entry: entry)
+        Result.new(success?: true, planned_expense: planned_expense, expense: nil, entry: entry)
       end
     rescue ActiveRecord::RecordInvalid => e
       failure(e.record.errors.full_messages.to_sentence)
@@ -35,40 +34,17 @@ module PlannedExpenses
 
     attr_reader :planned_expense, :entry_date, :target_status
 
-    def expense_attributes
-      {
-        date: resolved_entry_date,
-        amount: planned_expense.amount,
-        description: planned_expense.description,
-        category: planned_expense.category,
-        budget_period: planned_expense.income_event.budget_period,
-        income_event: planned_expense.income_event,
-        planned_expense: planned_expense,
-        account: planned_expense.account,
-        financial_account: planned_expense.financial_account,
-        financial_liability: planned_expense.financial_liability
-      }
-    end
 
-    def build_or_update_expense_if_needed
-      return nil if transaction_routing?
-      return nil if planned_expense.income_event.budget_period.blank?
-
-      expense = Expense.find_by(planned_expense_id: planned_expense.id) || planned_expense.expense || Expense.new
-      expense.assign_attributes(expense_attributes)
-      expense.save!
-      expense
-    end
-
-    def build_or_update_financial_entry!(expense:, execution_date:)
+    def build_or_update_financial_entry!(execution_date:)
       entry = Financial::Entry.find_by(planned_expense_id: planned_expense.id) || planned_expense.financial_entry || Financial::Entry.new
       entry.account = planned_expense.account
       entry.income_event = planned_expense.income_event
       entry.planned_expense = planned_expense
-      entry.expense = expense if expense.present?
       entry.entry_date = execution_date
       entry.amount = planned_expense.amount
       entry.description = planned_expense.description
+      entry.category = planned_expense.category
+      entry.budget_period = planned_expense.income_event&.budget_period || planned_expense.account.budget_periods.order(start_date: :desc).first
 
       if planned_expense.transfer?
         entry.entry_type = "transfer"

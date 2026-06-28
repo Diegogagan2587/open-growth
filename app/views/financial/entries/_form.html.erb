@@ -53,8 +53,13 @@
   </div>
 
   <div class="mb-4">
-    <%= form.label :expense_id, "Expense (optional)", class: "block text-sm font-medium text-foreground mb-1" %>
-    <%= form.collection_select :expense_id, @expenses, :id, :description, { include_blank: true }, { class: "border rounded px-3 py-2 w-full" } %>
+    <%= form.label :category_id, class: "block text-sm font-medium text-foreground mb-1" %>
+    <%= form.collection_select :category_id, @categories, :id, :name, { include_blank: true }, { class: "border rounded px-3 py-2 w-full" } %>
+  </div>
+
+  <div class="mb-4">
+    <%= form.label :budget_period_id, class: "block text-sm font-medium text-foreground mb-1" %>
+    <%= form.collection_select :budget_period_id, @budget_periods, :id, :name, { include_blank: true }, { class: "border rounded px-3 py-2 w-full" } %>
   </div>
 
   <div class="mb-4">
