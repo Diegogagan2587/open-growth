@@ -16,7 +16,10 @@ module Loans
       category = repayment_category
       return [] if category.blank?
 
-      existing = loan.planned_expenses.where.not(loan_installment_number: nil).index_by(&:loan_installment_number)
+      existing = loan.planned_expenses
+        .includes(:category, :financial_account, :financial_liability, :counterparty_financial_account)
+        .where.not(loan_installment_number: nil)
+        .index_by(&:loan_installment_number)
       active_installments = loan.loan_payment_schedules.active.ordered
       active_numbers = active_installments.map(&:installment_number)
 
