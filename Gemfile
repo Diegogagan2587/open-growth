@@ -49,7 +49,7 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
- # help finding n+1 
+  # help finding n+1
   gem "bullet"
 end
 
