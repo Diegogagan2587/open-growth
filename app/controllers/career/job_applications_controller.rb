@@ -10,7 +10,7 @@ module Career
       @needs_action = ActiveModel::Type::Boolean.new.cast(params[:needs_action])
 
       @job_applications = Career::JobApplication.for_account(Current.account)
-        .includes(:company, :tasks)
+        .includes(:company)
         .by_status(@status)
         .by_priority(@priority)
         .by_source(@source)
