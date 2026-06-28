@@ -2,6 +2,15 @@ require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
   config.after_initialize do
+    Bullet.enable        = true
+    Bullet.alert         = true
+    Bullet.bullet_logger = true
+    Bullet.console       = true
+    Bullet.rails_logger  = true
+    Bullet.add_footer    = true
+  end
+
+  config.after_initialize do
     require "socket"
     ip = Socket.ip_address_list.find { |addr| addr.ipv4_private? } &.ip_address
     port = ENV.fetch("PORT", 3000)
