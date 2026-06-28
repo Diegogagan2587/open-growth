@@ -51,7 +51,7 @@ module Projects
     private
 
     def set_doc
-      @doc = Doc.for_account(Current.account).includes(:links, :projects).find(params[:id])
+      @doc = Doc.for_account(Current.account).find(params[:id])
     rescue ActiveRecord::RecordNotFound
       redirect_to docs_path
     end
