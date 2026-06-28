@@ -41,8 +41,20 @@ class Financial::Entry < ApplicationRecord
     end
   end
 
+  def inflow?
+    entry_type == "inflow"
+  end
+
   def classification_required?
     entry_type.in?(%w[outflow liability_charge])
+  end
+
+  def date
+    entry_date
+  end
+
+  def date=(value)
+    self.entry_date = value
   end
 
   def source_selection
