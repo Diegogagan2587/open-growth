@@ -166,7 +166,7 @@ module Career
     private
 
     def set_job_application
-      @job_application = Career::JobApplication.for_account(Current.account).includes(:company).find(params[:id])
+      @job_application = Career::JobApplication.for_account(Current.account).find(params[:id])
     end
 
     def job_application_params
