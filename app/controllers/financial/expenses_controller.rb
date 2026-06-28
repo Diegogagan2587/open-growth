@@ -11,12 +11,14 @@ class Financial::ExpensesController < ApplicationController
 
 
   def index
-    @expenses = Financial::Entry.for_account(Current.account).where(entry_type: EXPENSE_ENTRY_TYPES)
+    @expenses = Financial::Entry.for_account(Current.account)
+      .includes(:category, :budget_period, :income_event)
+      .where(entry_type: EXPENSE_ENTRY_TYPES)
     @expenses = apply_account_ref_filter(@expenses)
     @expenses = @expenses.where("entry_date >= ?", params[:date_from]) if params[:date_from].present?
     @expenses = @expenses.where("entry_date <= ?", params[:date_to])   if params[:date_to].present?
     @expenses = @expenses.where(category_id: params[:category_id]) if params[:category_id].present?
-    @expenses = @expenses.where("description ILIKE ?", "%#{params[:q]}%") if params[:q].present?
+    @expenses = @expenses.where("financial_entries.description ILIKE ?", "%#{params[:q]}%") if params[:q].present?
     @selected_account_ref = selected_account_ref
     @categories = Category.for_account(Current.account).order(:name)
   end
