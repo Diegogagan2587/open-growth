@@ -96,4 +96,36 @@ class Financial::Entries::ExpenseBackfillServiceTest < ActiveSupport::TestCase
 
     assert_equal expense, entry.reload.expense
   end
+
+  test "creates and reuses fallback account for unrouted legacy expenses" do
+    first_expense = Expense.new(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      date: Date.current,
+      amount: 40,
+      description: "First legacy expense without any routing"
+    )
+    first_expense.save!(validate: false)
+    second_expense = Expense.new(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      date: Date.current,
+      amount: 50,
+      description: "Second legacy expense without any routing"
+    )
+    second_expense.save!(validate: false)
+
+    assert_difference("Financial::Asset.where(name: 'Legacy Expense Migration').count", 1) do
+      result = Financial::Entries::ExpenseBackfillService.call(scope: Expense.where(id: [ first_expense.id, second_expense.id ]))
+      assert_empty result.errors
+    end
+
+    fallback = Financial::Asset.find_by!(account: @account, name: "Legacy Expense Migration")
+    assert_equal fallback, first_expense.reload.financial_entry.financial_account
+    assert_equal fallback, second_expense.reload.financial_entry.financial_account
+  end
 end

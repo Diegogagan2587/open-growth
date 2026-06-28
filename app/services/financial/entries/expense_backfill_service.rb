@@ -49,7 +49,13 @@
 
       def existing_entry_for(expense)
         Financial::Entry.find_by(expense_id: expense.id) ||
-          Financial::Entry.find_by(planned_expense_id: expense.planned_expense_id)
+          existing_planned_expense_entry_for(expense)
+      end
+
+      def existing_planned_expense_entry_for(expense)
+        return if expense.planned_expense_id.blank?
+
+        Financial::Entry.find_by(planned_expense_id: expense.planned_expense_id)
       end
 
       def hydrate_entry(entry, expense)
@@ -65,7 +71,7 @@
           description: expense.description,
           category: expense.category,
           budget_period: expense.budget_period,
-          financial_account: expense.financial_account || expense.planned_expense&.financial_account,
+          financial_account: expense.financial_account || expense.planned_expense&.financial_account || fallback_account_for(expense),
           counterparty_financial_account: expense.counterparty_financial_account || expense.planned_expense&.counterparty_financial_account
         }
 
@@ -91,6 +97,21 @@
         return [ "liability_charge", expense.financial_liability || planned_expense&.financial_liability ] if expense.financial_liability.present? || planned_expense&.financial_liability.present?
 
         [ "outflow", nil ]
+      end
+
+      def fallback_account_for(expense)
+        return unless expense.financial_account.blank? && expense.financial_liability.blank?
+        return unless expense.planned_expense&.financial_account.blank? && expense.planned_expense&.financial_liability.blank?
+
+        legacy_fallback_account_for(expense.account)
+      end
+
+      def legacy_fallback_account_for(account)
+        Financial::Asset.find_or_create_by!(account: account, name: "Legacy Expense Migration") do |asset|
+          asset.account_type = "checking"
+          asset.status = "active"
+          asset.opening_balance = 0
+        end
       end
 
       def routing_details(expense)
