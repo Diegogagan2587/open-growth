@@ -60,8 +60,8 @@
           description: expense.description,
           category: expense.category,
           budget_period: expense.budget_period,
-          financial_account: expense.financial_account,
-          counterparty_financial_account: expense.counterparty_financial_account
+          financial_account: expense.financial_account || expense.planned_expense&.financial_account,
+          counterparty_financial_account: expense.counterparty_financial_account || expense.planned_expense&.counterparty_financial_account
         }
 
         entry_type, liability = mapped_type_and_liability(expense)
@@ -79,9 +79,11 @@
       end
 
       def mapped_type_and_liability(expense)
-        return [ "transfer", nil ] if expense.transfer?
-        return [ "liability_payment", expense.counterparty_financial_liability ] if expense.debt_payment?
-        return [ "liability_charge", expense.financial_liability ] if expense.financial_liability.present?
+        planned_expense = expense.planned_expense
+
+        return [ "transfer", nil ] if expense.transfer? || planned_expense&.transfer?
+        return [ "liability_payment", expense.counterparty_financial_liability || planned_expense&.financial_liability ] if expense.debt_payment? || planned_expense&.debt_payment?
+        return [ "liability_charge", expense.financial_liability || planned_expense&.financial_liability ] if expense.financial_liability.present? || planned_expense&.financial_liability.present?
 
         [ "outflow", nil ]
       end
