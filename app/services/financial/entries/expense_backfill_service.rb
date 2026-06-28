@@ -26,7 +26,7 @@
       attr_reader :scope, :created, :updated, :skipped, :errors
 
       def backfill_expense(expense)
-        entry = Financial::Entry.find_by(expense_id: expense.id)
+        entry = existing_entry_for(expense)
 
         if entry.present?
           changed = hydrate_entry(entry, expense)
@@ -44,7 +44,12 @@
         entry.save!
         @created += 1
       rescue ActiveRecord::RecordInvalid => e
-        @errors << "Expense ##{expense.id}: #{e.record.errors.full_messages.to_sentence}"
+        @errors << "Expense ##{expense.id}: #{e.record.errors.full_messages.to_sentence} (#{routing_details(expense)})"
+      end
+
+      def existing_entry_for(expense)
+        Financial::Entry.find_by(expense_id: expense.id) ||
+          Financial::Entry.find_by(planned_expense_id: expense.planned_expense_id)
       end
 
       def hydrate_entry(entry, expense)
@@ -86,5 +91,20 @@
         return [ "liability_charge", expense.financial_liability || planned_expense&.financial_liability ] if expense.financial_liability.present? || planned_expense&.financial_liability.present?
 
         [ "outflow", nil ]
+      end
+
+      def routing_details(expense)
+        planned_expense = expense.planned_expense
+
+        [
+          "expense financial_account_id=#{expense.financial_account_id || 'nil'}",
+          "expense financial_liability_id=#{expense.financial_liability_id || 'nil'}",
+          "expense counterparty_financial_account_id=#{expense.counterparty_financial_account_id || 'nil'}",
+          "expense counterparty_financial_liability_id=#{expense.counterparty_financial_liability_id || 'nil'}",
+          "planned_expense_id=#{expense.planned_expense_id || 'nil'}",
+          "planned financial_account_id=#{planned_expense&.financial_account_id || 'nil'}",
+          "planned financial_liability_id=#{planned_expense&.financial_liability_id || 'nil'}",
+          "planned counterparty_financial_account_id=#{planned_expense&.counterparty_financial_account_id || 'nil'}"
+        ].join(", ")
       end
     end

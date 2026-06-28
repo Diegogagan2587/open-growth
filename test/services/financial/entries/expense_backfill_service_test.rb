@@ -53,4 +53,47 @@ class Financial::Entries::ExpenseBackfillServiceTest < ActiveSupport::TestCase
     assert_equal "outflow", entry.entry_type
     assert_equal @asset, entry.financial_account
   end
+
+  test "links existing planned expense entry instead of creating duplicate" do
+    planned_expense = PlannedExpense.create!(
+      account: @account,
+      income_event: @income_event,
+      category: @category,
+      financial_account: @asset,
+      description: "Already executed",
+      amount: 30,
+      status: "paid"
+    )
+    entry = Financial::Entry.create!(
+      account: @account,
+      income_event: @income_event,
+      planned_expense: planned_expense,
+      category: @category,
+      budget_period: @budget_period,
+      financial_account: @asset,
+      entry_type: "outflow",
+      entry_date: Date.current,
+      amount: 30,
+      description: "Already executed"
+    )
+    expense = Expense.new(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      planned_expense: planned_expense,
+      date: Date.current,
+      amount: 30,
+      description: "Legacy expense without source"
+    )
+    expense.save!(validate: false)
+
+    assert_no_difference("Financial::Entry.count") do
+      result = Financial::Entries::ExpenseBackfillService.call(scope: Expense.where(id: expense.id))
+      assert_empty result.errors
+      assert_equal 1, result.updated
+    end
+
+    assert_equal expense, entry.reload.expense
+  end
 end
