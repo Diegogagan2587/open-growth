@@ -53,6 +53,33 @@ class IncomeEventsControllerTest < ActionDispatch::IntegrationTest
     Current.account = @account
   end
 
+  test "show renders entry backed direct expenses without category" do
+    sign_in
+    income_event = IncomeEvent.create!(
+      account: @account,
+      description: "Salary",
+      expected_date: Date.current,
+      expected_amount: 2000,
+      status: "pending"
+    )
+    entry = Financial::Entry.new(
+      account: @account,
+      income_event: income_event,
+      financial_account: @destination_asset,
+      entry_type: "outflow",
+      entry_date: Date.current,
+      amount: 25,
+      description: "Legacy uncategorized direct expense"
+    )
+    entry.save!(validate: false)
+
+    get income_event_path(income_event)
+
+    assert_response :success
+    assert_includes response.body, "Legacy uncategorized direct expense"
+    assert_includes response.body, I18n.t("expenses.index.unassigned")
+  end
+
   test "mark as received creates loan disbursement entry" do
     sign_in
 
