@@ -162,7 +162,13 @@ class Financial::ExpensesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def expense_params
-      params.expect(expense: [ :date, :amount, :description, :category_id, :budget_period_id, :income_event_id, :financial_account_id, :financial_liability_id, :source_selection, :destination_selection ])
+      # invokes expense_param_key as a temporary compatibility layer
+      # while we transition from legacy Expense model to Financial::Entry model
+      params.expect(expense_param_key => [ :date, :amount, :description, :category_id, :budget_period_id, :income_event_id, :financial_account_id, :financial_liability_id, :source_selection, :destination_selection ])
+    end
+
+    def expense_param_key
+      params[:financial_entry].present? ? :financial_entry : :expense
     end
 
     def set_budget_period
