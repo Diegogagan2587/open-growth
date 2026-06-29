@@ -47,7 +47,7 @@ es:
     log_out: "Cerrar sesión"
     menu_open: "Abrir menú"
     menu_close: "Cerrar menú"
-    incomes: "Ingresos"
+    incomes: "Planeacion de Ingresos"
 
   shared:
     view: "Ver"
