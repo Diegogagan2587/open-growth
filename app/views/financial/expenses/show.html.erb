@@ -15,7 +15,7 @@
       </div>
       <div>
         <p class="text-sm text-muted-foreground"><%= t("expenses.form.category") %></p>
-        <p class="font-semibold"><%= @expense.category.name %></p>
+        <p class="font-semibold"><%= @expense.category&.name || t("expenses.index.unassigned") %></p>
       </div>
       <div>
         <p class="text-sm text-muted-foreground"><%= t("expenses.index.description") %></p>
