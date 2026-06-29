@@ -1,5 +1,7 @@
 <% income_events_json = (@income_events || []).map { |ie| { id: ie.id, description: ie.description, expected_amount: ie.expected_amount.to_f, expected_date: ie.expected_date.iso8601 } }.to_json.html_safe %>
-<%= form_with model: [@budget_period, @expense].compact, local: true, class: "space-y-6", data: { controller: "expense-form", expense_form_income_events_value: income_events_json, expense_form_locale_value: I18n.locale.to_s } do |form| %>
+<% form_model = @expense.persisted? ? @expense : [@budget_period, @expense].compact %>
+<% form_url = expense_path(@expense) if @expense.persisted? %>
+<%= form_with model: form_model, scope: :expense, url: form_url, local: true, class: "space-y-6", data: { controller: "expense-form", expense_form_income_events_value: income_events_json, expense_form_locale_value: I18n.locale.to_s } do |form| %>
   <% if @expense.errors.any? %>
     <div class="bg-danger-soft border-l-4 border-red-500 text-danger p-4 rounded mb-6">
       <div class="flex">
