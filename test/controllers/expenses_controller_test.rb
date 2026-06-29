@@ -248,7 +248,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
     )
 
     patch expense_path(entry), params: {
-      expense: {
+      financial_entry: {
         date: Date.current + 1.day,
         amount: 275.40,
         description: "Updated payment",
@@ -270,6 +270,30 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "liability_payment", entry.entry_type
     assert_equal source_asset.id, entry.financial_account_id
     assert_equal destination_liability.id, entry.financial_liability_id
+  end
+
+  test "edit entry-backed expense submits expense params" do
+    sign_in
+
+    entry = Financial::Entry.create!(
+      account: @account,
+      category: @category,
+      budget_period: @budget_period,
+      income_event: @income_event,
+      financial_account: @asset_a,
+      entry_type: "outflow",
+      entry_date: Date.current,
+      amount: 45,
+      description: "Editable direct expense"
+    )
+
+    get edit_expense_path(entry)
+
+    assert_response :success
+    assert_select "form[action='#{expense_path(entry)}']"
+    assert_select "input[name='expense[amount]']"
+    assert_select "input[name='expense[date]']"
+    assert_select "input[name='expense[description]']"
   end
 
   test "index filters expenses by asset account and excludes transfers" do
