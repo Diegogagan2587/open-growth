@@ -312,7 +312,7 @@
           <div class="flex items-start justify-between mb-3">
             <div class="flex-1">
               <h3 class="font-semibold text-foreground mb-1"><%= expense.description %></h3>
-              <p class="text-sm text-muted-foreground"><%= expense.category.name %></p>
+              <p class="text-sm text-muted-foreground"><%= expense.category&.name || t("expenses.index.unassigned") %></p>
             </div>
             <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-success-soft text-success border border-success-soft">
               Spent
