@@ -38,7 +38,7 @@ en:
   nav:
     dashboard: "Dashboard"
     budgets: "Budgets"
-    expenses: "Expenses"
+    expenses: "Transactions"
     categories: "Categories"
     reports: "Reports"
     tasks: "Tasks"

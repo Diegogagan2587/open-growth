@@ -38,7 +38,7 @@ es:
   nav:
     dashboard: "Panel"
     budgets: "Presupuestos"
-    expenses: "Gastos"
+    expenses: "Transacciones"
     categories: "Categorías"
     reports: "Reportes"
     tasks: "Tareas"
