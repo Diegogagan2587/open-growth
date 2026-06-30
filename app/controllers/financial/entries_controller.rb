@@ -75,6 +75,14 @@ module Financial
       ])
     end
 
+    def filtered_entry_types
+      raw = params[:entry_type].presence
+      return if raw.blank?
+      return EXPENSE_ENTRY_TYPES if raw == "expenses"
+
+      Array(raw).select { |type| Financial::Entry::ENTRY_TYPES.include?(type)}
+    end
+
     def load_form_collections
       @financial_accounts = Financial::Asset.for_account(Current.account).order(:name)
       @financial_liabilities = Financial::Liability.for_account(Current.account).order(:name)
