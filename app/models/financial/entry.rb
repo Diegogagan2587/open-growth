@@ -46,6 +46,10 @@ class Financial::Entry < ApplicationRecord
     entry_type == "inflow"
   end
 
+  def expense?
+    entry_type.in?(EXPENSE_ENTRY_TYPES)
+  end
+
   def classification_required?
     entry_type.in?(%w[outflow liability_charge])
   end
