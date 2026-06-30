@@ -1,7 +1,8 @@
 class Financial::Entry < ApplicationRecord
   self.table_name = "financial_entries"
 
-  ENTRY_TYPES = %w[inflow outflow transfer liability_charge liability_payment loan_disbursement adjustment].freeze
+  ENTRY_TYPES         = %w[inflow outflow transfer liability_charge liability_payment loan_disbursement adjustment].freeze
+  EXPENSE_ENTRY_TYPES = %w[outflow liability_charge].freeze
 
   belongs_to :account, class_name: "::Account"
   belongs_to :category, optional: true
