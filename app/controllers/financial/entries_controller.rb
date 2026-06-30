@@ -25,6 +25,7 @@ module Financial
 
     def new
       @financial_entry = Financial::Entry.new(entry_date: Date.current)
+      @financial_entry.entry_type = "outflow" if params[:entry_type] == "expenses"
     end
 
     def create
