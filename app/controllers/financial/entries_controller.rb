@@ -66,6 +66,7 @@ module Financial
       params.expect(financial_entry: [
         :entry_type,
         :entry_date,
+        :date,
         :amount,
         :description,
         :notes,
@@ -73,8 +74,11 @@ module Financial
         :counterparty_financial_account_id,
         :financial_liability_id,
         :income_event_id,
+        :planned_expense_id,
         :category_id,
         :budget_period_id
+        :source_selection,
+        :destination_selection,
       ])
     end
 
