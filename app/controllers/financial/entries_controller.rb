@@ -90,6 +90,10 @@ module Financial
       Array(raw).select { |type| Financial::Entry::ENTRY_TYPES.include?(type)}
     end
 
+    def expense_style_params?(attrs)
+      attrs[:source_selection].present? || attrs[:destination_selection].present? || attrs[:date].present?
+    end
+
     def load_form_collections
       @financial_accounts = Financial::Asset.for_account(Current.account).order(:name)
       @financial_liabilities = Financial::Liability.for_account(Current.account).order(:name)
