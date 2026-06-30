@@ -75,7 +75,7 @@ module Financial
         category: Category.first
       )
 
-      get finance_financial_entries_path, params: { account_ref: "asset:#{@asset_a.id}" }
+      get finance_entries_path, params: { account_ref: "asset:#{@asset_a.id}" }
 
       assert_response :success
       assert_select "select[name='account_ref'] option[value='asset:#{@asset_a.id}'][selected]"
