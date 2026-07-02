@@ -19,6 +19,7 @@ class Account < ApplicationRecord
   has_many :career_companies, class_name: "Career::Company", dependent: :destroy
   has_many :career_job_applications, class_name: "Career::JobApplication", dependent: :destroy
   has_many :career_events, class_name: "Career::Event", dependent: :destroy
+  has_one :career_profile, class_name: "Career::Profile", dependent: :destroy
 
   validates :name, presence: true
 
