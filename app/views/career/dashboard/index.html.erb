@@ -5,6 +5,7 @@
       <p class="text-sm text-muted-foreground">Your pipeline and today's actions in one place.</p>
     </div>
     <div class="flex gap-2">
+      <%= link_to "Profile", career_profile_path, class: "inline-flex items-center justify-center rounded-md border border-input px-4 py-2" %>
       <%= link_to "All applications", career_job_applications_path, class: "inline-flex items-center justify-center rounded-md border border-input px-4 py-2" %>
       <%= link_to "New application", new_career_job_application_path, class: "inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-primary-foreground" %>
     </div>

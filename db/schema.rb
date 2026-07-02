@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_27_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_02_002000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -55,6 +55,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_27_120000) do
     t.decimal "total_amount", precision: 10, scale: 2
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_budget_periods_on_account_id"
+  end
+
+  create_table "career_carl_stories", force: :cascade do |t|
+    t.text "action"
+    t.text "behavioral_question", null: false
+    t.bigint "career_profile_id", null: false
+    t.text "context"
+    t.datetime "created_at", null: false
+    t.text "learning"
+    t.text "result"
+    t.datetime "updated_at", null: false
+    t.index ["career_profile_id"], name: "index_career_carl_stories_on_career_profile_id"
   end
 
   create_table "career_companies", force: :cascade do |t|
@@ -108,6 +120,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_27_120000) do
     t.index ["account_id", "status"], name: "index_career_job_applications_on_account_id_and_status"
     t.index ["account_id"], name: "index_career_job_applications_on_account_id"
     t.index ["career_company_id"], name: "index_career_job_applications_on_career_company_id"
+  end
+
+  create_table "career_profile_links", force: :cascade do |t|
+    t.bigint "career_profile_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.string "url", null: false
+    t.index ["career_profile_id"], name: "index_career_profile_links_on_career_profile_id"
+  end
+
+  create_table "career_profiles", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.text "bio"
+    t.text "cover_letter_snippet"
+    t.datetime "created_at", null: false
+    t.text "elevator_pitch"
+    t.string "email"
+    t.string "github_url"
+    t.string "headline"
+    t.string "linkedin_url"
+    t.string "location"
+    t.text "notes"
+    t.string "phone"
+    t.string "resume_url"
+    t.text "salary_preferences"
+    t.text "unique_selling_point"
+    t.datetime "updated_at", null: false
+    t.string "website_url"
+    t.index ["account_id"], name: "index_career_profiles_on_account_id", unique: true
   end
 
   create_table "categories", force: :cascade do |t|
@@ -565,11 +607,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_27_120000) do
   add_foreign_key "budget_line_items", "budget_periods"
   add_foreign_key "budget_line_items", "categories"
   add_foreign_key "budget_periods", "accounts"
+  add_foreign_key "career_carl_stories", "career_profiles"
   add_foreign_key "career_companies", "accounts"
   add_foreign_key "career_events", "accounts"
   add_foreign_key "career_events", "career_job_applications"
   add_foreign_key "career_job_applications", "accounts"
   add_foreign_key "career_job_applications", "career_companies"
+  add_foreign_key "career_profile_links", "career_profiles"
+  add_foreign_key "career_profiles", "accounts"
   add_foreign_key "categories", "accounts"
   add_foreign_key "doc_docs", "docs"
   add_foreign_key "doc_docs", "docs", column: "related_doc_id"

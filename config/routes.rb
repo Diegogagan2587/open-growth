@@ -131,6 +131,10 @@ Rails.application.routes.draw do
 
   namespace :career do
     root to: "dashboard#index"
+    resource :profile, only: [ :show, :edit, :update ] do
+      resources :links, controller: "profile_links", only: [ :create, :destroy ]
+      resources :carl_stories, only: [ :create, :edit, :update, :destroy ]
+    end
     resources :companies, only: [ :index, :create ]
     resources :job_applications do
       member do
