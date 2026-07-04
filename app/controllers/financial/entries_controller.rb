@@ -30,8 +30,8 @@ module Financial
     end
 
     def create
-      @financial_entry = Financial::Entry.for_account(Current.account).new(financial_entry_params)
-      @financial_entry.account = Current.account
+      attrs = permitted_expense_or_entry_params
+      attrs[:budget_period_id] ||= IncomeEvent.for_account(Current.account).find_by(id: attrs[:income_event_id])&.budget_period_id if attrs[:income_event_id].present?
 
       if @financial_entry.save
         redirect_to finance_financial_entry_path(@financial_entry), notice: "Entry created"
