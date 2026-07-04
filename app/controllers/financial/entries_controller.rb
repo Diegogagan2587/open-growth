@@ -72,7 +72,7 @@ module Financial
     end
 
     def update
-      if @financial_entry.update(financial_entry_params)
+      if @financial_entry.update(permitted_expense_or_entry_params)
         redirect_to finance_financial_entry_path(@financial_entry), notice: "Entry updated"
       else
         render :edit, status: :unprocessable_entity
@@ -90,7 +90,7 @@ module Financial
       @financial_entry = Financial::Entry.for_account(Current.account).find(params[:id])
     end
 
-    def financial_entry_params
+    def permitted_expense_or_entry_params
       params.expect(financial_entry: [
         :entry_type,
         :entry_date,
