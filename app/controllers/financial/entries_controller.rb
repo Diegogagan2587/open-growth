@@ -94,6 +94,23 @@ module Financial
       attrs[:source_selection].present? || attrs[:destination_selection].present? || attrs[:date].present?
     end
 
+    def entry_attributes(attrs)
+      attrs.slice(
+        :entry_type,
+        :entry_date,
+        :amount,
+        :description,
+        :notes,
+        :financial_account_id,
+        :counterparty_financial_account_id,
+        :financial_liability_id,
+        :income_event_id,
+        :planned_expense_id,
+        :category_id,
+        :budget_period_id
+      )
+    end
+
     def load_form_collections
       @financial_accounts = Financial::Asset.for_account(Current.account).order(:name)
       @financial_liabilities = Financial::Liability.for_account(Current.account).order(:name)
