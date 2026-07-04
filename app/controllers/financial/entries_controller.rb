@@ -90,6 +90,17 @@ module Financial
       Array(raw).select { |type| Financial::Entry::ENTRY_TYPES.include?(type)}
     end
 
+    def entry_attributes_from(attrs)
+      {
+        account: Current.account,
+        entry_date: attrs[:date] || attrs[:entry_date],
+        amount: attrs[:amount],
+        description: attrs[:description],
+        category_id: attrs[:category_id],
+        budget_period_id: attrs[:budget_period_id]
+      }
+    end
+
     def expense_style_params?(attrs)
       attrs[:source_selection].present? || attrs[:destination_selection].present? || attrs[:date].present?
     end
