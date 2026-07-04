@@ -44,6 +44,28 @@ module Financial
         end
         return
       end
+
+      result = Financial::Entries::RecordExpenseService.call(
+        account: Current.account,
+        amount: attrs[:amount],
+        entry_date: attrs[:date] || attrs[:entry_date],
+        description: attrs[:description],
+        category_id: attrs[:cateogry_id],
+        budget_period_id: attrs[:budget_period_id],
+        source_selection: attrs[:source_selection],
+        destination_selection: attrs[:destination_selection],
+        income_event_id: attrs[:income_event_id],
+        planned_expense_id: attrs[:planned_expense_id]
+
+      )
+      if result.success?
+        redirect_to finance_entry_path(result.entry), notice: "Entry created"
+      else
+        @financial_entry = Financial::Entry.new(entry_attributes_from(attrs))
+        @financial_entry.errors.add(:base, result.error_message)
+
+        render :new, status: :unprocessable_entity
+      end
     end
 
     def edit
