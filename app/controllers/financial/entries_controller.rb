@@ -33,10 +33,16 @@ module Financial
       attrs = permitted_expense_or_entry_params
       attrs[:budget_period_id] ||= IncomeEvent.for_account(Current.account).find_by(id: attrs[:income_event_id])&.budget_period_id if attrs[:income_event_id].present?
 
-      if @financial_entry.save
-        redirect_to finance_financial_entry_path(@financial_entry), notice: "Entry created"
-      else
-        render :new, status: :unprocessable_entity
+      unless expense_style_params(attrs)
+        @financial_entry = Financial::Entry.for_account(Current.account).new(entry_attributes(attrs))
+        @financial_entry.account = Current.account
+
+        if @financial_entry.save
+          redirect_to finance_entry_path(@financial_entry), notice: "Entry created"
+        else
+          render :new, status: :unprocessable_entity
+        end
+        return
       end
     end
 
