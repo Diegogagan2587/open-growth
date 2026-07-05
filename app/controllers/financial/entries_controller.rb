@@ -122,9 +122,9 @@ module Financial
         :income_event_id,
         :planned_expense_id,
         :category_id,
-        :budget_period_id
+        :budget_period_id,
         :source_selection,
-        :destination_selection,
+        :destination_selection
       ])
     end
 
