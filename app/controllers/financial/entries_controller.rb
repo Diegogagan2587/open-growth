@@ -56,7 +56,6 @@ module Financial
         destination_selection: attrs[:destination_selection],
         income_event_id: attrs[:income_event_id],
         planned_expense_id: attrs[:planned_expense_id]
-
       )
       if result.success?
         redirect_to finance_entry_path(result.entry), notice: "Entry created"
