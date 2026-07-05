@@ -33,7 +33,7 @@ module Financial
       attrs = permitted_expense_or_entry_params
       attrs[:budget_period_id] ||= IncomeEvent.for_account(Current.account).find_by(id: attrs[:income_event_id])&.budget_period_id if attrs[:income_event_id].present?
 
-      unless expense_style_params(attrs)
+      unless expense_style_params?(attrs)
         @financial_entry = Financial::Entry.for_account(Current.account).new(entry_attributes(attrs))
         @financial_entry.account = Current.account
 
@@ -50,7 +50,7 @@ module Financial
         amount: attrs[:amount],
         entry_date: attrs[:date] || attrs[:entry_date],
         description: attrs[:description],
-        category_id: attrs[:cateogry_id],
+        category_id: attrs[:category_id],
         budget_period_id: attrs[:budget_period_id],
         source_selection: attrs[:source_selection],
         destination_selection: attrs[:destination_selection],
