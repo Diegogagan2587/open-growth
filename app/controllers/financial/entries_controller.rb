@@ -160,6 +160,59 @@ module Financial
       )
     end
 
+    def mapped_entry_attributes(params_hash)
+      source = params_hash[:source_selection].presence
+      destination = params_hash[:destination_selection].presence
+
+      if source.blank?
+        source = "asset:#{params_hash[:financial_account_id]}" if params_hash[:financial_account_id].present?
+        source = "liability:#{params_hash[:financial_liability_id]}" if params_hash[:financial_liability_id].present?
+      end
+
+      source_kind, source_id = source.to_s.split(":", 2)
+      destination_kind, destination_id = destination.to_s.split(":", 2)
+
+      attrs = {
+        entry_date: params_hash[:date] || params_hash[:entry_date],
+        amount: params_hash[:amount],
+        description: params_hash[:description],
+        category_id: params_hash[:category_id],
+        budget_period_id: params_hash[:budget_period_id],
+        income_event_id: params_hash[:income_event_id],
+        counterparty_financial_account_id: nil,
+        counterparty_financial_liability_id: nil
+      }
+
+      if source_kind == "liability"
+        attrs.merge!(
+          entry_type: "liability_charge",
+          financial_account_id: nil,
+          financial_liability_id: source_id
+        )
+      elsif destination_kind == "asset"
+        attrs.merge!(
+          entry_type: "transfer",
+          financial_account_id: source_id,
+          counterparty_financial_account_id: destination_id,
+          financial_liability_id: nil
+        )
+      elsif destination_kind == "liability"
+        attrs.merge!(
+          entry_type: "liability_payment",
+          financial_account_id: source_id,
+          financial_liability_id: destination_id
+        )
+      else
+        attrs.merge!(
+          entry_type: "outflow",
+          financial_account_id: source_id,
+          financial_liability_id: nil
+        )
+      end
+
+      attrs
+    end
+
     def load_form_collections
       @financial_accounts = Financial::Asset.for_account(Current.account).order(:name)
       @financial_liabilities = Financial::Liability.for_account(Current.account).order(:name)
