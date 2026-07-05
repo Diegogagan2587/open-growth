@@ -10,12 +10,12 @@ module Financial
     before_action :load_categories, only: [ :index ]
 
     def index
-      @financial_entries = Financial::Entry.for_account(Current.account).by_date
+      @financial_entries = Financial::Entry.for_account(Current.account).includes(:category, :budget_period, :income_event).by_date
       @financial_entries = apply_account_ref_filter(@financial_entries)
       @financial_entries = @financial_entries.where("entry_date >= ?", params[:date_from]) if params[:date_from].present?
       @financial_entries = @financial_entries.where("entry_date <= ?", params[:date_to]) if params[:date_to].present?
       @financial_entries = @financial_entries.where(category_id: params[:category_id]) if params[:category_id].present?
-      @financial_entries = @financial_entries.where("description ILIKE ?", "%#{params[:q]}%") if params[:q].present?
+      @financial_entries = @financial_entries.where("financial_entries.description ILIKE ?", "%#{params[:q]}%") if params[:q].present?
       @financial_entries = @financial_entries.where(entry_type: filtered_entry_types) if filtered_entry_types.present?
       @selected_account_ref = selected_account_ref
     end
