@@ -72,10 +72,20 @@ module Financial
     end
 
     def update
-      if @financial_entry.update(permitted_expense_or_entry_params)
-        redirect_to finance_financial_entry_path(@financial_entry), notice: "Entry updated"
-      else
-        render :edit, status: :unprocessable_entity
+      attrs = permitted_expense_or_entry_params
+      ActiveRecord::Base.transaction do
+        @financial_entry.update!(expense_style_params?(attrs) ? mapped_entry_attributes(attrs) : entry_attributes(attrs))
+        if @financial_entry.planned_expense.present? && attrs[:income_event_id].present?
+          @financial_entry.planned_expense.update!(income_event_id: attrs[:income_event_id])
+        end
+      end
+
+      redirect_to finance_entry_path(@financial_entry), notice: "Entry updated"
+    rescue ActiveRecord::RecordInvalid => e
+      @financial_entry.errors.add(:base, e.record.errors.full_messages.to_sentence) unless e.record == @financial_entry
+      respond_to do |format|
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: @financial_entry.errors, status: :unprocessable_entity }
       end
     end
 
