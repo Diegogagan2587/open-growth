@@ -90,8 +90,17 @@ module Financial
     end
 
     def destroy
-      @financial_entry.destroy!
-      redirect_to finance_financial_entries_path, status: :see_other, notice: "Entry removed"
+      planned_expense = @financial_entry.planned_expense
+      legacy_expense  = @financial_entry.expense
+      ActiveRecord::Base.transaction do
+        @financial_entry.destroy!
+        legacy_expense&.destroy!
+        planned_expense&.update!(status: "pending_to_pay")
+      end
+      respond_to do |format|
+        format.html { redirect_to finance_entries_path, status: :see_other, notice: "Entry removed" }
+        format.json { head :no_content }
+      end
     end
 
     private
