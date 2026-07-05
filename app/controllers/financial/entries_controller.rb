@@ -133,7 +133,7 @@ module Financial
       return if raw.blank?
       return EXPENSE_ENTRY_TYPES if raw == "expenses"
 
-      Array(raw).select { |type| Financial::Entry::ENTRY_TYPES.include?(type)}
+      Array(raw).select { |type| Financial::Entry::ENTRY_TYPES.include?(type) }
     end
 
     def entry_attributes_from(attrs)
