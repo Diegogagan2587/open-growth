@@ -223,8 +223,8 @@ module Financial
     end
 
     def load_form_collections
-      @financial_accounts = Financial::Asset.for_account(Current.account).order(:name)
-      @financial_liabilities = Financial::Liability.for_account(Current.account).order(:name)
+      @financial_accounts = Financial::Asset.for_account(Current.account).active.order(:name)
+      @financial_liabilities = Financial::Liability.for_account(Current.account).active.order(:name)
       @income_events = IncomeEvent.for_account(Current.account).by_date
       @categories = Category.for_account(Current.account).order(:name)
       @budget_periods = BudgetPeriod.for_account(Current.account).order(start_date: :desc)
