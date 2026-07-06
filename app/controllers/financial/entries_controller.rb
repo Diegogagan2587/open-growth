@@ -143,7 +143,8 @@ module Financial
         amount: attrs[:amount],
         description: attrs[:description],
         category_id: attrs[:category_id],
-        budget_period_id: attrs[:budget_period_id]
+        budget_period_id: attrs[:budget_period_id],
+        income_event_id: attrs[:income_event_id]
       }
     end
 
