@@ -114,7 +114,7 @@ module Financial
         category: Category.first
       )
 
-      get finance_financial_entries_path, params: { account_ref: "liability:#{@liability_a.id}" }
+      get finance_entries_path, params: { account_ref: "liability:#{@liability_a.id}" }
 
       assert_response :success
       assert_includes response.body, source_match.description
@@ -144,7 +144,7 @@ module Financial
         category: Category.first
       )
 
-      get finance_financial_entries_path, params: { account_ref: "bad-value" }
+      get finance_entries_path, params: { account_ref: "bad-value" }
 
       assert_response :success
       assert_includes response.body, first.description
