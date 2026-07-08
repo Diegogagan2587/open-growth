@@ -1,7 +1,6 @@
 require "test_helper"
 
-module Financial
-  class EntriesControllerTest < ActionDispatch::IntegrationTest
+  class Financial::EntriesControllerTest < ActionDispatch::IntegrationTest
     def setup
       @user = users(:one)
       @account = accounts(:one)
@@ -151,4 +150,3 @@ module Financial
       assert_includes response.body, second.description
     end
   end
-end
