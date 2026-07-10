@@ -77,8 +77,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", /Quick Add Direct Expense/
     assert_select "form[action='#{income_event_direct_expenses_path(@income_event)}']"
-    assert_select "input[name='expense[date]'][value='#{Date.current}']"
-    assert_select "select[name='expense[budget_period_id]'] option[selected][value='#{@budget_period.id}']"
+    assert_select "input[name='financial_entry[date]'][value='#{Date.current}']"
+    assert_select "select[name='financial_entry[budget_period_id]'] option[selected][value='#{@budget_period.id}']"
     assert_select "p", text: /Salary/
   end
 
