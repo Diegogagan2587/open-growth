@@ -7,6 +7,9 @@ Rails.application.routes.draw do
     resources :account_memberships, except: [ :show ]
   end
   post "account_switches", to: "account_switches#create", as: :account_switch
+
+  get "dashboard/index"
+
   resource :settings, only: [ :edit, :update ]
   namespace :settings do
     get "finance", to: redirect("/finance")
@@ -22,7 +25,6 @@ Rails.application.routes.draw do
   get "settings/finance/categories/new", to: redirect("/finance/categories/new"), as: :new_settings_finance_category
   get "settings/finance/categories/:id/edit", to: redirect { |params, _request| "/finance/categories/#{params[:id]}/edit" }, as: :edit_settings_finance_category
 
-  get "dashboard/index"
   # resources :budget_line_items
   # resources :expenses
   # resources :categoryfs
