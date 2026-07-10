@@ -2,7 +2,6 @@ Rails.application.routes.draw do
   resource :session
   resource :registration, only: [ :new, :create ]
   resource :settings, only: [ :edit, :update ]
-  get "finance", to: "finance#index", as: :finance
   namespace :settings do
     get "finance", to: redirect("/finance")
     get "finance/categories", to: redirect("/finance/categories"), as: :finance_categories
@@ -38,6 +37,7 @@ Rails.application.routes.draw do
   #
   resources :expense_templates
 
+  get "finance", to: "finance#index", as: :finance
   namespace :finance do
     root to: "finance#index"
     resources :categories, controller: "/financial/categories"
