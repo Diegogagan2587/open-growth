@@ -67,6 +67,16 @@ Rails.application.routes.draw do
     end
   end
 
+  # Quick-add routes (quick UI modals)
+  get "/quick-add/financial", to: "quick_add#financial", as: :quick_add_financial
+  post "/quick-add/income", to: "quick_add#create_income", as: :quick_add_create_income
+  post "/quick-add/expense", to: "quick_add#create_expense", as: :quick_add_create_expense
+  post "/quick-add/transfer", to: "quick_add#create_transfer", as: :quick_add_create_transfer
+  get "/quick-add/task", to: "quick_add#task", as: :quick_add_task
+  post "/quick-add/task/create", to: "quick_add#create_task", as: :quick_add_create_task
+  get "/quick-add/doc", to: "quick_add#doc", as: :quick_add_doc
+  post "/quick-add/doc/create", to: "quick_add#create_doc", as: :quick_add_create_doc
+
   resources :income_events do
     get "direct_expenses/new", to: "financial/expenses#quick_new", as: :new_direct_expense
     post "direct_expenses", to: "financial/expenses#quick_create", as: :direct_expenses
@@ -159,17 +169,6 @@ Rails.application.routes.draw do
     end
     resources :links, only: [ :index, :show, :new, :create, :edit, :update, :destroy ]
   end
-
-  # Quick-add routes (quick UI modals)
-  get "/quick-add/financial", to: "quick_add#financial", as: :quick_add_financial
-  post "/quick-add/income", to: "quick_add#create_income", as: :quick_add_create_income
-  post "/quick-add/expense", to: "quick_add#create_expense", as: :quick_add_create_expense
-  post "/quick-add/transfer", to: "quick_add#create_transfer", as: :quick_add_create_transfer
-  get "/quick-add/task", to: "quick_add#task", as: :quick_add_task
-  post "/quick-add/task/create", to: "quick_add#create_task", as: :quick_add_create_task
-  get "/quick-add/doc", to: "quick_add#doc", as: :quick_add_doc
-  post "/quick-add/doc/create", to: "quick_add#create_doc", as: :quick_add_create_doc
-
   root "dashboard#index"
 
   # Misson control for inspecgtin queue jobs
