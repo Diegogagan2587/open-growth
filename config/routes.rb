@@ -1,6 +1,10 @@
 Rails.application.routes.draw do
   resource :session
   resource :registration, only: [ :new, :create ]
+  resources :accounts do
+    resources :account_memberships, except: [ :show ]
+  end
+  post "account_switches", to: "account_switches#create", as: :account_switch
   resource :settings, only: [ :edit, :update ]
   namespace :settings do
     get "finance", to: redirect("/finance")
@@ -106,10 +110,6 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :accounts do
-    resources :account_memberships, except: [ :show ]
-  end
-  post "account_switches", to: "account_switches#create", as: :account_switch
 
   get "reports", to: "reports#index", as: :reports
   get "reports/by_date", to: "reports#by_date", as: :reports_by_date
