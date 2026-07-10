@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   resource :session
   resource :registration, only: [ :new, :create ]
+  resources :passwords, param: :token
   resources :accounts do
     resources :account_memberships, except: [ :show ]
   end
@@ -19,7 +20,7 @@ Rails.application.routes.draw do
   # Explicit helpers for legacy expectations used in tests
   get "settings/finance/categories/new", to: redirect("/finance/categories/new"), as: :new_settings_finance_category
   get "settings/finance/categories/:id/edit", to: redirect { |params, _request| "/finance/categories/#{params[:id]}/edit" }, as: :edit_settings_finance_category
-  resources :passwords, param: :token
+
   get "dashboard/index"
   # resources :budget_line_items
   # resources :expenses
