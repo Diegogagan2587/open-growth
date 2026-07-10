@@ -2,7 +2,14 @@ class Financial::DirectExpensesController < ApplicationController
   before_action :set_income_event
   before_action :load_form_collections, only: [ :new, :create ]
 
-  
+  def new
+    @financial_entry = Financial::Entry.new(
+      income_event: @income_event,
+      budget_period: @income_event.budget_period,
+      entry_date: Date.current
+    )
+  end
+
   private
   
   def set_income_event
