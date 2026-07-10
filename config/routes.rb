@@ -25,11 +25,6 @@ Rails.application.routes.draw do
   get "settings/finance/categories/new", to: redirect("/finance/categories/new"), as: :new_settings_finance_category
   get "settings/finance/categories/:id/edit", to: redirect { |params, _request| "/finance/categories/#{params[:id]}/edit" }, as: :edit_settings_finance_category
 
-  # resources :budget_line_items
-  # resources :expenses
-  # resources :categoryfs
-  # resources :categories
-  # resources :budget_periods
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
