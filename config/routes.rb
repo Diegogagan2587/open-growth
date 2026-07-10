@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  root "dashboard#index"
   resource :session
   resource :registration, only: [ :new, :create ]
   resources :passwords, param: :token
@@ -169,7 +170,6 @@ Rails.application.routes.draw do
     end
     resources :links, only: [ :index, :show, :new, :create, :edit, :update, :destroy ]
   end
-  root "dashboard#index"
 
   # Misson control for inspecgtin queue jobs
   mount MissionControl::Jobs::Engine, at: "/jobs"
