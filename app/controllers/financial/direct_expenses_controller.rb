@@ -42,12 +42,25 @@ class Financial::DirectExpensesController < ApplicationController
   end
 
   private
-  
+
   def set_income_event
     @income_event = IncomeEvent.for_account(Current.account).find(params[:income_event_id])
   end
 
-  
+  def direct_expense_params
+    key = params[:financial_entry].present? ? :financial_entry : :expense
+    params.expect(key => [
+      :date,
+      :entry_date,
+      :amount,
+      :description,
+      :category_id,
+      :budget_period_id,
+      :source_selection,
+      :destination_selection
+    ])
+  end
+
   def load_form_collections
     @categories = Category.for_account(Current.account).order(:name)
     @budget_periods = BudgetPeriod.for_account(Current.account).order(start_date: :desc)
