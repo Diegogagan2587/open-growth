@@ -63,8 +63,8 @@ Rails.application.routes.draw do
   end
 
   resources :income_events do
-    get "direct_expenses/new", to: "financial/expenses#quick_new", as: :new_direct_expense
-    post "direct_expenses", to: "financial/expenses#quick_create", as: :direct_expenses
+    get "direct_expenses/new", to: "financial/direct_expenses#new", as: :new_direct_expense
+    post "direct_expenses", to: "financial/direct_expenses#create", as: :direct_expenses
 
     resources :planned_expenses do
       member do

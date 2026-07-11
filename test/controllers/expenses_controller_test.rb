@@ -77,8 +77,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", /Quick Add Direct Expense/
     assert_select "form[action='#{income_event_direct_expenses_path(@income_event)}']"
-    assert_select "input[name='expense[date]'][value='#{Date.current}']"
-    assert_select "select[name='expense[budget_period_id]'] option[selected][value='#{@budget_period.id}']"
+    assert_select "input[name='financial_entry[date]'][value='#{Date.current}']"
+    assert_select "select[name='financial_entry[budget_period_id]'] option[selected][value='#{@budget_period.id}']"
     assert_select "p", text: /Salary/
   end
 
@@ -94,7 +94,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
 
     assert_difference("Financial::Entry.count", 1) do
       post income_event_direct_expenses_path(@income_event), params: {
-        expense: {
+        financial_entry: {
           amount: 48.75,
           date: Date.current,
           category_id: @category.id,
@@ -115,9 +115,9 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
   test "invalid quick direct expense re-renders quick form" do
     sign_in
 
-    assert_no_difference("Expense.count") do
+    assert_no_difference("Financial::Entry.count") do
       post income_event_direct_expenses_path(@income_event), params: {
-        expense: {
+        financial_entry: {
           amount: nil,
           date: Date.current,
           category_id: nil,
@@ -133,7 +133,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action='#{income_event_direct_expenses_path(@income_event)}']"
   end
 
-  test "should delete expense from show page and remove linked financial entry" do
+  test "should delete entry from show page and restore linked planned expense" do
     sign_in
 
     financial_account = Financial::Asset.create!(
@@ -178,18 +178,18 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       description: expense.description
     )
 
-    get expense_path(expense)
+    get finance_entry_path(financial_entry)
 
     assert_response :success
-    assert_select "a[href='#{expense_path(expense)}'][data-turbo-method='delete']"
+    assert_select "a[href='#{finance_entry_path(financial_entry)}'][data-turbo-method='delete']"
 
     assert_difference("Expense.count", -1) do
       assert_difference("Financial::Entry.count", -1) do
-        delete expense_path(expense)
+        delete finance_entry_path(financial_entry)
       end
     end
 
-    assert_redirected_to expenses_path
+    assert_redirected_to finance_entries_path
     assert_nil Expense.find_by(id: expense.id)
     assert_nil Financial::Entry.find_by(id: financial_entry.id)
     assert_equal "pending_to_pay", planned_expense.reload.status
@@ -247,7 +247,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       description: expense.description
     )
 
-    patch expense_path(entry), params: {
+    patch finance_entry_path(entry), params: {
       financial_entry: {
         date: Date.current + 1.day,
         amount: 275.40,
@@ -260,7 +260,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to expense_path(entry)
+    assert_redirected_to finance_entry_path(entry)
     entry.reload
 
     assert_equal 275.40, entry.amount.to_f
@@ -272,7 +272,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_equal destination_liability.id, entry.financial_liability_id
   end
 
-  test "edit entry-backed expense submits expense params" do
+  test "edit entry submits financial entry params" do
     sign_in
 
     entry = Financial::Entry.create!(
@@ -287,13 +287,13 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       description: "Editable direct expense"
     )
 
-    get edit_expense_path(entry)
+    get edit_finance_entry_path(entry)
 
     assert_response :success
-    assert_select "form[action='#{expense_path(entry)}']"
-    assert_select "input[name='expense[amount]']"
-    assert_select "input[name='expense[date]']"
-    assert_select "input[name='expense[description]']"
+    assert_select "form[action='#{finance_entry_path(entry)}']"
+    assert_select "input[name='financial_entry[amount]']"
+    assert_select "input[name='financial_entry[entry_date]']"
+    assert_select "input[name='financial_entry[description]']"
   end
 
   test "index filters expenses by asset account and excludes transfers" do
@@ -334,7 +334,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       description: "non match"
     )
 
-    get expenses_path, params: { account_ref: "asset:#{@asset_a.id}" }
+    get finance_entries_path, params: { entry_type: "expenses", account_ref: "asset:#{@asset_a.id}" }
 
     assert_response :success
     assert_select "option[value='asset:#{@asset_a.id}'][selected]"
@@ -381,7 +381,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       description: "liability non match"
     )
 
-    get expenses_path, params: { account_ref: "liability:#{@liability_a.id}" }
+    get finance_entries_path, params: { entry_type: "expenses", account_ref: "liability:#{@liability_a.id}" }
 
     assert_response :success
     assert_includes response.body, source_match.description
@@ -426,7 +426,8 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       description: "target dinner"
     )
 
-    get expenses_path, params: {
+    get finance_entries_path, params: {
+      entry_type: "expenses",
       account_ref: "asset:#{@asset_a.id}",
       date_from: Date.current,
       date_to: Date.current,
@@ -466,7 +467,7 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
       description: "second expense"
     )
 
-    get expenses_path, params: { account_ref: "oops" }
+    get finance_entries_path, params: { entry_type: "expenses", account_ref: "oops" }
 
     assert_response :success
     assert_includes response.body, first.description
