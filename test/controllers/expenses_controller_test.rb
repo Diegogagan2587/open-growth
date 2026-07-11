@@ -115,9 +115,9 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
   test "invalid quick direct expense re-renders quick form" do
     sign_in
 
-    assert_no_difference("Expense.count") do
+    assert_no_difference("Financial::Entry.count") do
       post income_event_direct_expenses_path(@income_event), params: {
-        expense: {
+        financial_entry: {
           amount: nil,
           date: Date.current,
           category_id: nil,
