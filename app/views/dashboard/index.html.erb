@@ -9,7 +9,7 @@
       </div>
 
       <div class="grid w-full max-w-xl grid-cols-1 gap-2 sm:grid-cols-2">
-        <%= render Ui::ButtonComponent.new(href: new_expense_path, label: t("dashboard.add_expense"), variant: :default, css_class: "h-10 w-full justify-start") %>
+        <%= render Ui::ButtonComponent.new(href: new_finance_entry_path(entry_type: "expenses"), label: t("dashboard.add_expense"), variant: :default, css_class: "h-10 w-full justify-start") %>
         <%= render Ui::ButtonComponent.new(href: new_income_event_path, label: t("dashboard.new_income_event"), variant: :outline, css_class: "h-10 w-full justify-start") %>
         <%= render Ui::ButtonComponent.new(href: new_budget_period_path, label: t("dashboard.new_budget_period"), variant: :outline, css_class: "h-10 w-full justify-start") %>
         <%= render Ui::ButtonComponent.new(href: new_shopping_item_path, label: t("dashboard.add_shopping_item"), variant: :ghost, css_class: "h-10 w-full justify-start") %>
