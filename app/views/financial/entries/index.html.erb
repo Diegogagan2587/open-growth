@@ -1,5 +1,7 @@
 <p style="color: green"><%= notice %></p>
 
+<% content_for :title, "Transactions" %>
+
 <h1 class="text-2xl font-bold mb-4">Financial Entries</h1>
 
 <%= form_with url: finance_financial_entries_path, method: :get, local: true, class: "mb-4 flex flex-col sm:flex-row sm:items-end gap-3" do |f| %>
