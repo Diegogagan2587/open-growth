@@ -32,7 +32,7 @@ module ApplicationHelper
     when "dashboard" then "dashboard"
     when "budget_periods" then "budgets"
     when "income_events" then "incomes"
-    when "expenses" then "expenses"
+    when "expenses", "financial/entries" then "expenses"
     when "categories" then "categories"
     when "task/areas", "task/recurring_tasks" then "tasks"
     when "reports" then "reports"
