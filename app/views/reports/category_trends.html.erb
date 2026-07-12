@@ -46,7 +46,7 @@
                 <% end %>
                 <td class="px-4 py-3 text-sm text-right font-medium tabular-nums text-card-foreground"><%= number_to_currency(cat[:total]) %></td>
                 <td class="px-4 py-3 text-sm text-right">
-                  <%= link_to t("reports.view_expenses"), finance_financial_entries_path(category_id: cat[:category_id], date_from: @date_from, date_to: @date_to), class: "text-primary hover:underline font-medium" %>
+                  <%= link_to t("reports.view_expenses"), finance_entries_path(category_id: cat[:category_id], date_from: @date_from, date_to: @date_to), class: "text-primary hover:underline font-medium" %>
                 </td>
               </tr>
             <% end %>
@@ -66,7 +66,7 @@
                 <span class="text-right tabular-nums text-card-foreground font-medium"><%= number_to_currency(cat[:amounts][idx] || 0) %></span>
               <% end %>
             </div>
-            <%= link_to t("reports.view_expenses"), finance_financial_entries_path(category_id: cat[:category_id], date_from: @date_from, date_to: @date_to), class: "inline-flex items-center justify-center w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-primary hover:bg-muted/50 transition-colors" %>
+            <%= link_to t("reports.view_expenses"), finance_entries_path(category_id: cat[:category_id], date_from: @date_from, date_to: @date_to), class: "inline-flex items-center justify-center w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-primary hover:bg-muted/50 transition-colors" %>
           </div>
         <% end %>
       </div>

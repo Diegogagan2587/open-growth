@@ -109,7 +109,7 @@ class ShoppingItemsController < ApplicationController
       expense = @shopping_item.convert_to_expense(budget_period)
 
       if expense
-        redirect_to expenses_path, notice: "Shopping item converted to expense."
+        redirect_to finance_entries_path(entry_type: "expenses"), notice: "Shopping item converted to expense."
       else
         redirect_to @shopping_item, alert: t("shopping_items.alert_estimated_required")
       end

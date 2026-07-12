@@ -25,7 +25,7 @@
         <%= link_to t("nav.dashboard"), root_path, class: current_page?(root_path) ? "font-semibold text-foreground" : "font-semibold text-muted-foreground hover:text-foreground" %>
         <%= link_to t("nav.budgets"), budget_periods_path, class: controller_path == "budget_periods" ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground" %>
         <%= link_to t("nav.incomes"), income_events_path, class: controller_path == "income_events" || controller_path == "planned_expenses" ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground" %>
-        <%= link_to t("nav.expenses"), expenses_path, class: controller_path == "expenses" ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground" %>
+        <%= link_to t("nav.expenses"), finance_entries_path(entry_type: "expenses"), class: controller_path == "financial/entries" ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground" %>
         <%= link_to "Finance", finance_path, class: controller_path.start_with?("finance") ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground" %>
         <%= link_to t("nav.tasks"), task_root_path, class: controller_path.include?("task") ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground" %>
         <%= link_to "Projects", projects_path, class: controller_path == "projects/projects" ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground" %>
@@ -74,7 +74,7 @@
         <%= link_to t("nav.dashboard"), root_path, class: "py-2 #{current_page?(root_path) ? "font-semibold text-foreground" : "text-foreground hover:text-foreground"}" %>
         <%= link_to t("nav.budgets"), budget_periods_path, class: "py-2 #{controller_path == "budget_periods" ? "font-semibold text-foreground" : "text-foreground hover:text-foreground"}" %>
         <%= link_to t("nav.incomes"), income_events_path, class: "py-2 #{controller_path == "income_events" || controller_path == "planned_expenses" ? "font-semibold text-foreground" : "text-foreground hover:text-foreground"}" %>
-        <%= link_to t("nav.expenses"), expenses_path, class: "py-2 #{controller_path == "expenses" ? "font-semibold text-foreground" : "text-foreground hover:text-foreground"}" %>
+        <%= link_to t("nav.expenses"), finance_entries_path(entry_type: "expenses"), class: "py-2 #{controller_path == "financial/entries" ? "font-semibold text-foreground" : "text-foreground hover:text-foreground"}" %>
         <%= link_to "Finance", finance_path, class: "py-2 #{controller_path.start_with?("finance") ? "font-semibold text-foreground" : "text-foreground hover:text-foreground"}" %>
         <%= link_to t("nav.tasks"), task_root_path, class: "py-2 #{controller_path.include?("task") ? "font-semibold text-foreground" : "text-foreground hover:text-foreground"}" %>
         <%= link_to "Projects", projects_path, class: "py-2 #{controller_path == "projects/projects" ? "font-semibold text-foreground" : "text-foreground hover:text-foreground"}" %>

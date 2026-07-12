@@ -1,7 +1,7 @@
 <p style="color: green"><%= notice %></p>
 
 <div class="mb-4">
-  <%= link_to "← Back", finance_financial_entries_path, class: "text-accent hover:underline" %>
+  <%= link_to "← Back", finance_entries_path, class: "text-accent hover:underline" %>
 </div>
 
 <h1 class="text-2xl font-bold mb-4"><%= @financial_entry.description %></h1>
@@ -27,12 +27,12 @@
 
 <div class="mb-4 flex space-x-2">
   <%= render Ui::ButtonComponent.new(
-    href: edit_finance_financial_entry_path(@financial_entry),
+    href: edit_finance_entry_path(@financial_entry),
     label: "Edit",
     variant: "outline"
   ) %>
   <%= render Ui::ButtonComponent.new(
-    href: finance_financial_entry_path(@financial_entry),
+    href: finance_entry_path(@financial_entry),
     label: "Delete",
     variant: "destructive",
     method: :delete,

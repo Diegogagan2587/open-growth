@@ -150,7 +150,7 @@
             </button>
             <% if planned_expense.financial_entry.present? %>
               <%= render Ui::ButtonComponent.new(
-                href: finance_financial_entry_path(planned_expense.financial_entry),
+                href: finance_entry_path(planned_expense.financial_entry),
                 label: "View Transaction",
                 variant: "outline",
                 size: "sm"
