@@ -202,5 +202,51 @@ module Financial
       assert_includes response.body, @asset_b.name
       assert_select "tfoot", text: /Net asset account effect:.*-\$20\.00/m
     end
+
+    test "show renders routing planning notes and record metadata" do
+      sign_in
+      budget_period = BudgetPeriod.create!(
+        account: @account,
+        name: "Detailed month",
+        period_type: "monthly",
+        start_date: Date.current.beginning_of_month,
+        end_date: Date.current.end_of_month
+      )
+      planned_expense = PlannedExpense.create!(
+        account: @account,
+        income_event: @income_event,
+        category: @category,
+        description: "Planned transfer",
+        amount: 42,
+        status: "pending_to_pay"
+      )
+      entry = Financial::Entry.create!(
+        account: @account,
+        entry_type: "transfer",
+        financial_account: @asset_a,
+        counterparty_financial_account: @asset_b,
+        income_event: @income_event,
+        planned_expense: planned_expense,
+        budget_period: budget_period,
+        category: @category,
+        entry_date: Date.current,
+        amount: 42,
+        description: "Detailed transaction",
+        notes: "Visible transaction notes"
+      )
+
+      get finance_entry_path(entry)
+
+      assert_response :success
+      assert_includes response.body, "Money movement"
+      assert_includes response.body, @asset_a.name
+      assert_includes response.body, @asset_b.name
+      assert_includes response.body, @category.name
+      assert_includes response.body, budget_period.name
+      assert_includes response.body, @income_event.description
+      assert_includes response.body, planned_expense.description
+      assert_includes response.body, "Visible transaction notes"
+      assert_includes response.body, "Last updated"
+    end
   end
 end
