@@ -53,6 +53,30 @@ class IncomeEventsControllerTest < ActionDispatch::IntegrationTest
     Current.account = @account
   end
 
+  test "index eagerly loads budget periods" do
+    sign_in
+    budget_period = @account.budget_periods.create!(
+      name: "July",
+      period_type: "monthly",
+      start_date: Date.current.beginning_of_month,
+      end_date: Date.current.end_of_month
+    )
+    2.times do |index|
+      IncomeEvent.create!(
+        account: @account,
+        budget_period: budget_period,
+        description: "Salary #{index}",
+        expected_date: Date.current + index.days,
+        expected_amount: 2000,
+        status: "pending"
+      )
+    end
+
+    get income_events_path
+
+    assert_response :success
+  end
+
   test "show renders entry backed direct expenses without category" do
     sign_in
     income_event = IncomeEvent.create!(

@@ -5,9 +5,9 @@ class IncomeEventsController < ApplicationController
 
   def index
     @income_events = if @budget_period
-      @budget_period.income_events.by_date
+      @budget_period.income_events.includes(:budget_period).by_date
     else
-      IncomeEvent.for_account(Current.account).by_date
+      IncomeEvent.for_account(Current.account).includes(:budget_period).by_date
     end
 
     # Group by month/year for display
