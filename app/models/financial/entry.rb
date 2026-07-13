@@ -42,6 +42,20 @@ class Financial::Entry < ApplicationRecord
     end
   end
 
+  def net_asset_effect
+    return 0.to_d if entry_type.in?(%w[transfer liability_charge])
+    return 0.to_d if entry_type.in?(%w[inflow loan_disbursement]) && financial_account_id.blank?
+    return 0.to_d if entry_type == "liability_payment" && financial_account_id.blank?
+
+    account_delta
+  end
+
+  def net_liability_effect
+    [ financial_liability_id, counterparty_financial_liability_id ].compact.uniq.sum(0.to_d) do |liability_id|
+      liability_delta_for(liability_id)
+    end
+  end
+
   def inflow?
     entry_type == "inflow"
   end
