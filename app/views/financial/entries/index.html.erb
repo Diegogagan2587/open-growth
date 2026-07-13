@@ -1,63 +1,132 @@
 <% content_for :title, "Transactions" %>
+<% ordered_entries = @financial_entries %>
 
-<h1 class="text-2xl font-bold mb-4">Transactions</h1>
+<div class="container mx-auto px-4 py-4">
+  <h1 class="text-2xl font-bold mb-4">Transactions</h1>
 
-<%= form_with url: finance_entries_path, method: :get, local: true, class: "mb-4 flex flex-col sm:flex-row sm:items-end gap-3" do |f| %>
-  <div class="flex flex-col gap-1">
-    <label for="date_from" class="text-sm font-medium text-foreground">Date from</label>
-    <%= f.date_field :date_from, value: params[:date_from], class: "rounded border border-input px-3 py-2 text-sm" %>
-  </div>
-  <div class="flex flex-col gap-1">
-    <label for="date_to" class="text-sm font-medium text-foreground">Date to</label>
-    <%= f.date_field :date_to, value: params[:date_to], class: "rounded border border-input px-3 py-2 text-sm" %>
-  </div>
-  <div class="flex flex-col gap-1">
-    <label for="category_id" class="text-sm font-medium text-foreground">Category</label>
-    <%= f.select :category_id, @categories.pluck(:name, :id), { include_blank: "All categories", selected: params[:category_id] }, class: "rounded border border-input px-3 py-2 text-sm" %>
-  </div>
-  <div class="flex flex-col gap-1">
-    <label for="q" class="text-sm font-medium text-foreground">Description</label>
-    <%= f.text_field :q, value: params[:q], class: "rounded border border-input px-3 py-2 text-sm" %>
-  </div>
-  <div class="flex flex-col gap-1">
-    <label for="account_ref" class="text-sm font-medium text-foreground">Account</label>
-    <%= f.select :account_ref, @account_filter_options, { include_blank: "All accounts", selected: @selected_account_ref }, id: "account_ref", class: "rounded border border-input px-3 py-2 text-sm" %>
-  </div>
-  <div>
-    <%= f.submit "Filter", class: "px-4 py-2 bg-primary text-white rounded text-sm font-medium cursor-pointer" %>
-  </div>
-<% end %>
+  <%= form_with url: finance_entries_path, method: :get, local: true, class: "flex flex-col sm:flex-row sm:items-end gap-4 flex-wrap mb-4" do |f| %>
+    <div class="flex flex-wrap items-center gap-2">
+      <label for="date_from" class="text-sm font-medium text-foreground">Date from</label>
+      <%= f.date_field :date_from, value: params[:date_from], id: "date_from", class: "rounded border border-input px-3 py-2 text-sm" %>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <label for="date_to" class="text-sm font-medium text-foreground">Date to</label>
+      <%= f.date_field :date_to, value: params[:date_to], id: "date_to", class: "rounded border border-input px-3 py-2 text-sm" %>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <label for="category_id" class="text-sm font-medium text-foreground">Category</label>
+      <%= f.select :category_id, @categories.pluck(:name, :id), { include_blank: "All categories", selected: params[:category_id] }, id: "category_id", class: "rounded border border-input px-3 py-2 text-sm" %>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <label for="account_ref" class="text-sm font-medium text-foreground">Account</label>
+      <%= f.select :account_ref, @account_filter_options, { include_blank: "All accounts", selected: @selected_account_ref }, id: "account_ref", class: "rounded border border-input px-3 py-2 text-sm" %>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <label for="entry_type" class="text-sm font-medium text-foreground">Type</label>
+      <%= f.select :entry_type, [["Expense-like", "expenses"]] + Financial::Entry::ENTRY_TYPES.map { |type| [type.humanize, type] }, { include_blank: "All types", selected: params[:entry_type] }, id: "entry_type", class: "rounded border border-input px-3 py-2 text-sm" %>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 flex-grow min-w-0">
+      <label for="q" class="text-sm font-medium text-foreground sr-only">Description</label>
+      <%= f.text_field :q, placeholder: "Search description", value: params[:q], id: "q", class: "rounded border border-input px-3 py-2 text-sm flex-1 min-w-0" %>
+    </div>
+    <%= f.submit "Filter", class: "px-4 py-2 bg-primary text-white rounded hover:bg-primary text-sm font-medium cursor-pointer w-full sm:w-auto" %>
+  <% end %>
 
-<div class="mb-4 flex justify-between items-center">
-  <%= render Ui::ButtonComponent.new(
-    href: new_finance_entry_path,
-    label: "New Entry",
-    variant: "default"
-  ) %>
-</div>
+  <div class="mb-4 flex justify-between items-center">
+    <div class="w-full sm:w-auto [&>a]:w-full [&>a]:sm:w-auto [&>a]:flex [&>a]:justify-center">
+      <%= render Ui::ButtonComponent.new(
+        href: new_finance_entry_path,
+        label: "New Transaction",
+        variant: "default"
+      ) %>
+    </div>
+  </div>
 
-<table class="ui-table">
-  <thead>
-    <tr class="bg-muted">
-      <th class="px-4 py-2 text-left">Date</th>
-      <th class="px-4 py-2 text-left">Type</th>
-      <th class="px-4 py-2 text-left">Description</th>
-      <th class="px-4 py-2 text-left">Amount</th>
-      <th class="px-4 py-2 text-left">Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @financial_entries.each do |financial_entry| %>
-      <tr class="border-t">
-        <td class="px-4 py-2"><%= financial_entry.entry_date %></td>
-        <td class="px-4 py-2"><%= financial_entry.entry_type.humanize %></td>
-        <td class="px-4 py-2"><%= financial_entry.description %></td>
-        <td class="px-4 py-2"><%= number_to_currency(financial_entry.amount) %></td>
-        <td class="px-4 py-2">
-          <%= link_to "View", finance_financial_entry_path(financial_entry), class: "text-accent hover:underline" %>
-          <%= link_to "Delete", finance_financial_entry_path(financial_entry), method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "text-danger hover:underline ml-2" %>
-        </td>
-      </tr>
+  <div class="hidden md:block overflow-x-auto">
+    <table class="ui-table">
+      <thead>
+        <tr class="bg-muted">
+          <th class="px-4 py-2 text-left">Date</th>
+          <th class="px-4 py-2 text-left">Type</th>
+          <th class="px-4 py-2 text-left">Category</th>
+          <th class="px-4 py-2 text-left">Description</th>
+          <th class="px-4 py-2 text-left">Budget Period</th>
+          <th class="px-4 py-2 text-left">Income Event</th>
+          <th class="px-4 py-2 text-right">Amount</th>
+          <th class="px-4 py-2 text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% ordered_entries.each do |financial_entry| %>
+          <tr class="border-t">
+            <td class="px-4 py-2"><%= financial_entry.entry_date.strftime("%d %b %Y") %></td>
+            <td class="px-4 py-2"><%= financial_entry.entry_type.humanize %></td>
+            <td class="px-4 py-2"><%= financial_entry.category&.name || t("expenses.index.unassigned") %></td>
+            <td class="px-4 py-2"><%= financial_entry.description %></td>
+            <td class="px-4 py-2">
+              <% if financial_entry.budget_period %>
+                <%= link_to financial_entry.budget_period.name, financial_entry.budget_period, class: "text-accent hover:underline hover:text-accent-dark" %>
+              <% else %>
+                <span class="text-gray-400"><%= t("expenses.index.unassigned") %></span>
+              <% end %>
+            </td>
+            <td class="px-4 py-2">
+              <% if financial_entry.income_event %>
+                <%= link_to financial_entry.income_event.description, financial_entry.income_event, class: "text-purple-600 hover:underline" %>
+              <% else %>
+                <span class="text-gray-400"><%= t("expenses.index.unassigned") %></span>
+              <% end %>
+            </td>
+            <td class="px-4 py-2 text-right"><%= number_to_currency(financial_entry.amount) %></td>
+            <td class="px-4 py-2 text-center">
+              <span class="inline-flex items-center gap-2">
+                <%= link_to "View", finance_entry_path(financial_entry), class: "px-3 py-2 text-sm text-accent hover:underline rounded hover:bg-muted/35 min-h-[44px] inline-flex items-center" %>
+                <%= link_to "Edit", edit_finance_entry_path(financial_entry), class: "px-3 py-2 text-sm text-accent hover:underline rounded hover:bg-muted/35 min-h-[44px] inline-flex items-center" %>
+                <%= link_to "Delete", finance_entry_path(financial_entry), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "px-3 py-2 text-sm text-danger hover:underline rounded hover:bg-danger-soft min-h-[44px] inline-flex items-center" %>
+              </span>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+      <tfoot>
+        <tr class="bg-muted/35 font-semibold">
+          <td colspan="6" class="px-4 py-2 text-right">Total:</td>
+          <td class="px-4 py-2 text-right">
+            <%= number_to_currency(@financial_entries.sum(:amount)) %>
+          </td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="md:hidden space-y-3">
+    <% ordered_entries.each do |financial_entry| %>
+      <div class="bg-card border rounded-lg p-4 shadow-sm">
+        <div class="flex justify-between items-start gap-2 mb-2">
+          <span class="font-semibold text-foreground truncate flex-1"><%= financial_entry.description.presence || financial_entry.category&.name || t("expenses.index.unassigned") %></span>
+          <span class="font-semibold text-foreground whitespace-nowrap"><%= number_to_currency(financial_entry.amount) %></span>
+        </div>
+        <div class="text-sm text-muted-foreground mb-1">
+          <%= financial_entry.entry_date.strftime("%d %b %Y") %> · <%= financial_entry.entry_type.humanize %> · <%= financial_entry.category&.name || t("expenses.index.unassigned") %>
+        </div>
+        <div class="text-xs text-muted-foreground mb-3">
+          Budget Period: <%= financial_entry.budget_period ? financial_entry.budget_period.name : t("expenses.index.unassigned") %> ·
+          Income Event: <%= financial_entry.income_event ? financial_entry.income_event.description : t("expenses.index.unassigned") %>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <%= link_to "View", finance_entry_path(financial_entry), class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 text-sm font-medium text-muted-foreground bg-muted rounded hover:bg-muted" %>
+          <%= link_to "Edit", edit_finance_entry_path(financial_entry), class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 text-sm font-medium text-accent bg-muted/35 rounded hover:bg-muted" %>
+          <%= link_to "Delete", finance_entry_path(financial_entry), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 text-sm font-medium text-danger bg-danger-soft rounded hover:bg-danger-soft" %>
+        </div>
+      </div>
     <% end %>
-  </tbody>
-</table>
+
+    <% if ordered_entries.any? %>
+      <div class="bg-muted/35 border rounded-lg p-4 font-semibold flex justify-between items-center">
+        <span>Total:</span>
+        <span><%= number_to_currency(@financial_entries.sum(:amount)) %></span>
+      </div>
+    <% end %>
+  </div>
+</div>
