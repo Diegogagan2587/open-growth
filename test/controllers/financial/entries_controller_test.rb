@@ -150,5 +150,27 @@ module Financial
       assert_includes response.body, first.description
       assert_includes response.body, second.description
     end
+
+    test "index renders responsive desktop table and mobile cards" do
+      sign_in
+
+      entry = Financial::Entry.create!(
+        account: @account,
+        entry_type: "outflow",
+        financial_account: @asset_a,
+        entry_date: Date.current,
+        amount: 10,
+        description: "responsive transaction",
+        category: @category
+      )
+
+      get finance_entries_path
+
+      assert_response :success
+      assert_select "div.hidden.md\\:block table.ui-table"
+      assert_select "div.md\\:hidden.space-y-3"
+      assert_select "a[href='#{finance_entry_path(entry)}']", text: "View"
+      assert_includes response.body, "responsive transaction"
+    end
   end
 end

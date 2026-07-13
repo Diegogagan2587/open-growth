@@ -1,4 +1,4 @@
-<% form_url = @financial_entry.persisted? ? finance_financial_entry_path(@financial_entry) : finance_financial_entries_path %>
+<% form_url = @financial_entry.persisted? ? finance_entry_path(@financial_entry) : finance_entries_path %>
 <% form_method = @financial_entry.persisted? ? :patch : :post %>
 <%= form_with model: @financial_entry, url: form_url, method: form_method, local: true do |form| %>
   <% if @financial_entry.errors.any? %>
@@ -69,6 +69,6 @@
 
   <div class="mb-4">
     <%= form.submit class: "px-4 py-2 bg-primary text-white rounded hover:bg-primary" %>
-    <%= link_to "Cancel", finance_financial_entries_path, class: "px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80 ml-2" %>
+    <%= link_to "Cancel", finance_entries_path, class: "px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80 ml-2" %>
   </div>
 <% end %>
