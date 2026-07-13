@@ -172,5 +172,35 @@ module Financial
       assert_select "a[href='#{finance_entry_path(entry)}']", text: "View"
       assert_includes response.body, "responsive transaction"
     end
+
+    test "index shows account movement and signed net effect" do
+      sign_in
+      Financial::Entry.create!(
+        account: @account,
+        entry_type: "transfer",
+        financial_account: @asset_a,
+        counterparty_financial_account: @asset_b,
+        entry_date: Date.current,
+        amount: 75,
+        description: "Move savings"
+      )
+      Financial::Entry.create!(
+        account: @account,
+        entry_type: "outflow",
+        financial_account: @asset_a,
+        category: @category,
+        entry_date: Date.current,
+        amount: 20,
+        description: "Lunch"
+      )
+
+      get finance_entries_path
+
+      assert_response :success
+      assert_select "th", text: "Account movement"
+      assert_includes response.body, @asset_a.name
+      assert_includes response.body, @asset_b.name
+      assert_select "tfoot", text: /Net asset account effect:.*-\$20\.00/m
+    end
   end
 end
