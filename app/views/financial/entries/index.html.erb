@@ -1,5 +1,6 @@
 <% content_for :title, "Transactions" %>
 <% ordered_entries = @financial_entries %>
+<% net_asset_effect = ordered_entries.sum(&:net_asset_effect) %>
 
 <div class="container mx-auto px-4 py-4">
   <h1 class="text-2xl font-bold mb-4">Transactions</h1>
@@ -47,11 +48,9 @@
       <thead>
         <tr class="bg-muted">
           <th class="px-4 py-2 text-left">Date</th>
-          <th class="px-4 py-2 text-left">Type</th>
-          <th class="px-4 py-2 text-left">Category</th>
           <th class="px-4 py-2 text-left">Description</th>
-          <th class="px-4 py-2 text-left">Budget Period</th>
-          <th class="px-4 py-2 text-left">Income Event</th>
+          <th class="px-4 py-2 text-left">Account movement</th>
+          <th class="px-4 py-2 text-left">Type</th>
           <th class="px-4 py-2 text-right">Amount</th>
           <th class="px-4 py-2 text-center">Actions</th>
         </tr>
@@ -59,26 +58,25 @@
       <tbody>
         <% ordered_entries.each do |financial_entry| %>
           <tr class="border-t">
-            <td class="px-4 py-2"><%= financial_entry.entry_date.strftime("%d %b %Y") %></td>
-            <td class="px-4 py-2"><%= financial_entry.entry_type.humanize %></td>
-            <td class="px-4 py-2"><%= financial_entry.category&.name || t("expenses.index.unassigned") %></td>
-            <td class="px-4 py-2"><%= financial_entry.description %></td>
-            <td class="px-4 py-2">
-              <% if financial_entry.budget_period %>
-                <%= link_to financial_entry.budget_period.name, financial_entry.budget_period, class: "text-accent hover:underline hover:text-accent-dark" %>
-              <% else %>
-                <span class="text-gray-400"><%= t("expenses.index.unassigned") %></span>
-              <% end %>
+            <td class="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground"><%= financial_entry.entry_date.strftime("%d %b %Y") %></td>
+            <td class="max-w-xs px-4 py-3">
+              <%= link_to financial_entry.description, finance_entry_path(financial_entry), class: "font-medium text-foreground hover:text-accent hover:underline" %>
+              <div class="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                <span><%= financial_entry.category&.name || t("expenses.index.unassigned") %></span>
+                <% if financial_entry.budget_period %>
+                  <%= link_to financial_entry.budget_period.name, financial_entry.budget_period, class: "hover:text-accent hover:underline" %>
+                <% end %>
+                <% if financial_entry.income_event %>
+                  <%= link_to financial_entry.income_event.description, financial_entry.income_event, class: "hover:text-accent hover:underline" %>
+                <% end %>
+              </div>
             </td>
-            <td class="px-4 py-2">
-              <% if financial_entry.income_event %>
-                <%= link_to financial_entry.income_event.description, financial_entry.income_event, class: "text-purple-600 hover:underline" %>
-              <% else %>
-                <span class="text-gray-400"><%= t("expenses.index.unassigned") %></span>
-              <% end %>
+            <td class="px-4 py-3"><%= render Financial::EntryRouteComponent.new(entry: financial_entry) %></td>
+            <td class="px-4 py-3"><%= render Ui::BadgeComponent.new(label: financial_entry.entry_type.humanize, variant: :outline) %></td>
+            <td class="whitespace-nowrap px-4 py-3 text-right font-semibold <%= financial_entry_amount_class(financial_entry) %>">
+              <%= financial_entry_amount_prefix(financial_entry) %><%= number_to_currency(financial_entry.amount) %>
             </td>
-            <td class="px-4 py-2 text-right"><%= number_to_currency(financial_entry.amount) %></td>
-            <td class="px-4 py-2 text-center">
+            <td class="px-4 py-3 text-center">
               <span class="inline-flex items-center gap-2">
                 <%= link_to "View", finance_entry_path(financial_entry), class: "px-3 py-2 text-sm text-accent hover:underline rounded hover:bg-muted/35 min-h-[44px] inline-flex items-center" %>
                 <%= link_to "Edit", edit_finance_entry_path(financial_entry), class: "px-3 py-2 text-sm text-accent hover:underline rounded hover:bg-muted/35 min-h-[44px] inline-flex items-center" %>
@@ -90,9 +88,9 @@
       </tbody>
       <tfoot>
         <tr class="bg-muted/35 font-semibold">
-          <td colspan="6" class="px-4 py-2 text-right">Total:</td>
+          <td colspan="4" class="px-4 py-3 text-right">Net asset account effect:</td>
           <td class="px-4 py-2 text-right">
-            <%= number_to_currency(@financial_entries.sum(:amount)) %>
+            <span class="<%= net_asset_effect.negative? ? 'text-danger' : 'text-success' %>"><%= number_to_currency(net_asset_effect) %></span>
           </td>
           <td></td>
         </tr>
@@ -105,14 +103,23 @@
       <div class="bg-card border rounded-lg p-4 shadow-sm">
         <div class="flex justify-between items-start gap-2 mb-2">
           <span class="font-semibold text-foreground truncate flex-1"><%= financial_entry.description.presence || financial_entry.category&.name || t("expenses.index.unassigned") %></span>
-          <span class="font-semibold text-foreground whitespace-nowrap"><%= number_to_currency(financial_entry.amount) %></span>
+          <span class="whitespace-nowrap font-semibold <%= financial_entry_amount_class(financial_entry) %>"><%= financial_entry_amount_prefix(financial_entry) %><%= number_to_currency(financial_entry.amount) %></span>
         </div>
-        <div class="text-sm text-muted-foreground mb-1">
-          <%= financial_entry.entry_date.strftime("%d %b %Y") %> · <%= financial_entry.entry_type.humanize %> · <%= financial_entry.category&.name || t("expenses.index.unassigned") %>
+        <div class="mb-2">
+          <%= render Financial::EntryRouteComponent.new(entry: financial_entry) %>
         </div>
-        <div class="text-xs text-muted-foreground mb-3">
-          Budget Period: <%= financial_entry.budget_period ? financial_entry.budget_period.name : t("expenses.index.unassigned") %> ·
-          Income Event: <%= financial_entry.income_event ? financial_entry.income_event.description : t("expenses.index.unassigned") %>
+        <div class="mb-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <span><%= financial_entry.entry_date.strftime("%d %b %Y") %></span>
+          <%= render Ui::BadgeComponent.new(label: financial_entry.entry_type.humanize, variant: :outline) %>
+          <span><%= financial_entry.category&.name || t("expenses.index.unassigned") %></span>
+        </div>
+        <div class="mb-3 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground">
+          <% if financial_entry.budget_period %>
+            <%= link_to financial_entry.budget_period.name, financial_entry.budget_period, class: "hover:text-accent hover:underline" %>
+          <% end %>
+          <% if financial_entry.income_event %>
+            <%= link_to financial_entry.income_event.description, financial_entry.income_event, class: "hover:text-accent hover:underline" %>
+          <% end %>
         </div>
         <div class="flex flex-wrap gap-2">
           <%= link_to "View", finance_entry_path(financial_entry), class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 text-sm font-medium text-muted-foreground bg-muted rounded hover:bg-muted" %>
@@ -124,8 +131,8 @@
 
     <% if ordered_entries.any? %>
       <div class="bg-muted/35 border rounded-lg p-4 font-semibold flex justify-between items-center">
-        <span>Total:</span>
-        <span><%= number_to_currency(@financial_entries.sum(:amount)) %></span>
+        <span>Net asset account effect:</span>
+        <span class="<%= net_asset_effect.negative? ? 'text-danger' : 'text-success' %>"><%= number_to_currency(net_asset_effect) %></span>
       </div>
     <% end %>
   </div>

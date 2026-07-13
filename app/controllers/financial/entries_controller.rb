@@ -3,7 +3,6 @@ module Financial
     include Financial::AccountReferenceFiltering
 
     EXPENSE_ENTRY_TYPES = Financial::Entry::EXPENSE_ENTRY_TYPES
-
     before_action :set_financial_entry, only: [ :show, :edit, :update, :destroy ]
     before_action :load_form_collections, only: [ :new, :create, :edit, :update ]
     before_action :load_account_filter_options, only: [ :index ]
@@ -17,6 +16,8 @@ module Financial
       @financial_entries = @financial_entries.where(category_id: params[:category_id]) if params[:category_id].present?
       @financial_entries = @financial_entries.where("financial_entries.description ILIKE ?", "%#{params[:q]}%") if params[:q].present?
       @financial_entries = @financial_entries.where(entry_type: filtered_entry_types) if filtered_entry_types.present?
+      @financial_entries = @financial_entries.to_a
+      preload_entry_routes
       @selected_account_ref = selected_account_ref
     end
 
@@ -106,6 +107,18 @@ module Financial
 
     def set_financial_entry
       @financial_entry = Financial::Entry.for_account(Current.account).find(params[:id])
+    end
+
+    def preload_entry_routes
+      types = @financial_entries.map(&:entry_type).uniq
+      associations = []
+      associations << :financial_account if (types & %w[inflow outflow transfer liability_payment loan_disbursement adjustment]).any?
+      associations << :counterparty_financial_account if types.include?("transfer")
+      associations << :financial_liability if (types & %w[liability_charge liability_payment loan_disbursement]).any?
+      associations << :counterparty_financial_liability if (types & %w[inflow loan_disbursement]).any?
+      return if associations.empty?
+
+      ActiveRecord::Associations::Preloader.new(records: @financial_entries, associations: associations).call
     end
 
     def permitted_expense_or_entry_params
