@@ -74,6 +74,31 @@ class QuickAddControllerTest < ActionDispatch::IntegrationTest
     assert_equal 69.55.to_d, @asset_a.reload.current_balance
   end
 
+  test "quick add expense assigns the selected income event" do
+    income_event = @account.income_events.create!(
+      budget_period: @budget_period,
+      description: "May salary",
+      expected_amount: 1_000,
+      expected_date: Date.new(2026, 5, 1),
+      status: "pending",
+      income_type: "regular"
+    )
+
+    post quick_add_create_expense_path, params: {
+      expense: {
+        description: "Groceries",
+        amount: 30.45,
+        category_id: @category.id,
+        date: Date.new(2026, 5, 7),
+        origin: "asset_#{@asset_a.id}",
+        income_event_id: income_event.id
+      }
+    }
+
+    assert_response :created
+    assert_equal income_event, Financial::Entry.order(:created_at).last.income_event
+  end
+
   test "quick add transfer asset to asset updates both balances" do
     assert_difference -> { Financial::Entry.count }, 1 do
       post quick_add_create_transfer_path, params: {

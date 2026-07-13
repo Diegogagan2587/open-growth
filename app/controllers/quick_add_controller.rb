@@ -43,7 +43,8 @@ class QuickAddController < ApplicationController
       description: expense_params[:description],
       category_id: expense_params[:category_id],
       budget_period_id: Current.account.budget_periods.first&.id,
-      source_selection: from_type.present? ? "#{from_type}:#{from_id}" : nil
+      source_selection: from_type.present? ? "#{from_type}:#{from_id}" : nil,
+      income_event_id: expense_params[:income_event_id]
     )
 
     if result.success?
