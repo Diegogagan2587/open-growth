@@ -19,7 +19,6 @@ Rails.application.routes.draw do
   resources :passwords, param: :token
   get "dashboard/index"
   # resources :budget_line_items
-  # resources :expenses
   # resources :categoryfs
   # resources :categories
   # resources :budget_periods
@@ -54,10 +53,8 @@ Rails.application.routes.draw do
     resources :entries, controller: "/financial/entries"
   end
   scope module: "financial" do
-    resources :expenses
     resources :budget_periods do
       resources :budget_line_items
-      resources :expenses, only: [ :new, :create ]
       resources :income_events, controller: "/income_events"
     end
   end
