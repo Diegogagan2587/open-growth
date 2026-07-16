@@ -90,6 +90,7 @@ module PlannedExpenses
 
     def resolved_entry_date
       return entry_date if entry_date.present?
+      return planned_expense.financial_entry.entry_date if planned_expense.financial_entry&.entry_date.present?
       return planned_expense.applied_on if planned_expense.applied_on.present?
       return planned_expense.due_date if planned_expense.due_date.present? && planned_expense.final_status?
 

@@ -401,6 +401,55 @@ class PlannedExpensesControllerTest < ActionDispatch::IntegrationTest
     assert planned_expense.financial_entry.present?
   end
 
+  test "updating a finalized planned expense preserves its transaction date" do
+    sign_in
+    historical_date = Date.new(2025, 1, 20)
+    planned_expense = PlannedExpense.create!(
+      income_event: @income_event,
+      category: @category,
+      account: @account,
+      description: "Historical expense",
+      amount: 90.00,
+      status: "paid",
+      financial_account: @source_account,
+      applied_on: nil
+    )
+    entry = Financial::Entry.create!(
+      account: @account,
+      planned_expense: planned_expense,
+      income_event: @income_event,
+      category: @category,
+      budget_period: @budget_period,
+      description: planned_expense.description,
+      amount: planned_expense.amount,
+      entry_type: "outflow",
+      entry_date: historical_date,
+      financial_account: @source_account
+    )
+
+    assert_no_difference("Financial::Entry.count") do
+      patch income_event_planned_expense_path(@income_event, planned_expense), params: {
+        planned_expense: {
+          category_id: "",
+          description: planned_expense.description,
+          amount: 125.00,
+          status: "paid",
+          source_selection: "asset:#{@source_account.id}",
+          destination_selection: "asset:#{@destination_account.id}"
+        }
+      }
+    end
+
+    assert_redirected_to income_event_planned_expenses_path(@income_event)
+    assert_equal entry.id, planned_expense.reload.financial_entry.id
+    assert_equal "transfer", entry.reload.entry_type
+    assert_equal 125.to_d, entry.amount
+    assert_equal @source_account.id, entry.financial_account_id
+    assert_equal @destination_account.id, entry.counterparty_financial_account_id
+    assert_equal historical_date, entry.entry_date
+    assert_equal historical_date, planned_expense.applied_on
+  end
+
   test "create_transaction builds missing entry for final status" do
     sign_in
     planned_expense = PlannedExpense.create!(
