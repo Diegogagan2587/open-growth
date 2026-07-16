@@ -140,6 +140,10 @@ class PlannedExpense < ApplicationRecord
     "Uncategorized"
   end
 
+  def movement_label
+    debt_payment? ? "Card payment" : "Transfer"
+  end
+
   def financial_account_name
     financial_account&.name || "unassigned account"
   end
