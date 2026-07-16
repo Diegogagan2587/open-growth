@@ -4,8 +4,7 @@ class PlannedExpensesController < ApplicationController
   before_action :load_route_collections, only: [ :new, :create, :edit, :update ]
 
   def index
-    @planned_expenses = @income_event.planned_expenses_ordered.includes(
-      :category,
+    @planned_transactions = @income_event.planned_expenses_ordered.includes(
       :financial_account,
       :counterparty_financial_account,
       :financial_liability,
@@ -13,6 +12,8 @@ class PlannedExpensesController < ApplicationController
       :financial_entry,
       :expense
     )
+    @planned_expenses, @planned_movements = @planned_transactions.partition(&:budget_consuming?)
+    ActiveRecord::Associations::Preloader.new(records: @planned_expenses, associations: :category).call if @planned_expenses.any?
     @running_balance = @income_event.received_amount || @income_event.expected_amount
     @income_events = IncomeEvent.for_account(Current.account).order(:expected_date)
   end
@@ -26,13 +27,20 @@ class PlannedExpensesController < ApplicationController
   end
 
   def new
-    @planned_expense = @income_event.planned_expenses.build
-    @expense_templates = ExpenseTemplate.for_account(Current.account).includes(:category).all
-    @income_events = ordered_income_events_for_reference(@planned_expense.due_date)
+    @transaction_kind = normalized_transaction_kind
+    @planned_expense = @income_event.planned_expenses.build(status: "pending_to_pay")
+    load_expense_templates if expense_transaction?
   end
 
   def create
-    @planned_expense = @income_event.planned_expenses.build(planned_expense_params)
+    @transaction_kind = normalized_transaction_kind
+    creation_attributes = planned_expense_params.except(:income_event_id, :status, :position)
+    @planned_expense = @income_event.planned_expenses.build(creation_attributes)
+    @planned_expense.status = "pending_to_pay"
+    if transfer_transaction?
+      @planned_expense.category = nil
+      @planned_expense.expense_template = nil
+    end
     @planned_expense.position ||= (@income_event.planned_expenses.maximum(:position) || 0) + 1
 
     respond_to do |format|
@@ -40,7 +48,7 @@ class PlannedExpensesController < ApplicationController
       execution_error = nil
 
       ActiveRecord::Base.transaction do
-        success = @planned_expense.save
+        success = transfer_request_valid? && @planned_expense.save
         raise ActiveRecord::Rollback unless success
 
         if PlannedExpense.final_status?(@planned_expense.status)
@@ -62,8 +70,7 @@ class PlannedExpensesController < ApplicationController
         format.json { render :show, status: :created, location: [ @income_event, @planned_expense ] }
       else
         flash.now[:alert] = execution_error if execution_error.present?
-        @expense_templates = ExpenseTemplate.for_account(Current.account).includes(:category).all
-        @income_events = ordered_income_events_for_reference(@planned_expense.due_date)
+        load_expense_templates if expense_transaction?
         load_route_collections
         format.html { render :new, status: :unprocessable_entity }
         format.json { render json: @planned_expense.errors, status: :unprocessable_entity }
@@ -72,7 +79,7 @@ class PlannedExpensesController < ApplicationController
   end
 
   def edit
-    @expense_templates = ExpenseTemplate.for_account(Current.account).includes(:category).all
+    @expense_templates = ExpenseTemplate.for_account(Current.account).all
     @income_events = ordered_income_events_for_reference(@planned_expense.due_date)
   end
 
@@ -94,7 +101,7 @@ class PlannedExpensesController < ApplicationController
           )
           unless execution.success?
             @planned_expense.errors.add(:base, execution.error_message)
-            @expense_templates = ExpenseTemplate.for_account(Current.account).includes(:category).all
+            @expense_templates = ExpenseTemplate.for_account(Current.account).all
             @income_events = ordered_income_events_for_reference(@planned_expense.due_date)
             load_route_collections
             flash.now[:alert] = execution.error_message
@@ -117,7 +124,7 @@ class PlannedExpensesController < ApplicationController
         end
         format.json { render :show, status: :ok, location: [ @income_event, @planned_expense ] }
       else
-        @expense_templates = ExpenseTemplate.for_account(Current.account).includes(:category).all
+        @expense_templates = ExpenseTemplate.for_account(Current.account).all
         @income_events = ordered_income_events_for_reference(@planned_expense.due_date)
         load_route_collections
         format.turbo_stream { render :edit, status: :unprocessable_entity }
@@ -127,7 +134,7 @@ class PlannedExpensesController < ApplicationController
     end
   rescue ActiveRecord::RecordInvalid => e
     @planned_expense.errors.add(:base, e.record.errors.full_messages.to_sentence)
-    @expense_templates = ExpenseTemplate.for_account(Current.account).includes(:category).all
+    @expense_templates = ExpenseTemplate.for_account(Current.account).all
     @income_events = ordered_income_events_for_reference(@planned_expense.due_date)
     load_route_collections
     respond_to do |format|
@@ -222,8 +229,40 @@ class PlannedExpensesController < ApplicationController
   end
 
   def load_route_collections
-    @financial_accounts = Financial::Asset.for_account(Current.account).order(:name)
-    @financial_liabilities = Financial::Liability.for_account(Current.account).order(:name)
+    assets = Financial::Asset.for_account(Current.account)
+    liabilities = Financial::Liability.for_account(Current.account)
+    if action_name.in?(%w[new create])
+      assets = assets.active
+      liabilities = liabilities.active
+    end
+
+    @financial_accounts = assets.order(:name)
+    @financial_liabilities = liabilities.order(:name)
+    @categories = Category.for_account(Current.account).order(:name)
+  end
+
+  def normalized_transaction_kind
+    params[:kind] == "transfer" ? "transfer" : "expense"
+  end
+
+  def expense_transaction?
+    @transaction_kind == "expense"
+  end
+
+  def transfer_transaction?
+    @transaction_kind == "transfer"
+  end
+
+  def transfer_request_valid?
+    return true unless transfer_transaction?
+
+    @planned_expense.errors.add(:source_selection, "must be an asset account") unless @planned_expense.source_selection&.start_with?("asset:")
+    @planned_expense.errors.add(:destination_selection, "must be selected") if @planned_expense.destination_selection.blank?
+    @planned_expense.errors.empty?
+  end
+
+  def load_expense_templates
+    @expense_templates = ExpenseTemplate.for_account(Current.account).order(:name)
   end
 
   def ordered_income_events_for_reference(reference_date)

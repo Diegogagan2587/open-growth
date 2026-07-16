@@ -1,6 +1,6 @@
 <%= tag.div class: "px-4 py-3 border-t border-border flex flex-col gap-1" do %>
   <div class="flex justify-between items-start gap-2">
-    <span class="font-medium text-foreground"><%= planned_expense.category.name %></span>
+    <span class="font-medium text-foreground"><%= planned_expense.classification_label %></span>
     <span class="font-semibold text-foreground shrink-0"><%= number_to_currency(planned_expense.amount) %></span>
   </div>
   <% if planned_expense.description.present? %>

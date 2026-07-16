@@ -6,7 +6,7 @@ class PlannedExpense < ApplicationRecord
   belongs_to :account
   belongs_to :income_event
   belongs_to :origin_income_event, class_name: "IncomeEvent", optional: true
-  belongs_to :category
+  belongs_to :category, optional: true
   belongs_to :expense_template, optional: true
   belongs_to :shopping_item, optional: true
   belongs_to :financial_account, class_name: "Financial::Asset", optional: true
@@ -22,6 +22,7 @@ class PlannedExpense < ApplicationRecord
   validates :description, presence: true
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :status, presence: true
+  validates :category, presence: true, if: :budget_consuming?
   validate :financial_routing_is_valid, if: -> {
     source_selection.present? || destination_selection.present? ||
     financial_account_id.present? || counterparty_financial_account_id.present? ||
@@ -31,8 +32,13 @@ class PlannedExpense < ApplicationRecord
   scope :by_position, -> { order(:position, :created_at) }
   scope :by_status, ->(status) { where(status: status) }
   scope :by_template, ->(template_id) { where(expense_template_id: template_id) }
+  scope :budget_consuming, -> {
+    where(counterparty_financial_account_id: nil)
+      .where("financial_account_id IS NULL OR financial_liability_id IS NULL")
+  }
 
   def percentage_of_income
+    return 0 unless budget_consuming?
     return 0 if income_event.expected_amount.zero?
     (amount / income_event.expected_amount) * 100
   end
@@ -99,23 +105,47 @@ class PlannedExpense < ApplicationRecord
   public
 
   def routing_summary
-    if transfer?
-      "Transfer from #{financial_account_name} to #{counterparty_financial_account&.name}"
-    elsif debt_payment?
-      "Pay #{financial_liability&.name} from #{financial_account_name}"
-    elsif financial_liability.present? && financial_account.blank?
-      "Charged to #{financial_liability.name}"
-    elsif financial_account.present?
-      "Pay from #{financial_account_name}"
+    source = financial_account
+    destination = counterparty_financial_account
+    liability = financial_liability
+
+    if source && destination
+      "Transfer from #{source.name} to #{destination.name}"
+    elsif source && liability
+      "Pay #{liability.name} from #{source.name}"
+    elsif liability
+      "Charged to #{liability.name}"
+    elsif source
+      "Pay from #{source.name}"
     end
   end
 
   def transfer?
-    financial_account.present? && counterparty_financial_account.present?
+    financial_account_id.present? && counterparty_financial_account_id.present?
   end
 
   def debt_payment?
-    financial_account.present? && financial_liability.present?
+    financial_account_id.present? && financial_liability_id.present?
+  end
+
+  def budget_consuming?
+    source_present = financial_account.present?
+    destination_present = counterparty_financial_account.present?
+    liability_present = financial_liability.present?
+
+    !(source_present && destination_present) && !(source_present && liability_present)
+  end
+
+  def classification_label
+    return category.name if category.present?
+    return "Transfer" if transfer?
+    return "Card payment" if debt_payment?
+
+    "Uncategorized"
+  end
+
+  def movement_label
+    debt_payment? ? "Card payment" : "Transfer"
   end
 
   def financial_account_name

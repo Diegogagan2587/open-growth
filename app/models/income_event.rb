@@ -59,7 +59,7 @@ class IncomeEvent < ApplicationRecord
     # 2. Expenses directly assigned (without a planned_expense_id)
     # Note: Expenses created from planned expenses (with planned_expense_id) are NOT counted
     # to avoid double-counting, as they're already represented by the planned expense
-    planned_expenses.sum(:amount) + financial_entries.where(planned_expense_id: nil, entry_type: %w[outflow liability_charge]).sum(:amount)
+    planned_expenses.budget_consuming.sum(:amount) + financial_entries.where(planned_expense_id: nil, entry_type: %w[outflow liability_charge]).sum(:amount)
   end
 
   def total_spent
