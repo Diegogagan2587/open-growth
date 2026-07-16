@@ -117,7 +117,7 @@ class PlannedExpense < ApplicationRecord
   end
 
   def transfer?
-    financial_account.present? && counterparty_financial_account.present?
+    financial_account_id.present? && counterparty_financial_account_id.present?
   end
 
   def debt_payment?
