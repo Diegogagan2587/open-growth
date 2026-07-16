@@ -121,7 +121,7 @@ class PlannedExpense < ApplicationRecord
   end
 
   def debt_payment?
-    financial_account.present? && financial_liability.present?
+    financial_account_id.present? && financial_liability_id.present?
   end
 
   def budget_consuming?
