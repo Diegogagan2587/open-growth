@@ -104,6 +104,79 @@ class IncomeEventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, I18n.t("expenses.index.unassigned")
   end
 
+  test "show uses planned transaction labels and actions" do
+    sign_in
+
+    get income_event_path(@loan_income_event)
+
+    assert_response :success
+    assert_select "h2", "Planned Transactions"
+    assert_select "a", "Plan Transaction"
+    assert_select "a", "View Plan"
+  end
+
+  test "show uses a padded shell and a low-chrome income summary" do
+    sign_in
+
+    get income_event_path(@loan_income_event)
+
+    assert_response :success
+    assert_select "main > div[class*='p-4'][class*='sm:p-6']", count: 1
+    assert_select "main > div > p[style='color: green']", count: 0
+    assert_select "section[aria-labelledby='income-event-title'][class*='border-b']", count: 1
+    assert_select "section[aria-labelledby='income-event-title'].rounded-2xl", count: 0
+    assert_select "#income-event-metrics[class*='divide-y']", count: 1
+    assert_select "#income-event-metrics > div.rounded-xl", count: 0
+  end
+
+  test "show separates planned expenses from movements with independent totals" do
+    sign_in
+    income_event = IncomeEvent.create!(
+      account: @account,
+      description: "Mixed plan salary",
+      expected_date: Date.current,
+      expected_amount: 1000,
+      status: "pending"
+    )
+    category = Category.for_account(@account).first
+    source = Financial::Asset.create!(
+      account: @account,
+      name: "Mixed plan source",
+      account_type: "checking",
+      status: "active",
+      opening_balance: 500
+    )
+    destination = Financial::Asset.create!(
+      account: @account,
+      name: "Mixed plan destination",
+      account_type: "savings",
+      status: "active",
+      opening_balance: 0
+    )
+    PlannedExpense.create!(income_event: income_event, category: category, description: "Food expense", amount: 100, status: "pending_to_pay", financial_account: source)
+    PlannedExpense.create!(income_event: income_event, category: category, description: "Savings transfer", amount: 200, status: "pending_to_pay", financial_account: source, counterparty_financial_account: destination)
+
+    get income_event_path(income_event)
+
+    assert_response :success
+    assert_select "#planned-expenses" do
+      assert_select "h4", "Food expense"
+      assert_select "h4", text: "Savings transfer", count: 0
+      assert_select "p", text: /10.0% of income/
+      assert_select "p", text: /Total.*\$100\.00/
+    end
+    assert_select "#planned-movements" do
+      assert_select "h4", "Savings transfer"
+      assert_select "h4", text: "Food expense", count: 0
+      assert_select "p", "Transfer"
+      assert_select "p", "Does not affect budget"
+      assert_select "p", text: /Transfer from Mixed plan source to Mixed plan destination/
+      assert_select "p", text: /Total.*\$200\.00/
+    end
+    assert_equal 100.to_d, income_event.reload.total_planned
+    assert_equal 900.to_d, income_event.remaining_budget
+  end
+
   test "mark as received creates loan disbursement entry" do
     sign_in
 

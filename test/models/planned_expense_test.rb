@@ -71,6 +71,43 @@ class PlannedExpenseTest < ActiveSupport::TestCase
     assert_equal @source_account.id, planned_expense.financial_entry.financial_account_id
   end
 
+  test "budget-consuming expense requires a category" do
+    planned_expense = PlannedExpense.new(
+      income_event: @income_event,
+      description: "Uncategorized expense",
+      amount: 25,
+      status: "pending_to_pay",
+      financial_account: @source_account
+    )
+
+    assert_not planned_expense.valid?
+    assert_includes planned_expense.errors[:category], "can't be blank"
+  end
+
+  test "uncategorized movements are valid and have useful labels" do
+    transfer = PlannedExpense.create!(
+      income_event: @income_event,
+      description: "Move money",
+      amount: 25,
+      status: "pending_to_pay",
+      financial_account: @source_account,
+      counterparty_financial_account: @destination_account
+    )
+    payment = PlannedExpense.create!(
+      income_event: @income_event,
+      description: "Pay card",
+      amount: 25,
+      status: "pending_to_pay",
+      financial_account: @source_account,
+      financial_liability: @liability
+    )
+
+    assert_nil transfer.category
+    assert_equal "Transfer", transfer.classification_label
+    assert_nil payment.category
+    assert_equal "Card payment", payment.classification_label
+  end
+
   test "apply! creates transfer entry when destination account is present" do
     planned_expense = PlannedExpense.create!(
       income_event: @income_event,
@@ -121,6 +158,41 @@ class PlannedExpenseTest < ActiveSupport::TestCase
     assert_equal @source_account.id, entry.financial_account_id
     assert_equal @liability.id, entry.financial_liability_id
     assert_equal planned_expense.id, entry.planned_expense_id
+  end
+
+  test "transfers and liability payments do not consume planned budget" do
+    PlannedExpense.create!(
+      income_event: @income_event,
+      category: @category,
+      description: "Groceries",
+      amount: 100.00,
+      status: "pending_to_pay",
+      financial_account: @source_account
+    )
+    transfer = PlannedExpense.create!(
+      income_event: @income_event,
+      category: @category,
+      description: "Move to savings",
+      amount: 200.00,
+      status: "pending_to_pay",
+      financial_account: @source_account,
+      counterparty_financial_account: @destination_account
+    )
+    liability_payment = PlannedExpense.create!(
+      income_event: @income_event,
+      category: @category,
+      description: "Pay credit card",
+      amount: 300.00,
+      status: "pending_to_pay",
+      financial_account: @source_account,
+      financial_liability: @liability
+    )
+
+    assert_not transfer.budget_consuming?
+    assert_not liability_payment.budget_consuming?
+    assert_equal 100.to_d, @income_event.total_planned
+    assert_equal 900.to_d, @income_event.remaining_budget
+    assert_equal 100.to_d, @budget_period.total_planned
   end
 
   test "execute service is idempotent for transaction creation" do
