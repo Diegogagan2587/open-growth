@@ -32,6 +32,10 @@ class PlannedExpense < ApplicationRecord
   scope :by_position, -> { order(:position, :created_at) }
   scope :by_status, ->(status) { where(status: status) }
   scope :by_template, ->(template_id) { where(expense_template_id: template_id) }
+  scope :budget_consuming, -> {
+    where(counterparty_financial_account_id: nil)
+      .where("financial_account_id IS NULL OR financial_liability_id IS NULL")
+  }
 
   def percentage_of_income
     return 0 if income_event.expected_amount.zero?
