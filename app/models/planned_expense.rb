@@ -132,6 +132,13 @@ class PlannedExpense < ApplicationRecord
     !(source_present && destination_present) && !(source_present && liability_present)
   end
 
+  def classification_label
+    return category.name if category.present?
+    return "Transfer" if transfer?
+    return "Card payment" if debt_payment?
+
+    "Uncategorized"
+  end
 
   def financial_account_name
     financial_account&.name || "unassigned account"
