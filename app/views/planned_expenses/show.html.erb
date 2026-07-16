@@ -47,7 +47,9 @@
     <% if @planned_expense.routing_summary.present? %>
       <div class="md:col-span-2">
         <p class="text-sm font-medium text-muted-foreground mb-1">Routing</p>
-        <p class="text-foreground bg-emerald-50 p-3 rounded-lg border border-emerald-200"><%= @planned_expense.routing_summary %></p>
+        <div class="rounded-lg border border-border bg-muted/40 p-3 shadow-sm">
+          <p class="text-sm font-medium text-foreground leading-6"><%= @planned_expense.routing_summary %></p>
+        </div>
       </div>
     <% end %>
     <% if @planned_expense.financial_entry.present? %>
