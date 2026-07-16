@@ -38,6 +38,7 @@ class PlannedExpense < ApplicationRecord
   }
 
   def percentage_of_income
+    return 0 unless budget_consuming?
     return 0 if income_event.expected_amount.zero?
     (amount / income_event.expected_amount) * 100
   end
