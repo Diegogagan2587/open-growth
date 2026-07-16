@@ -42,14 +42,13 @@ class IncomeEventsController < ApplicationController
       .where(planned_expense_id: nil, entry_type: %w[outflow liability_charge])
       .order(entry_date: :desc)
     @loan_payment_schedules = @income_event.loan_payment_schedules_ordered if @income_event.loan?
-    @pending_liabilities = Financial::Liability.for_account(Current.account).active.select { |liability| liability.current_balance.positive? }
+    @pending_liabilities = Financial::Liability.for_account(Current.account).includes(:account).active.select { |liability| liability.current_balance.positive? }
     @active_financial_accounts = Financial::Asset.for_account(Current.account).active.order(:name)
   end
 
   def loan_summary
     @loan_payment_schedules = @income_event.loan_payment_schedules_ordered
     @planned_expenses = @income_event.planned_expenses
-      .includes(:income_event)
       .order(Arel.sql("COALESCE(planned_expenses.loan_installment_number, 2147483647) ASC"), :due_date, :created_at)
     @direct_expenses = @income_event.financial_entries
       .includes(:category)
