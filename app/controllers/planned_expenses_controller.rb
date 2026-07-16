@@ -4,7 +4,15 @@ class PlannedExpensesController < ApplicationController
   before_action :load_route_collections, only: [ :new, :create, :edit, :update ]
 
   def index
-    @planned_expenses = @income_event.planned_expenses_ordered
+    @planned_expenses = @income_event.planned_expenses_ordered.includes(
+      :category,
+      :financial_account,
+      :counterparty_financial_account,
+      :financial_liability,
+      :expense_template,
+      :financial_entry,
+      :expense
+    )
     @running_balance = @income_event.received_amount || @income_event.expected_amount
     @income_events = IncomeEvent.for_account(Current.account).order(:expected_date)
   end
