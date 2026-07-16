@@ -118,6 +118,15 @@ class PlannedExpense < ApplicationRecord
     financial_account.present? && financial_liability.present?
   end
 
+  def budget_consuming?
+    source_present = financial_account.present?
+    destination_present = counterparty_financial_account.present?
+    liability_present = financial_liability.present?
+
+    !(source_present && destination_present) && !(source_present && liability_present)
+  end
+
+
   def financial_account_name
     financial_account&.name || "unassigned account"
   end
