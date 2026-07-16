@@ -6,7 +6,7 @@ class PlannedExpense < ApplicationRecord
   belongs_to :account
   belongs_to :income_event
   belongs_to :origin_income_event, class_name: "IncomeEvent", optional: true
-  belongs_to :category
+  belongs_to :category, optional: true
   belongs_to :expense_template, optional: true
   belongs_to :shopping_item, optional: true
   belongs_to :financial_account, class_name: "Financial::Asset", optional: true
@@ -22,6 +22,7 @@ class PlannedExpense < ApplicationRecord
   validates :description, presence: true
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :status, presence: true
+  validates :category, presence: true, if: :budget_consuming?
   validate :financial_routing_is_valid, if: -> {
     source_selection.present? || destination_selection.present? ||
     financial_account_id.present? || counterparty_financial_account_id.present? ||
