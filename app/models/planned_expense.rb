@@ -105,14 +105,18 @@ class PlannedExpense < ApplicationRecord
   public
 
   def routing_summary
-    if transfer?
-      "Transfer from #{financial_account_name} to #{counterparty_financial_account&.name}"
-    elsif debt_payment?
-      "Pay #{financial_liability&.name} from #{financial_account_name}"
-    elsif financial_liability.present? && financial_account.blank?
-      "Charged to #{financial_liability.name}"
-    elsif financial_account.present?
-      "Pay from #{financial_account_name}"
+    source = financial_account
+    destination = counterparty_financial_account
+    liability = financial_liability
+
+    if source && destination
+      "Transfer from #{source.name} to #{destination.name}"
+    elsif source && liability
+      "Pay #{liability.name} from #{source.name}"
+    elsif liability
+      "Charged to #{liability.name}"
+    elsif source
+      "Pay from #{source.name}"
     end
   end
 
