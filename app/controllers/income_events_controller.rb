@@ -36,6 +36,7 @@ class IncomeEventsController < ApplicationController
       .includes(:financial_account, :counterparty_financial_account, :financial_liability)
       .order(Arel.sql("COALESCE(planned_expenses.loan_installment_number, 2147483647) ASC"), :due_date, :created_at)
     @planned_expenses, @planned_movements = @planned_transactions.partition(&:budget_consuming?)
+    ActiveRecord::Associations::Preloader.new(records: @planned_expenses, associations: :category).call if @planned_expenses.any?
     @direct_expenses = @income_event.financial_entries
       .includes(:category)
       .where(planned_expense_id: nil, entry_type: %w[outflow liability_charge])
