@@ -1,0 +1,59 @@
+class Financial::PlanProjection
+  Row = Data.define(:transaction, :balance)
+
+  def self.for(plan)
+    new(plan)
+  end
+
+  def initialize(plan)
+    @plan = plan
+  end
+
+  def expected_funding
+    projected_funding_for(plan)
+  end
+
+  def planned_consumption
+    plan.planned_expenses.budget_consuming.sum(:amount)
+  end
+
+  def opening_balance
+    preceding_plans.sum(0.to_d) do |preceding_plan|
+      projected_funding_for(preceding_plan) - preceding_plan.planned_expenses.budget_consuming.sum(:amount).to_d
+    end
+  end
+
+  def ending_balance
+    opening_balance + expected_funding - planned_consumption
+  end
+
+  def rows
+    balance = opening_balance + expected_funding
+    plan.planned_expenses.includes(:financial_account, :counterparty_financial_account, :financial_liability).by_position.map do |transaction|
+      balance -= transaction.amount.to_d if transaction.budget_consuming?
+      Row.new(transaction:, balance:)
+    end
+  end
+
+  def first_deficit_transaction
+    rows.find { |row| row.balance.negative? }&.transaction
+  end
+
+  private
+
+  attr_reader :plan
+
+  def preceding_plans
+    plan.account.income_events
+      .where("expected_date < :date OR (expected_date = :date AND id < :id)", date: plan.expected_date, id: plan.id)
+      .order(:expected_date, :id)
+  end
+
+
+  def projected_funding_for(candidate)
+    sources = Financial::FundingSource.where(financial_plan_id: candidate.id)
+    return sources.sum(:expected_amount).to_d if sources.exists?
+
+    candidate.expected_amount.to_d
+  end
+end
