@@ -12,7 +12,7 @@
 
   <div class="mb-4">
     <%= form.label :budget_period_id, "Budget Period (optional)", class: "block text-sm font-medium text-foreground mb-1" %>
-    <%= form.collection_select :budget_period_id, BudgetPeriod.all, :id, :name, { include_blank: "None" }, { class: "border rounded px-3 py-2 w-full" } %>
+    <%= form.collection_select :budget_period_id, BudgetPeriod.for_account(Current.account), :id, :name, { include_blank: "None" }, { class: "border rounded px-3 py-2 w-full" } %>
   </div>
 
   <div class="mb-4">

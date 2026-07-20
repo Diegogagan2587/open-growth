@@ -20,6 +20,7 @@ module PlannedExpenses
         entry = build_or_update_financial_entry!(execution_date: execution_date)
 
         planned_expense.update!(status: status_after_execution) unless planned_expense.status == status_after_execution
+        planned_expense.update!(execution_status: "applied") unless planned_expense.execution_status == "applied"
         if PlannedExpense.final_status?(status_after_execution) && planned_expense.applied_on.blank?
           planned_expense.update!(applied_on: execution_date)
         end
@@ -36,7 +37,10 @@ module PlannedExpenses
 
 
     def build_or_update_financial_entry!(execution_date:)
-      entry = Financial::Entry.find_by(planned_expense_id: planned_expense.id) || planned_expense.financial_entry || Financial::Entry.new
+      existing_entry = Financial::Entry.find_by(planned_expense_id: planned_expense.id) || planned_expense.financial_entry
+      return existing_entry if existing_entry
+
+      entry = Financial::Entry.new
       entry.account = planned_expense.account
       entry.income_event = planned_expense.income_event
       entry.planned_expense = planned_expense

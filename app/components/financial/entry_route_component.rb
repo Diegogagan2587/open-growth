@@ -19,7 +19,7 @@ class Financial::EntryRouteComponent < ViewComponent::Base
   def source
     case @entry.entry_type
     when "inflow"
-      endpoint("Source", "Income event", @entry.income_event, helpers.income_event_path(@entry.income_event)) if @entry.income_event
+      endpoint("Plan", "Financial plan", @entry.income_event, helpers.finance_plan_path(@entry.income_event)) if @entry.income_event
     when "outflow", "transfer", "adjustment"
       asset_endpoint("Source", @entry.financial_account)
     when "liability_charge", "loan_disbursement"
@@ -53,7 +53,7 @@ class Financial::EntryRouteComponent < ViewComponent::Base
   end
 
   def income_event_endpoint(role, income_event)
-    endpoint(role, "Income event", income_event, helpers.income_event_path(income_event)) if income_event
+    endpoint(role, "Financial plan", income_event, helpers.finance_plan_path(income_event)) if income_event
   end
 
   def endpoint(role, kind, record, path)

@@ -14,6 +14,8 @@ class Financial::Entry < ApplicationRecord
   belongs_to :planned_expense, optional: true
   belongs_to :expense, optional: true
   belongs_to :income_event, optional: true
+  belongs_to :funding_source, class_name: "Financial::FundingSource", optional: true, inverse_of: :receipt_entry
+  belongs_to :financial_loan, class_name: "Financial::Loan", optional: true, inverse_of: :entries
 
   before_validation :set_account, on: :create
 
@@ -25,9 +27,11 @@ class Financial::Entry < ApplicationRecord
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :description, presence: true
   validates :category, presence: true, if: :classification_required?
+  validates :planned_expense_id, uniqueness: true, allow_nil: true
 
   validate :required_links_by_type
   validate :associations_belong_to_same_account
+  validate :plan_is_open_for_new_actuals, on: :create
 
   def account_delta
     case entry_type
@@ -207,5 +211,19 @@ class Financial::Entry < ApplicationRecord
     if income_event.present? && income_event.account_id != account_id
       errors.add(:income_event, "must belong to the current account")
     end
+
+    if funding_source.present? && funding_source.account_id != account_id
+      errors.add(:funding_source, "must belong to the current account")
+    end
+
+    if financial_loan.present? && financial_loan.account_id != account_id
+      errors.add(:financial_loan, "must belong to the current account")
+    end
+  end
+
+  def plan_is_open_for_new_actuals
+    return unless income_event&.lifecycle_status.in?(%w[closed cancelled])
+
+    errors.add(:income_event, "must be active before adding an actual entry")
   end
 end

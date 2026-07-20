@@ -39,6 +39,29 @@ Rails.application.routes.draw do
 
   namespace :finance do
     root to: "finance#index"
+    resources :plans, controller: "/financial/plans" do
+      member do
+        post :close
+        post :cancel
+      end
+      resources :planned_transactions, controller: "/financial/planned_transactions", only: [ :index, :create, :update, :destroy ]
+      resources :funding_sources, controller: "/financial/funding_sources", only: [ :create, :update, :destroy ] do
+        member { post :receive }
+      end
+    end
+    resources :planned_transactions, controller: "/financial/planned_transactions", only: :index do
+      member do
+        patch :apply
+        patch :move
+      end
+    end
+    resources :loans, controller: "/financial/loans" do
+      member do
+        post :activate
+        post :generate_installments
+        post "installments/:installment_id/plan", action: :plan_installment, as: :plan_installment
+      end
+    end
     resources :categories, controller: "/financial/categories"
     resources :financial_accounts, controller: "/financial/accounts"
     resources :financial_liabilities, controller: "/financial/liabilities" do

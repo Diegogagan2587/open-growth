@@ -60,13 +60,13 @@ class ExpensesControllerTest < ActionDispatch::IntegrationTest
     Current.session = nil
   end
 
-  test "income event show displays quick add direct expense button" do
+  test "financial plan show displays add unplanned actual button" do
     sign_in
 
-    get income_event_path(@income_event)
+    get finance_plan_path(@income_event)
 
     assert_response :success
-    assert_select "a[href='#{income_event_new_direct_expense_path(@income_event)}']", text: /Add Unplanned Expense/
+    assert_select "a[href='#{new_finance_entry_path(income_event_id: @income_event.id)}']", text: /Add unplanned actual/
   end
 
   test "should get quick new direct expense with defaults" do

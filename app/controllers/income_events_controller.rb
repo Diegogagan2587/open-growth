@@ -1,4 +1,5 @@
 class IncomeEventsController < ApplicationController
+  before_action :redirect_legacy_plan_pages, only: [ :index, :show, :new, :edit ]
   before_action :set_income_event, only: [ :show, :edit, :update, :destroy, :receive, :apply_all, :loan_summary, :pay_liability ]
   before_action :set_budget_period, only: [ :index, :new, :create ]
   before_action :load_loan_route_collections, only: [ :new, :create, :edit, :update ]
@@ -32,6 +33,8 @@ class IncomeEventsController < ApplicationController
   end
 
   def show
+    @projection = Financial::PlanProjection.for(@income_event)
+    @actuals = Financial::PlanActuals.for(@income_event)
     @planned_transactions = @income_event.planned_expenses
       .includes(:financial_account, :counterparty_financial_account, :financial_liability)
       .order(Arel.sql("COALESCE(planned_expenses.loan_installment_number, 2147483647) ASC"), :due_date, :created_at)
@@ -67,6 +70,7 @@ class IncomeEventsController < ApplicationController
 
     respond_to do |format|
       if @income_event.save
+        @income_event.ensure_primary_funding_source!
         format.html { redirect_to @income_event, notice: t("income_events.flash.created") }
         format.json { render :show, status: :created, location: @income_event }
       else
@@ -102,14 +106,34 @@ class IncomeEventsController < ApplicationController
 
   def receive
     if request.patch? || request.put?
-      if @income_event.update(receive_params.merge(status: "received"))
+      if @income_event.valid?
+        source = @income_event.ensure_primary_funding_source!
         if @income_event.loan?
+          @income_event.update!(receive_params.merge(status: "received"))
           disbursement = Loans::DisbursementSyncService.call(@income_event)
           unless disbursement.success?
             flash.now[:alert] = disbursement.error_message
             render :receive, status: :unprocessable_entity
             return
           end
+          disbursement.entry.update!(funding_source: source) if disbursement.entry.funding_source_id.blank?
+        else
+          result = Financial::FundingSources::ReceiveService.call(
+            funding_source: source,
+            amount: receive_params[:received_amount],
+            entry_date: receive_params[:received_date]
+          )
+          unless result.success?
+            @income_event.errors.add(:base, result.error_message)
+            render :receive, status: :unprocessable_entity
+            return
+          end
+          @income_event.update_columns(
+            received_date: result.entry.entry_date,
+            received_amount: result.entry.amount,
+            status: "received",
+            updated_at: Time.current
+          )
         end
 
         redirect_to @income_event, notice: t("income_events.flash.marked_received")
@@ -155,6 +179,22 @@ class IncomeEventsController < ApplicationController
   end
 
   private
+
+  def redirect_legacy_plan_pages
+    return unless request.format.html?
+
+    destination = case action_name
+    when "index"
+      finance_plans_path(budget_period_id: params[:budget_period_id])
+    when "new"
+      new_finance_plan_path(budget_period_id: params[:budget_period_id])
+    when "show"
+      finance_plan_path(Financial::Plan.for_account(Current.account).find(params[:id]))
+    when "edit"
+      edit_finance_plan_path(Financial::Plan.for_account(Current.account).find(params[:id]))
+    end
+    redirect_to destination
+  end
 
   def set_income_event
     @income_event = IncomeEvent.for_account(Current.account).find(params[:id])

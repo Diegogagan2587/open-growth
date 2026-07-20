@@ -15,13 +15,13 @@
   <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-x-2">
     <%= render Ui::ButtonComponent.new(href: edit_budget_period_path(@budget_period), label: "Edit", variant: "outline", css_class: "w-full sm:w-auto justify-center min-h-[44px]") %>
     <%= render Ui::ButtonComponent.new(
-      href: budget_period_income_events_path(@budget_period),
+      href: finance_plans_path(budget_period_id: @budget_period.id),
       label: t("budget_periods.show.income_events"),
       variant: "default",
       css_class: "w-full sm:w-auto justify-center min-h-[44px]"
     ) %>
     <%= render Ui::ButtonComponent.new(
-      href: new_budget_period_income_event_path(@budget_period),
+      href: new_finance_plan_path(budget_period_id: @budget_period.id),
       label: t("income_events.new_income_event"),
       variant: "default",
       css_class: "w-full sm:w-auto justify-center min-h-[44px]"
@@ -116,7 +116,7 @@
 <% else %>
   <div class="text-center py-10 px-4 bg-muted/35 rounded-lg border border-border mb-6">
     <p class="text-muted-foreground mb-3"><%= t("budget_periods.show.no_income_events") %></p>
-    <%= render Ui::ButtonComponent.new(href: new_budget_period_income_event_path(@budget_period), label: t("budget_periods.show.add_one"), variant: :default) %>
+    <%= render Ui::ButtonComponent.new(href: new_finance_plan_path(budget_period_id: @budget_period.id), label: t("budget_periods.show.add_one"), variant: :default) %>
   </div>
 <% end %>
 
@@ -225,7 +225,7 @@
 <% else %>
   <div class="text-center py-12 px-4 bg-muted/35 rounded-lg border border-border">
     <p class="text-muted-foreground mb-4"><%= t("budget_periods.show.no_planned_expenses") %></p>
-    <%= render Ui::ButtonComponent.new(href: new_budget_period_income_event_path(@budget_period), label: t("budget_periods.show.add_income_event"), variant: :default) %>
+    <%= render Ui::ButtonComponent.new(href: new_finance_plan_path(budget_period_id: @budget_period.id), label: "Add financial plan", variant: :default) %>
   </div>
 <% end %>
 </div>

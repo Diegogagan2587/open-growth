@@ -12,6 +12,7 @@ class IncomeEvent < ApplicationRecord
   has_many :originated_planned_expenses, class_name: "PlannedExpense", foreign_key: :origin_income_event_id, dependent: :nullify
   has_many :expenses, dependent: :nullify
   has_many :financial_entries, class_name: "Financial::Entry", dependent: :nullify
+  has_many :funding_sources, class_name: "Financial::FundingSource", foreign_key: :financial_plan_id, dependent: :restrict_with_error
   has_many :loan_payment_schedules, foreign_key: :loan_id, dependent: :destroy
   has_one :loan_disbursement_entry, -> { where(entry_type: "loan_disbursement") }, class_name: "Financial::Entry", inverse_of: :income_event
   has_one :regular_income_entry, -> { where(entry_type: "inflow", expense_id: nil, planned_expense_id: nil) }, class_name: "Financial::Entry", inverse_of: :income_event
@@ -22,8 +23,6 @@ class IncomeEvent < ApplicationRecord
   before_validation :assign_destination_selection
   before_validation :infer_loan_interest_rate
   after_commit :sync_loan_side_effects, if: :loan?
-  after_commit :sync_regular_income_transaction, unless: :loan?
-  after_destroy_commit :remove_regular_income_transaction
 
   scope :for_account, ->(account) { where(account: account) }
   scope :regular, -> { where(income_type: "regular") }
@@ -45,6 +44,7 @@ class IncomeEvent < ApplicationRecord
   validate :loan_routing_account_ownership, if: :loan?
   validate :regular_income_destination_presence, if: :regular_income_destination_set?
   validate :regular_income_destination_account_ownership, unless: :loan?
+  validate :budget_period_account_ownership
 
   scope :pending, -> { where(status: "pending") }
   scope :received, -> { where(status: "received") }
@@ -84,6 +84,24 @@ class IncomeEvent < ApplicationRecord
       received_amount: amount,
       status: "received"
     )
+  end
+
+  def ensure_primary_funding_source!
+    source = funding_sources.find_or_initialize_by(legacy_income_event_id: id)
+    source.assign_attributes(
+      account: account,
+      description: description,
+      expected_amount: expected_amount,
+      expected_date: expected_date,
+      kind: loan? ? "borrowed" : "income",
+      expected_destination_asset: loan? ? loan_disbursement_destination_asset : regular_income_destination_asset,
+      expected_destination_liability: loan? ? loan_disbursement_destination_liability : regular_income_destination_liability
+    )
+    source.save!
+
+    entry = loan? ? loan_disbursement_entry : regular_income_entry
+    entry&.update!(funding_source: source) if entry&.funding_source_id.blank?
+    source
   end
 
   def apply_all!
@@ -346,14 +364,10 @@ class IncomeEvent < ApplicationRecord
     end
   end
 
-  def sync_regular_income_transaction
-    IncomeEvents::TransactionSyncService.call(self)
-  end
+  def budget_period_account_ownership
+    return if account.blank? || budget_period.blank? || budget_period.account_id == account_id
 
-  def remove_regular_income_transaction
-    return if loan?
-
-    IncomeEvents::TransactionSyncService.remove_for(self)
+    errors.add(:budget_period, "must belong to the current account")
   end
 
   def inferred_annual_rate_from_payment

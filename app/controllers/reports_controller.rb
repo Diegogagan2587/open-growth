@@ -40,10 +40,10 @@ class ReportsController < ApplicationController
     @expenses_by_category_values = by_category.values.map(&:to_f)
     @expenses_by_category_ids = by_category.keys.map { |(id, _)| id }
 
-    # Income vs expenses (for the same date range: income by effective date)
-    income_total = IncomeEvent.for_account(Current.account).where(
-      "COALESCE(received_date, expected_date) BETWEEN ? AND ?", @date_from, @date_to
-    ).sum(Arel.sql("COALESCE(received_amount, expected_amount)"))
+    # Actual reporting is ledger-derived; expectations never count as income.
+    income_total = Financial::Entry.for_account(Current.account)
+      .where(entry_date: range, entry_type: %w[inflow loan_disbursement])
+      .sum(:amount)
     expenses_total = expenses.sum(:amount)
     @income_vs_expenses_labels = [ I18n.t("reports.income"), I18n.t("reports.expenses") ]
     @income_vs_expenses_values = [ income_total.to_f, expenses_total.to_f ]

@@ -95,4 +95,37 @@ class Financial::EntryTest < ActiveSupport::TestCase
 
     assert_equal 0.to_d, disbursement.net_liability_effect
   end
+
+  test "only one actual entry can be linked to a planned expense" do
+    income_event = IncomeEvent.create!(
+      account: @account,
+      description: "Payday",
+      expected_date: Date.current,
+      expected_amount: 100
+    )
+    planned_expense = PlannedExpense.create!(
+      account: @account,
+      income_event: income_event,
+      category: Category.first,
+      description: "Groceries",
+      amount: 20,
+      status: "pending"
+    )
+    attributes = {
+      account: @account,
+      planned_expense: planned_expense,
+      financial_account: @financial_account,
+      category: planned_expense.category,
+      entry_type: "outflow",
+      entry_date: Date.current,
+      amount: 20,
+      description: "Groceries"
+    }
+
+    Financial::Entry.create!(attributes)
+    duplicate = Financial::Entry.new(attributes)
+
+    assert_not duplicate.valid?
+    assert_includes duplicate.errors[:planned_expense_id], "has already been taken"
+  end
 end

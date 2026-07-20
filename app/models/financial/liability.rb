@@ -5,8 +5,8 @@ class Financial::Liability < ApplicationRecord
   STATUSES = %w[active closed archived].freeze
 
   belongs_to :account, class_name: "::Account"
-  has_many :financial_entries, class_name: "Financial::Entry", foreign_key: :financial_liability_id, dependent: :nullify, inverse_of: :financial_liability
-  has_many :incoming_financial_entries, class_name: "Financial::Entry", foreign_key: :counterparty_financial_liability_id, dependent: :nullify, inverse_of: :counterparty_financial_liability
+  has_many :financial_entries, class_name: "Financial::Entry", foreign_key: :financial_liability_id, dependent: :restrict_with_error, inverse_of: :financial_liability
+  has_many :incoming_financial_entries, class_name: "Financial::Entry", foreign_key: :counterparty_financial_liability_id, dependent: :restrict_with_error, inverse_of: :counterparty_financial_liability
 
   before_validation :set_account, on: :create
 

@@ -96,6 +96,7 @@ class ShoppingItemsController < ApplicationController
   end
 
   def convert_to_expense
+    @financial_accounts = Financial::Asset.for_account(Current.account).active.order(:name)
     if request.post?
       budget_period_id = params[:budget_period_id]
       unless budget_period_id.present?
@@ -106,7 +107,8 @@ class ShoppingItemsController < ApplicationController
       end
 
       budget_period = BudgetPeriod.for_account(Current.account).find(budget_period_id)
-      expense = @shopping_item.convert_to_expense(budget_period)
+      financial_account = Financial::Asset.for_account(Current.account).active.find_by(id: params[:financial_account_id])
+      expense = @shopping_item.convert_to_expense(budget_period, financial_account: financial_account)
 
       if expense
         redirect_to finance_entries_path(entry_type: "expenses"), notice: "Shopping item converted to expense."

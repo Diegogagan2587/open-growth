@@ -41,16 +41,14 @@
   </div>
 
   <!-- Key Metrics -->
-  <% prev_balance = @income_event.previous_balance %>
-  <% prev_event = @income_event.previous_income_event %>
+  <% prev_balance = @projection.opening_balance %>
+  <% prev_event = nil %>
   <% has_previous = prev_balance != 0 || prev_event %>
   <div id="income-event-metrics" class="grid grid-cols-1 divide-y divide-border overflow-hidden rounded-xl bg-muted/20 md:grid-cols-2 md:divide-x md:divide-y-0 <%= has_previous ? 'lg:grid-cols-5' : 'lg:grid-cols-4' %>">
     <div class="p-4 lg:p-5">
-      <p class="text-muted-foreground text-sm mb-2">Income Amount</p>
-      <p class="text-3xl font-bold"><%= number_to_currency(@income_event.received_amount || @income_event.expected_amount) %></p>
-      <% if @income_event.received_date %>
-        <p class="text-muted-foreground text-xs mt-2">Received: <%= @income_event.received_date.strftime("%b %d") %></p>
-      <% end %>
+      <p class="text-muted-foreground text-sm mb-2">Expected / Actual Funding</p>
+      <p class="text-3xl font-bold"><%= number_to_currency(@projection.expected_funding) %></p>
+      <p class="text-muted-foreground text-xs mt-2">Actual: <%= number_to_currency(@actuals.actual_funding) %></p>
     </div>
     <% if prev_balance != 0 || prev_event %>
       <div class="p-4 lg:p-5 <%= prev_balance < 0 ? 'bg-danger-soft/35' : '' %>">
@@ -71,29 +69,21 @@
       </div>
     <% end %>
     <div class="p-4 lg:p-5">
-      <p class="text-muted-foreground text-sm mb-2">Total Planned</p>
-      <p class="text-3xl font-bold"><%= number_to_currency(@income_event.total_planned) %></p>
-      <p class="text-muted-foreground text-xs mt-2">
-        <%= @planned_expenses.count %> planned + <%= @direct_expenses.count %> direct
-      </p>
+      <p class="text-muted-foreground text-sm mb-2">Planned Consumption</p>
+      <p class="text-3xl font-bold"><%= number_to_currency(@projection.planned_consumption) %></p>
+      <p class="text-muted-foreground text-xs mt-2"><%= @planned_expenses.count %> planned transactions</p>
     </div>
     <div class="p-4 lg:p-5">
       <p class="text-muted-foreground text-sm mb-2">Total Spent</p>
-      <p class="text-3xl font-bold"><%= number_to_currency(@income_event.total_spent) %></p>
-      <p class="text-muted-foreground text-xs mt-2"><%= @income_event.expenses.count %> expenses</p>
+      <p class="text-3xl font-bold"><%= number_to_currency(@actuals.actual_consumption) %></p>
+      <p class="text-muted-foreground text-xs mt-2">Entry-derived actuals</p>
     </div>
     <div class="p-4 lg:p-5">
-      <p class="text-muted-foreground text-sm mb-2">Effective Remaining</p>
-      <p class="text-3xl font-bold <%= @income_event.effective_remaining_budget < 0 ? 'text-danger' : 'text-success' %>">
-        <%= number_to_currency(@income_event.effective_remaining_budget) %>
+      <p class="text-muted-foreground text-sm mb-2">Projected / Actual Ending</p>
+      <p class="text-3xl font-bold <%= @projection.ending_balance < 0 ? 'text-danger' : 'text-success' %>">
+        <%= number_to_currency(@projection.ending_balance) %>
       </p>
-      <p class="text-muted-foreground text-xs mt-2">
-        <% if prev_balance != 0 %>
-          After carryover
-        <% else %>
-          Available budget
-        <% end %>
-      </p>
+      <p class="text-muted-foreground text-xs mt-2">Actual: <%= number_to_currency(@actuals.ending_balance) %></p>
     </div>
   </div>
 
@@ -102,14 +92,14 @@
     <div class="mt-5 border-l-2 border-primary/35 pl-4">
       <p class="text-muted-foreground text-sm">
         <strong>Calculation:</strong>
-        <%= number_to_currency(@income_event.received_amount || @income_event.expected_amount) %> (Income)
+        <%= number_to_currency(@projection.expected_funding) %> (Expected funding)
         <% if prev_balance < 0 %>
           - <%= number_to_currency(prev_balance.abs) %> (Previous deficit)
         <% elsif prev_balance > 0 %>
           + <%= number_to_currency(prev_balance) %> (Previous surplus)
         <% end %>
-        - <%= number_to_currency(@income_event.total_planned) %> (Planned)
-        = <%= number_to_currency(@income_event.effective_remaining_budget) %> (Effective Remaining)
+        - <%= number_to_currency(@projection.planned_consumption) %> (Planned)
+        = <%= number_to_currency(@projection.ending_balance) %> (Projected ending)
       </p>
     </div>
   <% end %>

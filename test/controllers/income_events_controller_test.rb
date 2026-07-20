@@ -53,7 +53,7 @@ class IncomeEventsControllerTest < ActionDispatch::IntegrationTest
     Current.account = @account
   end
 
-  test "index eagerly loads budget periods" do
+  test "legacy index redirects to financial plans" do
     sign_in
     budget_period = @account.budget_periods.create!(
       name: "July",
@@ -74,7 +74,16 @@ class IncomeEventsControllerTest < ActionDispatch::IntegrationTest
 
     get income_events_path
 
+    assert_redirected_to finance_plans_path
+  end
+
+  test "finance plan facade resolves the same record id" do
+    sign_in
+
+    get finance_plan_path(@loan_income_event)
+
     assert_response :success
+    assert_select "body", text: /#{Regexp.escape(@loan_income_event.description)}/
   end
 
   test "show renders entry backed direct expenses without category" do
@@ -97,7 +106,7 @@ class IncomeEventsControllerTest < ActionDispatch::IntegrationTest
     )
     entry.save!(validate: false)
 
-    get income_event_path(income_event)
+    get finance_plan_path(income_event)
 
     assert_response :success
     assert_includes response.body, "Legacy uncategorized direct expense"
@@ -107,26 +116,23 @@ class IncomeEventsControllerTest < ActionDispatch::IntegrationTest
   test "show uses planned transaction labels and actions" do
     sign_in
 
-    get income_event_path(@loan_income_event)
+    get finance_plan_path(@loan_income_event)
 
     assert_response :success
-    assert_select "h2", "Planned Transactions"
-    assert_select "a", "Plan Transaction"
-    assert_select "a", "View Plan"
+    assert_select "h2", "Planned transactions"
+    assert_select "summary", "Add planned transaction"
   end
 
   test "show uses a padded shell and a low-chrome income summary" do
     sign_in
 
-    get income_event_path(@loan_income_event)
+    get finance_plan_path(@loan_income_event)
 
     assert_response :success
-    assert_select "main > div[class*='p-4'][class*='sm:p-6']", count: 1
+    assert_select "main section[class*='p-6'][class*='sm:p-8']", count: 1
     assert_select "main > div > p[style='color: green']", count: 0
-    assert_select "section[aria-labelledby='income-event-title'][class*='border-b']", count: 1
-    assert_select "section[aria-labelledby='income-event-title'].rounded-2xl", count: 0
-    assert_select "#income-event-metrics[class*='divide-y']", count: 1
-    assert_select "#income-event-metrics > div.rounded-xl", count: 0
+    assert_select "h1", text: @loan_income_event.description, count: 1
+    assert_select "section[aria-labelledby='plan-results-title']", count: 1
   end
 
   test "show separates planned expenses from movements with independent totals" do
@@ -156,23 +162,14 @@ class IncomeEventsControllerTest < ActionDispatch::IntegrationTest
     PlannedExpense.create!(income_event: income_event, category: category, description: "Food expense", amount: 100, status: "pending_to_pay", financial_account: source)
     PlannedExpense.create!(income_event: income_event, category: category, description: "Savings transfer", amount: 200, status: "pending_to_pay", financial_account: source, counterparty_financial_account: destination)
 
-    get income_event_path(income_event)
+    get finance_plan_path(income_event)
 
     assert_response :success
-    assert_select "#planned-expenses" do
-      assert_select "h4", "Food expense"
-      assert_select "h4", text: "Savings transfer", count: 0
-      assert_select "p", text: /10.0% of income/
-      assert_select "p", text: /Total.*\$100\.00/
-    end
-    assert_select "#planned-movements" do
-      assert_select "h4", "Savings transfer"
-      assert_select "h4", text: "Food expense", count: 0
-      assert_select "p", "Transfer"
-      assert_select "p", "Does not affect budget"
-      assert_select "p", text: /Transfer from Mixed plan source to Mixed plan destination/
-      assert_select "p", text: /Total.*\$200\.00/
-    end
+    assert_select "table tbody tr", count: 2
+    assert_select "table", text: /Food expense/
+    assert_select "table", text: /Savings transfer/
+    running_balances = css_select("table tbody tr td:nth-child(4)").map { |cell| cell.text.strip }
+    assert_equal 1, running_balances.uniq.size, "budget-neutral transfer should not change the running balance"
     assert_equal 100.to_d, income_event.reload.total_planned
     assert_equal 900.to_d, income_event.remaining_budget
   end

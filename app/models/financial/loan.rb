@@ -1,0 +1,44 @@
+class Financial::Loan < ApplicationRecord
+  self.table_name = "financial_loans"
+
+  LIFECYCLE_STATUSES = %w[simulated active paid cancelled].freeze
+
+  belongs_to :account, class_name: "::Account"
+  belongs_to :liability, class_name: "Financial::Liability", optional: true
+  belongs_to :destination_asset, class_name: "Financial::Asset", optional: true
+  belongs_to :destination_liability, class_name: "Financial::Liability", optional: true
+  has_many :funding_sources, class_name: "Financial::FundingSource", foreign_key: :financial_loan_id, dependent: :restrict_with_error
+  has_many :entries, class_name: "Financial::Entry", foreign_key: :financial_loan_id, dependent: :restrict_with_error
+  has_many :installments, class_name: "Financial::LoanInstallment", foreign_key: :financial_loan_id, inverse_of: :financial_loan, dependent: :restrict_with_error
+
+  validates :name, presence: true
+  validates :principal_amount, numericality: { greater_than: 0 }
+  validates :lifecycle_status, inclusion: { in: LIFECYCLE_STATUSES }
+  validate :active_routing_is_complete
+  validate :associations_belong_to_same_account
+
+  scope :for_account, ->(account) { where(account: account) }
+
+  def actual_balance
+    return 0.to_d unless liability
+
+    entries.sum(0.to_d) { |entry| entry.liability_delta_for(liability_id) }
+  end
+
+  private
+
+  def active_routing_is_complete
+    return unless lifecycle_status == "active"
+
+    errors.add(:liability, "must be selected") if liability.blank?
+    destinations = [ destination_asset, destination_liability ].compact
+    errors.add(:base, "active loan requires exactly one destination") unless destinations.one?
+  end
+
+  def associations_belong_to_same_account
+    [ :liability, :destination_asset, :destination_liability ].each do |association|
+      record = public_send(association)
+      errors.add(association, "must belong to the current account") if record && record.account_id != account_id
+    end
+  end
+end
