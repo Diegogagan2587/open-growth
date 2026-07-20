@@ -178,11 +178,15 @@ class PlannedExpensesController < ApplicationController
       return
     end
 
-    ActiveRecord::Base.transaction do
-      move_planned_expense_to!(@planned_expense, target_income_event)
+    result = Financial::PlannedTransactions::MoveService.call(
+      planned_transaction: @planned_expense.becomes(Financial::PlannedTransaction),
+      target_plan: target_income_event.becomes(Financial::Plan)
+    )
+    if result.success?
+      redirect_to income_event_planned_expenses_path(target_income_event), notice: t("planned_expenses.flash.moved_to", description: target_income_event.description)
+    else
+      redirect_to income_event_planned_expenses_path(@income_event), alert: result.error_message
     end
-
-    redirect_to income_event_planned_expenses_path(target_income_event), notice: t("planned_expenses.flash.moved_to", description: target_income_event.description)
   rescue ActiveRecord::RecordInvalid => e
     redirect_to income_event_planned_expenses_path(@income_event), alert: e.record.errors.full_messages.to_sentence
   rescue ActiveRecord::RecordNotUnique
