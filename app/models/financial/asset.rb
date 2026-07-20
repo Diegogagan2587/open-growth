@@ -5,8 +5,8 @@ class Financial::Asset < ApplicationRecord
   STATUSES = %w[active closed archived].freeze
 
   belongs_to :account, class_name: "::Account"
-  has_many :financial_entries, class_name: "Financial::Entry", foreign_key: :financial_account_id, dependent: :destroy, inverse_of: :financial_account
-  has_many :incoming_transfers, class_name: "Financial::Entry", foreign_key: :counterparty_financial_account_id, dependent: :nullify, inverse_of: :counterparty_financial_account
+  has_many :financial_entries, class_name: "Financial::Entry", foreign_key: :financial_account_id, dependent: :restrict_with_error, inverse_of: :financial_account
+  has_many :incoming_transfers, class_name: "Financial::Entry", foreign_key: :counterparty_financial_account_id, dependent: :restrict_with_error, inverse_of: :counterparty_financial_account
 
   before_validation :set_account, on: :create
 
