@@ -289,7 +289,7 @@ class IncomeEventTest < ActiveSupport::TestCase
     assert_equal(4000.0, event3.effective_remaining_budget)
   end
 
-  test "regular received income with asset destination creates and syncs one inflow entry" do
+  test "receiving funding creates an inflow and later expectation edits do not rewrite it" do
     destination_asset = Financial::Asset.create!(
       account: @account,
       name: "Checking",
@@ -309,7 +309,9 @@ class IncomeEventTest < ActiveSupport::TestCase
       destination_selection: "asset:#{destination_asset.id}"
     )
 
-    entry = Financial::Entry.find_by(income_event: income, entry_type: "inflow")
+    source = income.ensure_primary_funding_source!
+    result = Financial::FundingSources::ReceiveService.call(funding_source: source)
+    entry = result.entry
     assert_not_nil entry
     assert_equal destination_asset.id, entry.financial_account_id
 
@@ -317,11 +319,10 @@ class IncomeEventTest < ActiveSupport::TestCase
       income.update!(received_amount: 1200)
     end
 
-    entry.reload
-    assert_equal 1200.to_d, entry.amount
+    assert_equal 1000.to_d, entry.reload.amount
   end
 
-  test "regular received income with liability destination reduces liability balance and is removed when pending" do
+  test "changing planning status does not delete an actual liability receipt" do
     destination_liability = Financial::Liability.create!(
       account: @account,
       name: "Card",
@@ -341,13 +342,14 @@ class IncomeEventTest < ActiveSupport::TestCase
       destination_selection: "liability:#{destination_liability.id}"
     )
 
-    entry = Financial::Entry.find_by(income_event: income, entry_type: "inflow")
+    source = income.ensure_primary_funding_source!
+    entry = Financial::FundingSources::ReceiveService.call(funding_source: source).entry
     assert_not_nil entry
     assert_equal destination_liability.id, entry.counterparty_financial_liability_id
     assert_equal 300.to_d, destination_liability.current_balance
 
     income.update!(status: "pending")
-    assert_nil Financial::Entry.find_by(id: entry.id)
+    assert Financial::Entry.exists?(entry.id)
   end
 
   test "previous_balance handles events across year boundaries" do
@@ -468,5 +470,25 @@ class IncomeEventTest < ActiveSupport::TestCase
 
     assert_nil event.previous_income_event
     assert_equal 0.0, event.previous_balance
+  end
+
+  test "rejects a budget period from another account" do
+    foreign_period = BudgetPeriod.create!(
+      account: accounts(:two),
+      name: "Foreign period",
+      start_date: Date.current.beginning_of_month,
+      end_date: Date.current.end_of_month
+    )
+    event = IncomeEvent.new(
+      account: @account,
+      budget_period: foreign_period,
+      description: "Cross-account plan",
+      expected_date: Date.current,
+      expected_amount: 100,
+      status: "pending"
+    )
+
+    assert_not event.valid?
+    assert_includes event.errors[:budget_period], "must belong to the current account"
   end
 end
