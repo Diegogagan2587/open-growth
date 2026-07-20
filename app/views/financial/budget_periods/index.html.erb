@@ -49,7 +49,7 @@
               <td class="px-4 py-2">
                 <%= link_to t("shared.view"), budget_period, class: "text-accent hover:underline" %>
                 <%= link_to t("shared.edit"), edit_budget_period_path(budget_period), class: "text-accent hover:underline ml-2" %>
-                <%= link_to t("budget_periods.show.income_events"), budget_period_income_events_path(budget_period), class: "text-success hover:underline ml-2" %>
+                <%= link_to "Financial plans", finance_plans_path(budget_period_id: budget_period.id), class: "text-success hover:underline ml-2" %>
               </td>
             </tr>
           <% end %>
