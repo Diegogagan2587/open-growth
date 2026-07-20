@@ -10,7 +10,7 @@
 
       <div class="grid w-full max-w-xl grid-cols-1 gap-2 sm:grid-cols-2">
         <%= render Ui::ButtonComponent.new(href: new_finance_entry_path(entry_type: "expenses"), label: t("dashboard.add_expense"), variant: :default, css_class: "h-10 w-full justify-start") %>
-        <%= render Ui::ButtonComponent.new(href: new_income_event_path, label: t("dashboard.new_income_event"), variant: :outline, css_class: "h-10 w-full justify-start") %>
+        <%= render Ui::ButtonComponent.new(href: new_finance_plan_path, label: "New financial plan", variant: :outline, css_class: "h-10 w-full justify-start") %>
         <%= render Ui::ButtonComponent.new(href: new_budget_period_path, label: t("dashboard.new_budget_period"), variant: :outline, css_class: "h-10 w-full justify-start") %>
         <%= render Ui::ButtonComponent.new(href: new_shopping_item_path, label: t("dashboard.add_shopping_item"), variant: :ghost, css_class: "h-10 w-full justify-start") %>
       </div>
@@ -44,8 +44,8 @@
         <p class="mt-1 text-sm text-muted-foreground"><%= t("dashboard.expenses_description") %></p>
       <% end %>
 
-      <%= link_to income_events_path, class: "group rounded-xl border border-border bg-card p-5 shadow-sm transition-colors hover:bg-muted/35" do %>
-        <h3 class="text-base font-semibold text-foreground">Income Events</h3>
+      <%= link_to finance_plans_path, class: "group rounded-xl border border-border bg-card p-5 shadow-sm transition-colors hover:bg-muted/35" do %>
+        <h3 class="text-base font-semibold text-foreground">Financial plans</h3>
         <p class="mt-1 text-sm text-muted-foreground"><%= t("dashboard.income_events_description") %></p>
       <% end %>
 
