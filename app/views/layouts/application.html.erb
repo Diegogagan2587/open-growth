@@ -97,8 +97,8 @@
 
         <%= yield :overlays %>
 
-        <main class="mx-auto w-full max-w-7xl px-4 pt-4 pb-8">
-          <div class="rounded-3xl border border-border bg-[hsl(var(--shell-main-surface))] p-4 shadow-[var(--shell-main-shadow)] backdrop-blur-sm sm:p-6">
+        <main class="mx-auto w-full max-w-7xl px-0 pt-4 pb-8 sm:px-4">
+          <div class="rounded-none border-0 bg-[hsl(var(--shell-main-surface))] p-0 shadow-none sm:rounded-3xl sm:border sm:border-border sm:p-6 sm:shadow-[var(--shell-main-shadow)] sm:backdrop-blur-sm">
             <%= yield %>
           </div>
         </main>
