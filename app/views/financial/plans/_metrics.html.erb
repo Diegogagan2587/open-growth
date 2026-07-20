@@ -1,0 +1,17 @@
+<section aria-labelledby="plan-results-title" class="space-y-3">
+  <h2 id="plan-results-title" class="text-xl font-semibold">Projection and actual result</h2>
+  <div class="grid overflow-hidden rounded-xl border border-border bg-card sm:grid-cols-2 lg:grid-cols-4">
+    <% [
+      ["Opening", projection.opening_balance, actuals.opening_balance],
+      ["Funding", projection.expected_funding, actuals.actual_funding],
+      ["Consumption", projection.planned_consumption, actuals.actual_consumption],
+      ["Ending", projection.ending_balance, actuals.ending_balance]
+    ].each do |label, projected, actual| %>
+      <div class="border-b border-border p-4 last:border-b-0 sm:border-r lg:border-b-0">
+        <p class="text-sm text-muted-foreground"><%= label %></p>
+        <p class="mt-2 text-xl font-bold"><%= number_to_currency(projected) %></p>
+        <p class="mt-1 text-xs text-muted-foreground">Actual <%= number_to_currency(actual) %></p>
+      </div>
+    <% end %>
+  </div>
+</section>
