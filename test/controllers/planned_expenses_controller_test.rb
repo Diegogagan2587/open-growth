@@ -401,7 +401,7 @@ class PlannedExpensesControllerTest < ActionDispatch::IntegrationTest
     assert planned_expense.financial_entry.present?
   end
 
-  test "updating a finalized planned expense preserves its transaction date" do
+  test "updating a finalized planned expense cannot rewrite its actual entry" do
     sign_in
     historical_date = Date.new(2025, 1, 20)
     planned_expense = PlannedExpense.create!(
@@ -440,14 +440,14 @@ class PlannedExpensesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to income_event_planned_expenses_path(@income_event)
+    assert_response :unprocessable_entity
     assert_equal entry.id, planned_expense.reload.financial_entry.id
-    assert_equal "transfer", entry.reload.entry_type
-    assert_equal 125.to_d, entry.amount
+    assert_equal "outflow", entry.reload.entry_type
+    assert_equal 90.to_d, entry.amount
     assert_equal @source_account.id, entry.financial_account_id
-    assert_equal @destination_account.id, entry.counterparty_financial_account_id
+    assert_nil entry.counterparty_financial_account_id
     assert_equal historical_date, entry.entry_date
-    assert_equal historical_date, planned_expense.applied_on
+    assert_equal 90.to_d, planned_expense.amount
   end
 
   test "create_transaction builds missing entry for final status" do
@@ -522,7 +522,7 @@ class PlannedExpensesControllerTest < ActionDispatch::IntegrationTest
       "Edit form should have edit mode so amount is preserved"
   end
 
-  test "move keeps linked spent expense in sync with new income event" do
+  test "move changes only the planning assignment and leaves legacy actual history intact" do
     sign_in
 
     target_income_event = income_events(:two)
@@ -563,7 +563,7 @@ class PlannedExpensesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to income_event_planned_expenses_path(target_income_event)
     assert_equal target_income_event.id, planned_expense.reload.income_event_id
-    assert_equal target_income_event.id, expense.reload.income_event_id
-    assert_equal target_income_event.budget_period_id, expense.budget_period_id
+    assert_equal @income_event.id, expense.reload.income_event_id
+    assert_equal budget_period.id, expense.budget_period_id
   end
 end
