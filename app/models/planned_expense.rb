@@ -4,7 +4,7 @@ class PlannedExpense < ApplicationRecord
   attr_accessor :source_selection, :destination_selection
 
   belongs_to :account
-  belongs_to :income_event
+  belongs_to :income_event, optional: true
   belongs_to :origin_income_event, class_name: "IncomeEvent", optional: true
   belongs_to :category, optional: true
   belongs_to :expense_template, optional: true
@@ -16,10 +16,12 @@ class PlannedExpense < ApplicationRecord
   has_one :financial_entry, class_name: "Financial::Entry", dependent: :nullify
 
   before_validation :set_account, on: :create
+  before_validation :infer_transaction_kind
 
   scope :for_account, ->(account) { where(account: account) }
 
   validates :description, presence: true
+  validates :income_event, presence: true, unless: :unassigned_planned_transaction?
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :status, presence: true
   validates :category, presence: true, if: :budget_consuming?
@@ -28,6 +30,7 @@ class PlannedExpense < ApplicationRecord
     financial_account_id.present? || counterparty_financial_account_id.present? ||
     financial_liability_id.present?
   }
+  validate :planned_values_are_immutable_after_execution, on: :update
 
   scope :by_position, -> { order(:position, :created_at) }
   scope :by_status, ->(status) { where(status: status) }
@@ -100,6 +103,30 @@ class PlannedExpense < ApplicationRecord
 
   def set_account
     self.account ||= Current.account if Current.account
+  end
+
+  def infer_transaction_kind
+    self.kind ||= if transfer?
+      "transfer"
+    elsif debt_payment?
+      "liability_payment"
+    elsif financial_liability_id.present?
+      "liability_charge"
+    else
+      "outflow"
+    end
+  end
+
+  def unassigned_planned_transaction?
+    is_a?(Financial::PlannedTransaction)
+  end
+
+  def planned_values_are_immutable_after_execution
+    immutable_fields = %w[amount description category_id due_date financial_account_id counterparty_financial_account_id financial_liability_id income_event_id]
+    return if (changes.keys & immutable_fields).empty?
+    return if financial_entry.blank?
+
+    errors.add(:base, "applied planning values are historical and cannot be changed")
   end
 
   public
