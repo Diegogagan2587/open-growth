@@ -3,6 +3,7 @@ class ShoppingItem < ApplicationRecord
   belongs_to :category, optional: true
   belongs_to :planned_expense, optional: true
   belongs_to :expense, optional: true
+  belongs_to :financial_entry, class_name: "Financial::Entry", optional: true
 
   before_validation :set_account, on: :create
 
@@ -27,8 +28,8 @@ class ShoppingItem < ApplicationRecord
   def convert_to_planned_expense(income_event)
     return nil unless estimated_amount.present? && estimated_amount > 0
 
-    planned_expense = PlannedExpense.create!(
-      income_event: income_event,
+    planned_expense = Financial::PlannedTransaction.create!(
+      plan: income_event.becomes(Financial::Plan),
       category: category || Category.for_account(account).first,
       description: name,
       amount: estimated_amount,
@@ -41,20 +42,23 @@ class ShoppingItem < ApplicationRecord
     planned_expense
   end
 
-  def convert_to_expense(budget_period)
+  def convert_to_expense(budget_period, financial_account:)
     return nil unless estimated_amount.present? && estimated_amount > 0
+    return nil unless financial_account&.account_id == account_id
 
-    expense = Expense.create!(
+    entry = Financial::Entry.create!(
+      account: account,
       budget_period: budget_period,
       category: category || Category.for_account(account).first,
       description: name,
       amount: estimated_amount,
-      date: Date.current,
-      account_id: account_id
+      entry_date: Date.current,
+      entry_type: "outflow",
+      financial_account: financial_account
     )
 
-    update!(expense_id: expense.id)
-    expense
+    update!(financial_entry: entry)
+    entry
   end
 
   def link_to_planned_expense(planned_expense)
