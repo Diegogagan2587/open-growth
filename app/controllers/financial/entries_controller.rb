@@ -28,6 +28,11 @@ module Financial
       @financial_entry = Financial::Entry.new(entry_date: Date.current)
       @financial_entry.entry_type = "outflow" if params[:entry_type] == "expenses"
       @financial_entry.budget_period_id = params[:budget_period_id] if params[:budget_period_id].present?
+      if params[:income_event_id].present?
+        plan = Financial::Plan.for_account(Current.account).find(params[:income_event_id])
+        @financial_entry.income_event = plan
+        @financial_entry.budget_period ||= plan.budget_period
+      end
     end
 
     def create
