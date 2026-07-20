@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_18_005000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -276,6 +276,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
     t.bigint "expense_id"
     t.bigint "financial_account_id"
     t.bigint "financial_liability_id"
+    t.bigint "financial_loan_id"
+    t.bigint "funding_source_id"
     t.bigint "income_event_id"
     t.text "notes"
     t.bigint "planned_expense_id"
@@ -290,8 +292,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
     t.index ["expense_id"], name: "index_financial_entries_on_expense_id"
     t.index ["financial_account_id"], name: "index_financial_entries_on_financial_account_id"
     t.index ["financial_liability_id"], name: "index_financial_entries_on_financial_liability_id"
+    t.index ["financial_loan_id"], name: "index_financial_entries_on_financial_loan_id"
+    t.index ["funding_source_id"], name: "index_financial_entries_on_funding_source_id"
+    t.index ["funding_source_id"], name: "index_financial_entries_on_unique_funding_source", unique: true, where: "(funding_source_id IS NOT NULL)"
     t.index ["income_event_id"], name: "index_financial_entries_on_income_event_id"
     t.index ["planned_expense_id"], name: "index_financial_entries_on_planned_expense_id"
+    t.index ["planned_expense_id"], name: "index_financial_entries_on_unique_planned_expense", unique: true, where: "(planned_expense_id IS NOT NULL)"
+  end
+
+  create_table "financial_funding_sources", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.string "description", null: false
+    t.decimal "expected_amount", precision: 12, scale: 2, null: false
+    t.date "expected_date", null: false
+    t.bigint "expected_destination_asset_id"
+    t.bigint "expected_destination_liability_id"
+    t.bigint "financial_loan_id"
+    t.bigint "financial_plan_id", null: false
+    t.string "kind", default: "income", null: false
+    t.bigint "legacy_income_event_id"
+    t.string "resolution", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_financial_funding_sources_on_account_id"
+    t.index ["expected_destination_asset_id"], name: "idx_on_expected_destination_asset_id_e22fd2d6af"
+    t.index ["expected_destination_liability_id"], name: "idx_on_expected_destination_liability_id_6d8c44a66a"
+    t.index ["financial_loan_id"], name: "index_financial_funding_sources_on_financial_loan_id"
+    t.index ["financial_plan_id"], name: "index_financial_funding_sources_on_financial_plan_id"
+    t.index ["legacy_income_event_id"], name: "index_financial_funding_sources_on_legacy_income_event_id", unique: true
   end
 
   create_table "financial_liabilities", force: :cascade do |t|
@@ -310,9 +338,57 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
     t.index ["status"], name: "index_financial_liabilities_on_status"
   end
 
+  create_table "financial_loan_installments", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.date "due_date", null: false
+    t.decimal "expected_amount", precision: 12, scale: 2, null: false
+    t.decimal "expected_interest", precision: 12, scale: 2, default: "0.0", null: false
+    t.decimal "expected_principal", precision: 12, scale: 2, default: "0.0", null: false
+    t.bigint "financial_loan_id", null: false
+    t.integer "installment_number", null: false
+    t.bigint "legacy_loan_payment_schedule_id"
+    t.bigint "payment_entry_id"
+    t.bigint "planned_transaction_id"
+    t.string "resolution", default: "scheduled", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_financial_loan_installments_on_account_id"
+    t.index ["financial_loan_id", "installment_number"], name: "index_loan_installments_on_number", unique: true
+    t.index ["financial_loan_id"], name: "index_financial_loan_installments_on_financial_loan_id"
+    t.index ["legacy_loan_payment_schedule_id"], name: "index_loan_installments_on_legacy_schedule", unique: true
+    t.index ["payment_entry_id"], name: "index_financial_loan_installments_on_payment_entry_id"
+    t.index ["planned_transaction_id"], name: "index_financial_loan_installments_on_planned_transaction_id"
+  end
+
+  create_table "financial_loans", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "destination_asset_id"
+    t.bigint "destination_liability_id"
+    t.decimal "interest_rate", precision: 6, scale: 3
+    t.bigint "legacy_income_event_id"
+    t.string "lender_name"
+    t.bigint "liability_id"
+    t.string "lifecycle_status", default: "simulated", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.integer "number_of_payments"
+    t.decimal "payment_amount", precision: 12, scale: 2
+    t.string "payment_frequency"
+    t.decimal "principal_amount", precision: 12, scale: 2, null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_financial_loans_on_account_id"
+    t.index ["destination_asset_id"], name: "index_financial_loans_on_destination_asset_id"
+    t.index ["destination_liability_id"], name: "index_financial_loans_on_destination_liability_id"
+    t.index ["legacy_income_event_id"], name: "index_financial_loans_on_legacy_income_event_id", unique: true
+    t.index ["liability_id"], name: "index_financial_loans_on_liability_id"
+  end
+
   create_table "income_events", force: :cascade do |t|
     t.bigint "account_id", null: false
+    t.decimal "actual_ending_balance_at_close", precision: 12, scale: 2
     t.bigint "budget_period_id"
+    t.datetime "closed_at"
     t.datetime "created_at", null: false
     t.string "description", null: false
     t.decimal "expected_amount", precision: 10, scale: 2, null: false
@@ -321,6 +397,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
     t.decimal "interest_rate", precision: 6, scale: 3
     t.boolean "interest_rate_estimated", default: false, null: false
     t.string "lender_name"
+    t.string "lifecycle_status", default: "active", null: false
     t.decimal "loan_amount", precision: 10, scale: 2
     t.bigint "loan_disbursement_destination_asset_id"
     t.bigint "loan_disbursement_destination_liability_id"
@@ -335,6 +412,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
     t.bigint "regular_income_destination_liability_id"
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
+    t.index ["account_id", "expected_date", "id"], name: "index_income_events_on_plan_chronology"
     t.index ["account_id"], name: "index_income_events_on_account_id"
     t.index ["budget_period_id"], name: "index_income_events_on_budget_period_id"
     t.index ["income_type"], name: "index_income_events_on_income_type"
@@ -418,17 +496,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
     t.datetime "created_at", null: false
     t.string "description", null: false
     t.date "due_date"
+    t.string "execution_status", default: "pending", null: false
     t.bigint "expense_template_id"
     t.bigint "financial_account_id"
     t.bigint "financial_liability_id"
-    t.bigint "income_event_id", null: false
+    t.string "importance", default: "normal", null: false
+    t.bigint "income_event_id"
+    t.string "kind", null: false
     t.integer "loan_installment_number"
     t.text "notes"
     t.bigint "origin_income_event_id"
+    t.date "planned_for"
     t.integer "position"
     t.bigint "shopping_item_id"
     t.string "status", null: false
     t.datetime "updated_at", null: false
+    t.index ["account_id", "execution_status"], name: "index_planned_transactions_on_execution_status"
     t.index ["account_id"], name: "index_planned_expenses_on_account_id"
     t.index ["applied_on"], name: "index_planned_expenses_on_applied_on"
     t.index ["category_id"], name: "index_planned_expenses_on_category_id"
@@ -437,6 +520,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
     t.index ["financial_account_id"], name: "index_planned_expenses_on_financial_account_id"
     t.index ["financial_liability_id"], name: "index_planned_expenses_on_financial_liability_id"
     t.index ["income_event_id", "loan_installment_number"], name: "index_planned_expenses_on_income_event_and_loan_installment", unique: true, where: "((loan_installment_number IS NOT NULL) AND (origin_income_event_id IS NULL))"
+    t.index ["income_event_id", "position"], name: "index_planned_transactions_on_plan_position", unique: true, where: "(income_event_id IS NOT NULL)"
     t.index ["income_event_id"], name: "index_planned_expenses_on_income_event_id"
     t.index ["origin_income_event_id", "loan_installment_number"], name: "idx_planned_expenses_on_origin_event_installment", unique: true, where: "((loan_installment_number IS NOT NULL) AND (origin_income_event_id IS NOT NULL))"
     t.index ["origin_income_event_id"], name: "index_planned_expenses_on_origin_income_event_id"
@@ -518,6 +602,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
     t.datetime "created_at", null: false
     t.decimal "estimated_amount", precision: 10, scale: 2
     t.bigint "expense_id"
+    t.bigint "financial_entry_id"
     t.string "frequency"
     t.string "item_type", default: "one_time", null: false
     t.date "last_purchased_at"
@@ -530,6 +615,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
     t.index ["account_id"], name: "index_shopping_items_on_account_id"
     t.index ["category_id"], name: "index_shopping_items_on_category_id"
     t.index ["expense_id"], name: "index_shopping_items_on_expense_id"
+    t.index ["financial_entry_id"], name: "index_shopping_items_on_financial_entry_id"
     t.index ["item_type"], name: "index_shopping_items_on_item_type"
     t.index ["planned_expense_id"], name: "index_shopping_items_on_planned_expense_id"
     t.index ["status"], name: "index_shopping_items_on_status"
@@ -643,11 +729,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
   add_foreign_key "financial_entries", "expenses"
   add_foreign_key "financial_entries", "financial_accounts"
   add_foreign_key "financial_entries", "financial_accounts", column: "counterparty_financial_account_id"
+  add_foreign_key "financial_entries", "financial_funding_sources", column: "funding_source_id"
   add_foreign_key "financial_entries", "financial_liabilities"
   add_foreign_key "financial_entries", "financial_liabilities", column: "counterparty_financial_liability_id"
+  add_foreign_key "financial_entries", "financial_loans"
   add_foreign_key "financial_entries", "income_events"
   add_foreign_key "financial_entries", "planned_expenses"
+  add_foreign_key "financial_funding_sources", "accounts"
+  add_foreign_key "financial_funding_sources", "financial_accounts", column: "expected_destination_asset_id"
+  add_foreign_key "financial_funding_sources", "financial_liabilities", column: "expected_destination_liability_id"
+  add_foreign_key "financial_funding_sources", "financial_loans"
+  add_foreign_key "financial_funding_sources", "income_events", column: "financial_plan_id"
   add_foreign_key "financial_liabilities", "accounts"
+  add_foreign_key "financial_loan_installments", "accounts"
+  add_foreign_key "financial_loan_installments", "financial_entries", column: "payment_entry_id"
+  add_foreign_key "financial_loan_installments", "financial_loans"
+  add_foreign_key "financial_loan_installments", "planned_expenses", column: "planned_transaction_id"
+  add_foreign_key "financial_loans", "accounts"
+  add_foreign_key "financial_loans", "financial_accounts", column: "destination_asset_id"
+  add_foreign_key "financial_loans", "financial_liabilities", column: "destination_liability_id"
+  add_foreign_key "financial_loans", "financial_liabilities", column: "liability_id"
   add_foreign_key "income_events", "accounts"
   add_foreign_key "income_events", "budget_periods"
   add_foreign_key "income_events", "financial_accounts", column: "loan_disbursement_destination_asset_id"
@@ -684,6 +785,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
   add_foreign_key "shopping_items", "accounts"
   add_foreign_key "shopping_items", "categories"
   add_foreign_key "shopping_items", "expenses"
+  add_foreign_key "shopping_items", "financial_entries"
   add_foreign_key "shopping_items", "planned_expenses"
   add_foreign_key "tags", "accounts", on_delete: :cascade
   add_foreign_key "task_areas", "accounts"
