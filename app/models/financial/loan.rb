@@ -13,6 +13,7 @@ class Financial::Loan < ApplicationRecord
 
   validates :name, presence: true
   validates :principal_amount, numericality: { greater_than: 0 }
+  validates :interest_rate, numericality: { greater_than_or_equal_to: 0, less_than: 100_000 }, allow_nil: true
   validates :lifecycle_status, inclusion: { in: LIFECYCLE_STATUSES }
   validate :active_routing_is_complete
   validate :associations_belong_to_same_account
