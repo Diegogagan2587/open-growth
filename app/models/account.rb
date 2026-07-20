@@ -7,10 +7,14 @@ class Account < ApplicationRecord
   has_many :expenses, dependent: :destroy
   has_many :expense_templates, dependent: :destroy
   has_many :income_events, dependent: :destroy
+  has_many :financial_plans, class_name: "Financial::Plan"
+  has_many :financial_funding_sources, class_name: "Financial::FundingSource", dependent: :destroy
+  has_many :financial_loans, class_name: "Financial::Loan", dependent: :destroy
   has_many :financial_accounts, class_name: "Financial::Asset", dependent: :destroy
   has_many :financial_liabilities, class_name: "Financial::Liability", dependent: :destroy
   has_many :financial_entries, class_name: "Financial::Entry", dependent: :destroy
   has_many :planned_expenses, dependent: :destroy
+  has_many :financial_planned_transactions, class_name: "Financial::PlannedTransaction"
   has_many :budget_line_items, dependent: :destroy
   has_many :shopping_items, dependent: :destroy
   has_many :inventory_items, dependent: :destroy
