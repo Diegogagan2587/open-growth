@@ -15,6 +15,10 @@ module Projects
       @doc = Doc.new
     end
 
+    def preview
+      render html: helpers.render_markdown(params[:content].to_s), layout: false
+    end
+
     def create
       @doc = Doc.new(doc_params)
       @doc.account = Current.account
