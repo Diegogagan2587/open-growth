@@ -41,6 +41,7 @@ module Task
     end
 
     def show
+      @return_to_dashboard = params[:return_to] == "dashboard"
     end
 
     def new
