@@ -162,7 +162,8 @@ export default class extends Controller {
   }
 
   handleKeydown(event) {
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "b") {
+    const typing = event.target.closest?.("input, textarea, select, [contenteditable='true']")
+    if (!event.defaultPrevented && !typing && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "b") {
       event.preventDefault()
       this.toggle()
     }
