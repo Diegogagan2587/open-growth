@@ -17,7 +17,7 @@
     </div>
   </header>
 
-  <% if Current.account && @due_soon_tasks&.any? %>
+  <% if @pending_tasks.any? %>
     <section class="rounded-xl border border-warning-soft bg-warning-soft p-4">
       <div class="mb-2 flex items-center justify-between gap-3">
         <h2 class="text-base font-semibold text-foreground"><%= t("task.recurring_tasks.index.title") %></h2>
