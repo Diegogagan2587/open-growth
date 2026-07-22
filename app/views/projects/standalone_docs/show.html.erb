@@ -14,10 +14,8 @@
     </div>
   </div>
 
-  <div class="bg-card rounded-lg shadow p-6 mb-8">
-    <div class="markdown-content">
-      <%= render_markdown(@doc.content) %>
-    </div>
+  <div class="mb-8">
+    <%= render Projects::MarkdownDocumentComponent.new(markdown: @doc.content) %>
   </div>
 
   <!-- Projects using this doc -->
