@@ -24,13 +24,8 @@
         <%= link_to t("task.recurring_tasks.index.title"), task_root_path, class: "text-sm font-medium text-accent hover:text-accent-dark hover:underline" %>
       </div>
       <ul class="space-y-1.5 text-sm">
-        <% @due_soon_tasks.each do |task| %>
-          <li class="flex items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2">
-            <span class="min-w-0 truncate <%= 'font-semibold text-danger' if task.overdue? %>"><%= task.name %></span>
-            <% if task.next_due_date %>
-              <span class="shrink-0 text-xs text-muted-foreground"><%= l(task.next_due_date, format: :short) %></span>
-            <% end %>
-          </li>
+        <% @pending_tasks.each do |task| %>
+          <%= render Dashboard::PendingTaskRowComponent.new(task: task) %>
         <% end %>
       </ul>
     </section>
