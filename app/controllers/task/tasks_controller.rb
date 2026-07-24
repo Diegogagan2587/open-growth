@@ -14,6 +14,8 @@ module Task
     def update
       old_status = @task.status
       if @task.update(task_params)
+        return redirect_to(root_path, notice: t("tasks.flash.updated")) if return_to_dashboard?
+
         respond_to do |format|
           format.html { redirect_to task_root_path(task_filter_params), notice: t("tasks.flash.updated") }
           format.turbo_stream do
