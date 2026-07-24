@@ -3,5 +3,5 @@
 </div>
 
 <div class="rounded-2xl border border-border bg-card p-6 shadow-sm">
-  <%= render "form", task: @task, projects: @projects, filter_params: params.permit(:project_id, :status, :priority).to_h.symbolize_keys.compact_blank %>
+  <%= render "form", task: @task, projects: @projects, filter_params: params.permit(:project_id, :status, :priority, :return_to).to_h.symbolize_keys.compact_blank %>
 </div>
