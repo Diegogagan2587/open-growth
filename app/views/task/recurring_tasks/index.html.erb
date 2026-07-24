@@ -115,25 +115,4 @@
       <p class="text-muted-foreground"><%= t("task.recurring_tasks.index.empty") %></p>
     </div>
   <% end %>
-
-  <%= turbo_frame_tag "task_detail_panel" %>
-</div>
-
-<!-- Task Edit Drawer -->
-<div data-controller="drawer">
-  <!-- Overlay -->
-  <div data-drawer-target="overlay" class="hidden fixed inset-0 bg-black/50 transition-opacity z-40" data-action="click->drawer#overlayClick"></div>
-
-  <!-- Slide Panel -->
-  <div data-drawer-target="panel" class="hidden fixed right-0 top-0 bottom-0 w-full max-w-2xl bg-background shadow-lg z-50 overflow-y-auto transform transition-transform duration-300 translate-x-full">
-    <div class="sticky top-0 border-b border-border bg-background p-4 flex justify-between items-center">
-      <h2 class="text-lg font-semibold text-foreground">Edit Task</h2>
-      <button type="button" class="text-muted-foreground hover:text-foreground" onclick="document.dispatchEvent(new CustomEvent('drawer:close'))">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
-    <div data-drawer-target="content" class="p-6"></div>
-  </div>
 </div>
