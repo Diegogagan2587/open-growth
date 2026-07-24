@@ -65,7 +65,9 @@ module Task
     end
 
     def task_filter_params
-      params.permit(:project_id, :status, :priority).to_h.symbolize_keys.compact_blank
+      filters = params.permit(:project_id, :status, :priority).to_h.symbolize_keys.compact_blank
+      filters[:return_to] = "dashboard" if return_to_dashboard?
+      filters
     end
 
     def tabs_differ?(old_status, new_status)
