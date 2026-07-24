@@ -70,6 +70,10 @@ module Task
       filters
     end
 
+    def return_to_dashboard?
+      params[:return_to] == "dashboard"
+    end
+
     def tabs_differ?(old_status, new_status)
       pending_statuses = %w[blocked backlog in_progress in_review]
 
