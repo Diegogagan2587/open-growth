@@ -1,6 +1,7 @@
 <%
   index_path_options = params[:task_area_id].present? ? { task_area_id: params[:task_area_id] } : {}
-  tasks_index_path = task_root_path(index_path_options)
+  navigation_options = @return_to_dashboard ? { return_to: "dashboard" } : index_path_options
+  tasks_index_path = @return_to_dashboard ? root_path : task_root_path(index_path_options)
 %>
 <%= turbo_frame_tag "task_detail_panel" do %>
   <div class="fixed inset-0 sm:inset-y-0 sm:right-0 sm:left-auto w-full sm:max-w-md bg-card shadow-xl z-50 overflow-y-auto overflow-x-hidden border-l border-border animate-slide-in-right">
