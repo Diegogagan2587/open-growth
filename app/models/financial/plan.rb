@@ -3,9 +3,6 @@ class Financial::Plan < ApplicationRecord
 
   LIFECYCLE_STATUSES = %w[draft active closed cancelled].freeze
 
-  alias_attribute :name, :description
-  alias_attribute :planned_for, :expected_date
-
   has_many :funding_sources,
     class_name: "Financial::FundingSource",
     foreign_key: :financial_plan_id,
