@@ -53,19 +53,20 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1200.to_d, loan.interest_rate
   end
 
-  test "rejects an interest rate outside the database range" do
-    assert_no_difference("Financial::Loan.count") do
+  test "creates a simulated loan without an arbitrary interest rate ceiling" do
+    assert_difference("Financial::Loan.count", 1) do
       post finance_loans_path, params: {
         financial_loan: {
-          name: "Impossible-interest simulation",
+          name: "Very high-interest simulation",
           principal_amount: "2000",
           interest_rate: "100000"
         }
       }
     end
 
-    assert_response :unprocessable_entity
-    assert_select "p.text-destructive", text: /Interest rate must be less than 100000/
+    loan = Financial::Loan.order(:id).last
+    assert_redirected_to finance_loan_path(loan)
+    assert_equal 100_000.to_d, loan.interest_rate
   end
 
   test "loan edit form uses finance routes and updates the simulation" do
