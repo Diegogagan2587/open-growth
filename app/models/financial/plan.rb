@@ -3,6 +3,8 @@ class Financial::Plan < ApplicationRecord
 
   LIFECYCLE_STATUSES = %w[draft active closed cancelled].freeze
 
+  belongs_to :account, class_name: "::Account"
+  belongs_to :budget_period, optional: true
   has_many :funding_sources,
     class_name: "Financial::FundingSource",
     foreign_key: :financial_plan_id,
