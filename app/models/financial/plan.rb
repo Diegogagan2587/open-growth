@@ -1,4 +1,6 @@
-class Financial::Plan < IncomeEvent
+class Financial::Plan < ApplicationRecord
+  self.table_name = "financial_plans"
+
   LIFECYCLE_STATUSES = %w[draft active closed cancelled].freeze
 
   alias_attribute :name, :description
