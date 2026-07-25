@@ -20,7 +20,10 @@ class Financial::Plan < ApplicationRecord
     foreign_key: :income_event_id,
     inverse_of: :plan,
     dependent: :destroy
-
+  has_many :transactions,
+    class_name: "Financial::Transaction",
+    inverse_of: :plan,
+    dependent: :restrict_with_error
   validates :lifecycle_status, inclusion: { in: LIFECYCLE_STATUSES }
   validate :closed_chronology_is_immutable, on: :update
   before_destroy :allow_safe_draft_deletion
