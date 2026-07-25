@@ -93,6 +93,8 @@
         <% if Current.account.present? %>
           <%= render QuickAddMenuComponent.new %>
           <div id="quick-add-modal-container"></div>
+          <%= turbo_frame_tag "task_detail_panel" %>
+          <%= render "task/tasks/drawer" %>
         <% end %>
 
         <%= yield :overlays %>

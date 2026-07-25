@@ -1,6 +1,13 @@
 require "test_helper"
 
 class Financial::LoanTest < ActiveSupport::TestCase
+  test "interest rate must be nonnegative" do
+    loan = Financial::Loan.new(name: "Invalid rate", principal_amount: 1, interest_rate: -0.001)
+
+    assert_not loan.valid?
+    assert_includes loan.errors[:interest_rate], "must be greater than or equal to 0"
+  end
+
   test "simulation creates no debt and activation disburses only once" do
     account = Account.create!(name: "Loan Tenant")
     Current.account = account

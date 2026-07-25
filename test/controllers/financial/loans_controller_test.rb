@@ -35,6 +35,40 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{finance_loan_path(loan)}']", text: /Car simulation/
   end
 
+  test "creates a simulated loan with an annual interest rate above one thousand percent" do
+    assert_difference("Financial::Loan.count", 1) do
+      post finance_loans_path, params: {
+        financial_loan: {
+          name: "High-interest simulation",
+          principal_amount: "2000",
+          interest_rate: "1200",
+          number_of_payments: "6",
+          payment_frequency: "quincenal"
+        }
+      }
+    end
+
+    loan = Financial::Loan.order(:id).last
+    assert_redirected_to finance_loan_path(loan)
+    assert_equal 1200.to_d, loan.interest_rate
+  end
+
+  test "creates a simulated loan without an arbitrary interest rate ceiling" do
+    assert_difference("Financial::Loan.count", 1) do
+      post finance_loans_path, params: {
+        financial_loan: {
+          name: "Very high-interest simulation",
+          principal_amount: "2000",
+          interest_rate: "100000"
+        }
+      }
+    end
+
+    loan = Financial::Loan.order(:id).last
+    assert_redirected_to finance_loan_path(loan)
+    assert_equal 100_000.to_d, loan.interest_rate
+  end
+
   test "loan edit form uses finance routes and updates the simulation" do
     loan = Financial::Loan.create!(account: @account, name: "Editable loan", principal_amount: 500, lifecycle_status: "simulated")
 

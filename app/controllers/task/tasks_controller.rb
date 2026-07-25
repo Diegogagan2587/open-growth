@@ -14,6 +14,8 @@ module Task
     def update
       old_status = @task.status
       if @task.update(task_params)
+        return redirect_to(root_path, notice: t("tasks.flash.updated")) if return_to_dashboard?
+
         respond_to do |format|
           format.html { redirect_to task_root_path(task_filter_params), notice: t("tasks.flash.updated") }
           format.turbo_stream do
@@ -63,7 +65,13 @@ module Task
     end
 
     def task_filter_params
-      params.permit(:project_id, :status, :priority).to_h.symbolize_keys.compact_blank
+      filters = params.permit(:project_id, :status, :priority).to_h.symbolize_keys.compact_blank
+      filters[:return_to] = "dashboard" if return_to_dashboard?
+      filters
+    end
+
+    def return_to_dashboard?
+      params[:return_to] == "dashboard"
     end
 
     def tabs_differ?(old_status, new_status)

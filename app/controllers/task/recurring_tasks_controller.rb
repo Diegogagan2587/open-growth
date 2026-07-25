@@ -41,6 +41,7 @@ module Task
     end
 
     def show
+      @return_to_dashboard = params[:return_to] == "dashboard"
     end
 
     def new
@@ -77,7 +78,8 @@ module Task
 
     def mark_done
       @recurring_task.mark_done!
-      redirect_to task_root_path(task_area_id: params[:task_area_id]), notice: t("task.recurring_tasks.flash.mark_done")
+      return_path = params[:return_to] == "dashboard" ? root_path : task_root_path(task_area_id: params[:task_area_id])
+      redirect_to return_path, notice: t("task.recurring_tasks.flash.mark_done")
     end
 
     private
