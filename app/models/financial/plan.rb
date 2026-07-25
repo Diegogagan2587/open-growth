@@ -3,6 +3,10 @@ class Financial::Plan < ApplicationRecord
 
   LIFECYCLE_STATUSES = %w[draft active closed cancelled].freeze
 
+  # Accepted only while older callers are moved off IncomeEvent. A Plan's
+  # expected funding is derived from its FundingSources, never from this value.
+  attr_writer :expected_amount
+
   belongs_to :account, class_name: "::Account"
   belongs_to :budget_period, optional: true
   has_many :funding_sources,
