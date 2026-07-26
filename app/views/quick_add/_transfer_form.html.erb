@@ -38,6 +38,11 @@
     </div>
 
     <div>
+      <label class="block text-sm font-medium text-foreground mb-1">Time (optional)</label>
+      <%= render Ui::InputComponent.new(name: "transfer[time]", type: "time") %>
+    </div>
+
+    <div>
       <label class="block text-sm font-medium text-foreground mb-1">Description</label>
       <%= render Ui::InputComponent.new(name: "transfer[description]", type: "text", placeholder: "Optional description (e.g. Rent reimbursement)", value: @transfer&.description) %>
     </div>

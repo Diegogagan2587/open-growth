@@ -53,6 +53,11 @@
       <%= render Ui::InputComponent.new(name: "expense[date]", type: "date", value: @expense&.date || Date.today, required: true) %>
     </div>
 
+    <div>
+      <label class="block text-sm font-medium text-foreground mb-1">Time (optional)</label>
+      <%= render Ui::InputComponent.new(name: "expense[time]", type: "time") %>
+    </div>
+
     <div class="flex justify-end gap-2 pt-2">
       <%= render Ui::ButtonComponent.new(label: "Create Expense", variant: :default, type: "submit") %>
     </div>

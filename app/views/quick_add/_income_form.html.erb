@@ -16,6 +16,11 @@
     </div>
 
     <div>
+      <label class="block text-sm font-medium text-foreground mb-1">Time (optional)</label>
+      <%= render Ui::InputComponent.new(name: "income[time]", type: "time") %>
+    </div>
+
+    <div>
       <label class="block text-sm font-medium text-foreground mb-1">Destination account</label>
       <%= render Ui::SelectComponent.new(
         name: "income[destination]",
