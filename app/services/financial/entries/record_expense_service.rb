@@ -38,7 +38,7 @@ module Financial
 
       private
 
-      attr_reader :account, :amount, :entry_date, :description, :category_id, :budget_period_id, :source_selection, :destination_selection, :income_event_id, :planned_expense_id
+      attr_reader :account, :amount, :entry_date, :entry_time, :description, :category_id, :budget_period_id, :source_selection, :destination_selection, :income_event_id, :planned_expense_id
 
       def base_attributes
         {
