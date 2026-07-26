@@ -188,7 +188,7 @@ class QuickAddController < ApplicationController
     "#{type}:#{id}"
   end
 
-  def build_transfer_entry(amount:, from_type:, from_id:, to_type:, to_id:, description: nil)
+  def build_transfer_entry(amount:, from_type:, from_id:, to_type:, to_id:, entry_date:, entry_time: nil, description: nil)
     from_asset = from_type == :asset ? Financial::Asset.for_account(Current.account).find_by(id: from_id) : nil
     to_asset = to_type == :asset ? Financial::Asset.for_account(Current.account).find_by(id: to_id) : nil
     from_liability = from_type == :liability ? Financial::Liability.for_account(Current.account).find_by(id: from_id) : nil
@@ -202,7 +202,8 @@ class QuickAddController < ApplicationController
     base_attrs = {
       account: Current.account,
       amount: amount,
-      entry_date: Date.current,
+      entry_date: entry_date,
+      entry_time: entry_time.presence,
       description: description.presence || "Transfer"
     }
 
