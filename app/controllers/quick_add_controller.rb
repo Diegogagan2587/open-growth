@@ -48,6 +48,7 @@ class QuickAddController < ApplicationController
       account: Current.account,
       amount: expense_params[:amount],
       entry_date: expense_params[:date],
+      entry_time: expense_params[:time],
       description: expense_params[:description],
       category_id: expense_params[:category_id],
       budget_period_id: Current.account.budget_periods.first&.id,
@@ -156,7 +157,7 @@ class QuickAddController < ApplicationController
   end
 
   def expense_params
-    params.require(:expense).except(:origin).permit(:description, :amount, :category_id, :date, :income_event_id)
+    params.require(:expense).except(:origin).permit(:description, :amount, :category_id, :date, :time, :income_event_id)
   end
 
   def task_params
