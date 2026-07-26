@@ -14,6 +14,7 @@ class QuickAddController < ApplicationController
     @income.destination_selection = normalize_financial_destination(params.dig(:income, :destination))
 
     if @income.save
+      @income.regular_income_entry&.update!(entry_time: params.dig(:income, :time).presence)
       source = @income.ensure_primary_funding_source!
       result = Financial::FundingSources::ReceiveService.call(funding_source: source)
       unless result.success?
