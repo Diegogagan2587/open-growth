@@ -45,6 +45,7 @@ module Financial
           account: account,
           amount: amount,
           entry_date: entry_date,
+          entry_time: entry_time,
           description: description,
           category: Category.for_account(account).find_by(id: category_id),
           budget_period: BudgetPeriod.for_account(account).find_by(id: budget_period_id),
