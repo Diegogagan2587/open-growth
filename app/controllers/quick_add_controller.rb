@@ -153,7 +153,7 @@ class QuickAddController < ApplicationController
   private
 
   def income_params
-    params.require(:income).permit(:description, :expected_amount, :expected_date, :income_type)
+    params.require(:income).except(:time).permit(:description, :expected_amount, :expected_date, :income_type)
   end
 
   def expense_params
