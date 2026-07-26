@@ -24,20 +24,20 @@
           <button
             type="button"
             data-quick-add-tabs-target="tab"
-            data-panel="income-panel"
+            data-panel="expense-panel"
             data-action="click->quick-add-tabs#selectTab"
             class="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
           >
-            Income
+            Expense
           </button>
           <button
             type="button"
             data-quick-add-tabs-target="tab"
-            data-panel="expense-panel"
+            data-panel="income-panel"
             data-action="click->quick-add-tabs#selectTab"
             class="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-card hover:text-foreground"
           >
-            Expense
+            Income
           </button>
           <button
             type="button"
@@ -50,12 +50,12 @@
           </button>
         </div>
 
-        <div id="income-panel" data-quick-add-tabs-target="panel" class="space-y-4">
-          <%= render "quick_add/income_form" %>
+        <div id="expense-panel" data-quick-add-tabs-target="panel" class="space-y-4">
+          <%= render "quick_add/expense_form" %>
         </div>
 
-        <div id="expense-panel" data-quick-add-tabs-target="panel" class="hidden space-y-4">
-          <%= render "quick_add/expense_form" %>
+        <div id="income-panel" data-quick-add-tabs-target="panel" class="hidden space-y-4">
+          <%= render "quick_add/income_form" %>
         </div>
 
         <div id="transfer-panel" data-quick-add-tabs-target="panel" class="hidden space-y-4">

@@ -10,7 +10,7 @@ module Financial
         new(...).call
       end
 
-      def initialize(account:, amount:, entry_date:, description:, category_id:, budget_period_id:, source_selection:, destination_selection: nil, income_event_id: nil, planned_expense_id: nil)
+      def initialize(account:, amount:, entry_date:, description:, category_id:, budget_period_id:, source_selection:, destination_selection: nil, income_event_id: nil, planned_expense_id: nil, entry_time: nil)
         @account = account
         @amount = amount
         @entry_date = entry_date
@@ -21,6 +21,7 @@ module Financial
         @destination_selection = destination_selection
         @income_event_id = income_event_id
         @planned_expense_id = planned_expense_id
+        @entry_time = entry_time
       end
 
       def call
@@ -37,13 +38,14 @@ module Financial
 
       private
 
-      attr_reader :account, :amount, :entry_date, :description, :category_id, :budget_period_id, :source_selection, :destination_selection, :income_event_id, :planned_expense_id
+      attr_reader :account, :amount, :entry_date, :entry_time, :description, :category_id, :budget_period_id, :source_selection, :destination_selection, :income_event_id, :planned_expense_id
 
       def base_attributes
         {
           account: account,
           amount: amount,
           entry_date: entry_date,
+          entry_time: entry_time,
           description: description,
           category: Category.for_account(account).find_by(id: category_id),
           budget_period: BudgetPeriod.for_account(account).find_by(id: budget_period_id),

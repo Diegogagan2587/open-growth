@@ -17,7 +17,8 @@
         options: from_options,
         selected: @transfer_from_type,
         include_blank: "Select from account",
-        required: true
+        required: true,
+        searchable: true
       ) %>
     </div>
 
@@ -31,8 +32,19 @@
         options: to_options,
         selected: @transfer_to_type,
         include_blank: "Select to account",
-        required: true
+        required: true,
+        searchable: true
       ) %>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-foreground mb-1">Date</label>
+      <%= render Ui::InputComponent.new(name: "transfer[date]", type: "date", value: Date.current, required: true) %>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-foreground mb-1">Time (optional)</label>
+      <%= render Ui::InputComponent.new(name: "transfer[time]", type: "time") %>
     </div>
 
     <div>

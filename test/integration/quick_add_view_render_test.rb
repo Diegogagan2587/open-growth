@@ -10,7 +10,7 @@ class QuickAddViewRenderTest < ActionDispatch::IntegrationTest
     }
   end
 
-  test "financial modal renders with income form" do
+  test "financial modal renders with expense first and searchable selects" do
     get quick_add_financial_path
     if response.status == 200
       assert_select "div[data-controller='quick-add-tabs']", count: 1
@@ -18,6 +18,12 @@ class QuickAddViewRenderTest < ActionDispatch::IntegrationTest
       assert_select "button", text: /Expense/
       assert_select "button", text: /Transfer/
       assert_select "form[data-quick-add-offline='true']", count: 3
+      assert_select "button[data-quick-add-tabs-target='tab']:first-child[data-panel='expense-panel']", text: /Expense/
+      assert_select "#expense-panel:not(.hidden)", count: 1
+      assert_select "#income-panel.hidden", count: 1
+      assert_select "[data-controller='searchable-select']", count: 6
+      assert_select "input[type='time']", count: 3
+      assert_select "input[name='transfer[date]'][type='date']", count: 1
     end
   end
 

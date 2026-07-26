@@ -35,6 +35,10 @@ es:
       - Noviembre
       - Diciembre
 
+  time:
+    formats:
+      long: "%d de %B de %Y, %H:%M"
+
   nav:
     dashboard: "Panel"
     budgets: "Presupuestos"

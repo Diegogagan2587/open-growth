@@ -9,7 +9,9 @@
     <div class="min-w-0">
       <div class="mb-2 flex flex-wrap items-center gap-2">
         <%= render Ui::BadgeComponent.new(label: @financial_entry.entry_type.humanize, variant: :outline) %>
-        <span class="text-sm text-muted-foreground"><%= @financial_entry.entry_date.strftime("%d %B %Y") %></span>
+        <span class="text-sm text-muted-foreground">
+          <%= @financial_entry.entry_date.strftime("%d %B %Y") %><%= " · #{@financial_entry.entry_time.strftime('%H:%M')}" if @financial_entry.entry_time %>
+        </span>
       </div>
       <h1 class="break-words text-2xl font-bold tracking-tight text-foreground sm:text-3xl"><%= @financial_entry.description %></h1>
     </div>
@@ -27,7 +29,9 @@
       </div>
       <div class="rounded-xl border border-border bg-card p-4">
         <dt class="text-sm text-muted-foreground">Transaction date</dt>
-        <dd class="mt-1 font-semibold text-foreground"><%= @financial_entry.entry_date.strftime("%d %b %Y") %></dd>
+        <dd class="mt-1 font-semibold text-foreground">
+          <%= @financial_entry.entry_date.strftime("%d %b %Y") %><%= " · #{@financial_entry.entry_time.strftime('%H:%M')}" if @financial_entry.entry_time %>
+        </dd>
       </div>
       <div class="rounded-xl border border-border bg-card p-4">
         <dt class="text-sm text-muted-foreground">Net asset account effect</dt>

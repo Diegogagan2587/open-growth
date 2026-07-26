@@ -20,7 +20,8 @@
         ),
         selected: nil,
         include_blank: "Select account",
-        required: true
+        required: true,
+        searchable: true
       ) %>
     </div>
 
@@ -31,7 +32,8 @@
         options: Current.account&.categories&.pluck(:name, :id) || [],
         selected: @expense&.category_id,
         include_blank: "Select category",
-        required: true
+        required: true,
+        searchable: true
       ) %>
     </div>
 
@@ -41,13 +43,19 @@
         name: "expense[income_event_id]",
         options: (Current.account&.income_events&.by_date || []).map { |ie| ["#{ie.description} (#{ie.expected_date.strftime('%Y-%m-%d')})", ie.id] },
         selected: @expense&.income_event_id,
-        include_blank: "None"
+        include_blank: "None",
+        searchable: true
       ) %>
     </div>
 
     <div>
       <label class="block text-sm font-medium text-foreground mb-1">Date</label>
       <%= render Ui::InputComponent.new(name: "expense[date]", type: "date", value: @expense&.date || Date.today, required: true) %>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-foreground mb-1">Time (optional)</label>
+      <%= render Ui::InputComponent.new(name: "expense[time]", type: "time") %>
     </div>
 
     <div class="flex justify-end gap-2 pt-2">

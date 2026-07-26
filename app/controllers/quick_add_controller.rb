@@ -20,6 +20,7 @@ class QuickAddController < ApplicationController
         @income.errors.add(:base, result.error_message)
         return render plain: @income.errors.full_messages.join(", "), status: :unprocessable_entity
       end
+      result.entry.update!(entry_time: params.dig(:income, :time).presence)
 
       respond_to do |format|
         format.turbo_stream do
@@ -47,6 +48,7 @@ class QuickAddController < ApplicationController
       account: Current.account,
       amount: expense_params[:amount],
       entry_date: expense_params[:date],
+      entry_time: expense_params[:time],
       description: expense_params[:description],
       category_id: expense_params[:category_id],
       budget_period_id: Current.account.budget_periods.first&.id,
@@ -90,7 +92,9 @@ class QuickAddController < ApplicationController
       from_id:,
       to_type:,
       to_id:,
-      description: params.dig(:transfer, :description)
+      description: params.dig(:transfer, :description),
+      entry_date: params.dig(:transfer, :date).presence || Date.current,
+      entry_time: params.dig(:transfer, :time)
     )
 
     if entry&.save
@@ -151,11 +155,11 @@ class QuickAddController < ApplicationController
   private
 
   def income_params
-    params.require(:income).permit(:description, :expected_amount, :expected_date, :income_type)
+    params.require(:income).except(:time).permit(:description, :expected_amount, :expected_date, :income_type)
   end
 
   def expense_params
-    params.require(:expense).except(:origin).permit(:description, :amount, :category_id, :date, :income_event_id)
+    params.require(:expense).except(:origin).permit(:description, :amount, :category_id, :date, :time, :income_event_id)
   end
 
   def task_params
@@ -186,7 +190,7 @@ class QuickAddController < ApplicationController
     "#{type}:#{id}"
   end
 
-  def build_transfer_entry(amount:, from_type:, from_id:, to_type:, to_id:, description: nil)
+  def build_transfer_entry(amount:, from_type:, from_id:, to_type:, to_id:, entry_date:, entry_time: nil, description: nil)
     from_asset = from_type == :asset ? Financial::Asset.for_account(Current.account).find_by(id: from_id) : nil
     to_asset = to_type == :asset ? Financial::Asset.for_account(Current.account).find_by(id: to_id) : nil
     from_liability = from_type == :liability ? Financial::Liability.for_account(Current.account).find_by(id: from_id) : nil
@@ -200,7 +204,8 @@ class QuickAddController < ApplicationController
     base_attrs = {
       account: Current.account,
       amount: amount,
-      entry_date: Date.current,
+      entry_date: entry_date,
+      entry_time: entry_time.presence,
       description: description.presence || "Transfer"
     }
 

@@ -65,6 +65,7 @@ class QuickAddControllerTest < ActionDispatch::IntegrationTest
           amount: 30.45,
           category_id: @category.id,
           date: Date.new(2026, 5, 7),
+          time: "14:35",
           origin: "asset_#{@asset_a.id}"
         }
       }
@@ -72,6 +73,7 @@ class QuickAddControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :created
     assert_equal 69.55.to_d, @asset_a.reload.current_balance
+    assert_equal "14:35", Financial::Entry.order(:created_at).last.entry_time.strftime("%H:%M")
   end
 
   test "quick add expense assigns the selected income event" do
@@ -104,6 +106,8 @@ class QuickAddControllerTest < ActionDispatch::IntegrationTest
       post quick_add_create_transfer_path, params: {
         transfer: {
           amount: 25,
+          date: Date.new(2026, 5, 9),
+          time: "08:10",
           from_type: "asset_#{@asset_a.id}",
           to_type: "asset_#{@asset_b.id}"
         }
@@ -113,6 +117,9 @@ class QuickAddControllerTest < ActionDispatch::IntegrationTest
     assert_response :created
     assert_equal 75.to_d, @asset_a.reload.current_balance
     assert_equal 45.to_d, @asset_b.reload.current_balance
+    entry = Financial::Entry.order(:created_at).last
+    assert_equal Date.new(2026, 5, 9), entry.entry_date
+    assert_equal "08:10", entry.entry_time.strftime("%H:%M")
   end
 
   test "quick add transfer asset to liability reduces liability and asset" do
@@ -196,6 +203,7 @@ class QuickAddControllerTest < ActionDispatch::IntegrationTest
           description: "Bonus to debt",
           expected_amount: 35,
           expected_date: Date.new(2026, 5, 7),
+          time: "09:45",
           destination: "liability_#{@liability.id}"
         }
       }
@@ -203,5 +211,21 @@ class QuickAddControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :created
     assert_equal 165.to_d, @liability.reload.current_balance
+    assert_equal "09:45", Financial::Entry.order(:created_at).last.entry_time.strftime("%H:%M")
+  end
+
+  test "quick add entries allow a blank time" do
+    post quick_add_create_expense_path, params: {
+      expense: {
+        description: "Untimed expense",
+        amount: 10,
+        category_id: @category.id,
+        date: Date.new(2026, 5, 7),
+        origin: "asset_#{@asset_a.id}"
+      }
+    }
+
+    assert_response :created
+    assert_nil Financial::Entry.order(:created_at).last.entry_time
   end
 end

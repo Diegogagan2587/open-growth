@@ -58,7 +58,12 @@
       <tbody>
         <% ordered_entries.each do |financial_entry| %>
           <tr class="border-t">
-            <td class="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground"><%= financial_entry.entry_date.strftime("%d %b %Y") %></td>
+            <td class="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
+              <%= financial_entry.entry_date.strftime("%d %b %Y") %>
+              <% if financial_entry.entry_time %>
+                <span class="block text-xs"><%= financial_entry.entry_time.strftime("%H:%M") %></span>
+              <% end %>
+            </td>
             <td class="max-w-xs px-4 py-3">
               <%= link_to financial_entry.description, finance_entry_path(financial_entry), class: "font-medium text-foreground hover:text-accent hover:underline" %>
               <div class="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground">
@@ -110,6 +115,9 @@
         </div>
         <div class="mb-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <span><%= financial_entry.entry_date.strftime("%d %b %Y") %></span>
+          <% if financial_entry.entry_time %>
+            <span><%= financial_entry.entry_time.strftime("%H:%M") %></span>
+          <% end %>
           <%= render Ui::BadgeComponent.new(label: financial_entry.entry_type.humanize, variant: :outline) %>
           <span><%= financial_entry.category&.name || t("expenses.index.unassigned") %></span>
         </div>
