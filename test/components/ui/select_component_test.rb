@@ -2,7 +2,7 @@ require "test_helper"
 
 class Ui::SelectComponentTest < ViewComponent::TestCase
   test "renders a native select by default" do
-    render_inline(Ui::SelectComponent.new(name: "category_id", options: [[ "Food", 1 ]]))
+    render_inline(Ui::SelectComponent.new(name: "category_id", options: [ [ "Food", 1 ] ]))
 
     assert_selector "select[name='category_id']"
     assert_no_selector "[data-controller='searchable-select']"
@@ -11,7 +11,7 @@ class Ui::SelectComponentTest < ViewComponent::TestCase
   test "renders searchable controls while preserving the named select" do
     render_inline(Ui::SelectComponent.new(
       name: "category_id",
-      options: [[ "Food", 1 ], [ "Transportation", 2 ]],
+      options: [ [ "Food", 1 ], [ "Transportation", 2 ] ],
       include_blank: "Select category",
       required: true,
       searchable: true
