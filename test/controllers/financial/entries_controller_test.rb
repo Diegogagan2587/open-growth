@@ -248,5 +248,22 @@ module Financial
       assert_includes response.body, "Visible transaction notes"
       assert_includes response.body, "Last updated"
     end
+
+    test "show page renders" do
+      sign_in
+      entry = Financial::Entry.create!(
+        account: @account,
+        entry_type: "outflow",
+        financial_account: @asset_a,
+        category: @category,
+        entry_date: Date.current,
+        amount: 20,
+        description: "Rendered transaction"
+      )
+
+      get finance_entry_path(entry)
+
+      assert_response :success
+    end
   end
 end
