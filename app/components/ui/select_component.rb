@@ -38,6 +38,22 @@ class Ui::SelectComponent < ViewComponent::Base
     @searchable
   end
 
+  def searchable_options
+    @options.map { |label, value| { label: label.to_s, value: value.to_s } }
+  end
+
+  def selected_label
+    searchable_options.find { |option| option[:value] == @selected.to_s }&.fetch(:label, nil)
+  end
+
+  def search_placeholder
+    include_blank_option? ? blank_label : "Search..."
+  end
+
+  def listbox_id
+    "#{@id.presence || "select-#{object_id}"}-listbox"
+  end
+
   private
 
   def include_blank_option?
