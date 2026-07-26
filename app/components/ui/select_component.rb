@@ -34,6 +34,10 @@ class Ui::SelectComponent < ViewComponent::Base
     }.compact
   end
 
+  def searchable?
+    @searchable
+  end
+
   private
 
   def include_blank_option?
