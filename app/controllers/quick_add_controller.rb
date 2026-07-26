@@ -92,7 +92,9 @@ class QuickAddController < ApplicationController
       from_id:,
       to_type:,
       to_id:,
-      description: params.dig(:transfer, :description)
+      description: params.dig(:transfer, :description),
+      entry_date: params.dig(:transfer, :date).presence || Date.current,
+      entry_time: params.dig(:transfer, :time)
     )
 
     if entry&.save
