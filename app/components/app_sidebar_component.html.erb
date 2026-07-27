@@ -30,7 +30,7 @@
         <% end %>
 
         <%= render SidebarMenuItemComponent.new do %>
-          <%= render SidebarMenuButtonComponent.new(href: "/finance/entries?entry_type=expenses", active: active_controller?("financial/entries")) do %>
+          <%= render SidebarMenuButtonComponent.new(href: "/finance/entries", active: active_controller?("financial/entries")) do %>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-sidebar-foreground/90" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 7h18M7 3v4m10-4v4M6 11h12l-1 9H7l-1-9z"/></svg>
             <span data-sidebar-collapse="hide" class="<%= nav_label_classes %>"><%= t("nav.expenses") %></span>
           <% end %>
