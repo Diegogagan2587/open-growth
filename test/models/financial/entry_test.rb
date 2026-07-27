@@ -1,6 +1,15 @@
 require "test_helper"
 
 class Financial::EntryTest < ActiveSupport::TestCase
+  test "by_date orders same-day entries by available time" do
+    account = accounts(:one)
+    asset = Financial::Asset.create!(account: account, name: "Ordering wallet", account_type: "checking", status: "active")
+    early = Financial::Entry.create!(account: account, financial_account: asset, entry_type: "adjustment", entry_date: Date.current, entry_time: "08:00", amount: 1, description: "Early")
+    late = Financial::Entry.create!(account: account, financial_account: asset, entry_type: "adjustment", entry_date: Date.current, entry_time: "18:00", amount: 1, description: "Late")
+
+    assert_equal [ late, early ], Financial::Entry.where(id: [ early.id, late.id ]).by_date.to_a
+  end
+
   def setup
     @account = Account.create!(name: "Tenant Account")
     Current.account = @account

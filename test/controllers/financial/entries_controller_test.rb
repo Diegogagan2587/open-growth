@@ -265,5 +265,37 @@ module Financial
 
       assert_response :success
     end
+
+    test "edit shows and updates entry time" do
+      sign_in
+      entry = Financial::Entry.create!(
+        account: @account,
+        entry_type: "outflow",
+        financial_account: @asset_a,
+        category: @category,
+        entry_date: Date.current,
+        entry_time: "08:15",
+        amount: 20,
+        description: "Timed transaction"
+      )
+
+      get edit_finance_entry_path(entry)
+
+      assert_response :success
+      assert_select "input[name='financial_entry[entry_time]'][type='time'][value='08:15:00.000']"
+
+      patch finance_entry_path(entry), params: { financial_entry: {
+        entry_type: entry.entry_type,
+        entry_date: entry.entry_date,
+        entry_time: "17:45",
+        amount: entry.amount,
+        description: entry.description,
+        financial_account_id: @asset_a.id,
+        category_id: @category.id
+      } }
+
+      assert_redirected_to finance_entry_path(entry)
+      assert_equal "17:45", entry.reload.entry_time.strftime("%H:%M")
+    end
   end
 end

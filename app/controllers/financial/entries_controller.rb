@@ -130,6 +130,7 @@ module Financial
       params.expect(financial_entry: [
         :entry_type,
         :entry_date,
+        :entry_time,
         :date,
         :amount,
         :description,
@@ -158,6 +159,7 @@ module Financial
       {
         account: Current.account,
         entry_date: attrs[:date] || attrs[:entry_date],
+        entry_time: attrs[:entry_time],
         amount: attrs[:amount],
         description: attrs[:description],
         category_id: attrs[:category_id],
@@ -174,6 +176,7 @@ module Financial
       attrs.slice(
         :entry_type,
         :entry_date,
+        :entry_time,
         :amount,
         :description,
         :notes,
@@ -201,6 +204,7 @@ module Financial
 
       attrs = {
         entry_date: params_hash[:date] || params_hash[:entry_date],
+        entry_time: params_hash[:entry_time],
         amount: params_hash[:amount],
         description: params_hash[:description],
         category_id: params_hash[:category_id],

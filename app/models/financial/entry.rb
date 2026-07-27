@@ -20,7 +20,7 @@ class Financial::Entry < ApplicationRecord
   before_validation :set_account, on: :create
 
   scope :for_account, ->(account) { where(account: account) }
-  scope :by_date, -> { order(entry_date: :desc, created_at: :desc) }
+  scope :by_date, -> { order(entry_date: :desc, entry_time: :desc, created_at: :desc) }
 
   validates :entry_type, presence: true, inclusion: { in: ENTRY_TYPES }
   validates :entry_date, presence: true
