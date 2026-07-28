@@ -28,7 +28,8 @@ class Financial::Plan < ApplicationRecord
   validate :closed_chronology_is_immutable, on: :update
   before_destroy :allow_safe_draft_deletion
 
-  scope :chronological, -> { order(:expected_date, :id) }
+  scope :for_account, ->(account) { where(account: account) }
+  scope :chronological, -> { order(:planned_for, :id) }
 
   # Loan terms and routing belong to Financial::Loan. Treating a plan row as a
   # legacy IncomeEvent loan would re-run obsolete validations and callbacks.
