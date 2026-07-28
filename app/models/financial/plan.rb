@@ -30,6 +30,11 @@ class Financial::Plan < ApplicationRecord
 
   scope :for_account, ->(account) { where(account: account) }
   scope :chronological, -> { order(:planned_for, :id) }
+  # Compatibility readers for views during the legacy-route retirement window.
+  alias_attribute :description, :name
+  alias_attribute :expected_date, :planned_for
+  alias_method :financial_entries, :transactions
+  alias_method :funding_entries, :funding_transactions
 
   def expected_amount
     @expected_amount || funding_sources.sum(:expected_amount)
