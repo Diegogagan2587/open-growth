@@ -55,4 +55,8 @@ class Financial::Plan < ApplicationRecord
 
     errors.add(:base, "closed or cancelled plan chronology cannot be changed")
   end
+
+  def budget_period_belongs_to_account
+    errors.add(:budget_period, "must belong to the current account") if budget_period && budget_period.account_id != account_id
+  end
 end
