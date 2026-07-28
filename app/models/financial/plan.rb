@@ -59,7 +59,7 @@ class Financial::Plan < ApplicationRecord
   end
 
   def allow_safe_draft_deletion
-    return if lifecycle_status == "draft" && financial_entries.none? && funding_sources.none?(&:receipt_entry)
+    return if lifecycle_status == "draft" && transactions.none? && funding_sources.none?(&:receipt_transaction)
 
     errors.add(:base, "only an empty draft plan can be deleted; cancel it instead")
     throw :abort
