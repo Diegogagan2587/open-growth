@@ -31,10 +31,8 @@ class Financial::Plan < ApplicationRecord
   scope :for_account, ->(account) { where(account: account) }
   scope :chronological, -> { order(:planned_for, :id) }
 
-  # Loan terms and routing belong to Financial::Loan. Treating a plan row as a
-  # legacy IncomeEvent loan would re-run obsolete validations and callbacks.
-  def loan?
-    false
+  def expected_amount
+    @expected_amount || funding_sources.sum(:expected_amount)
   end
 
   private
