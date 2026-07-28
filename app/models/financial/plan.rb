@@ -38,6 +38,10 @@ class Financial::Plan < ApplicationRecord
 
   private
 
+  def set_owner_account
+    self.account ||= Current.account if Current.account
+  end
+
   def allow_safe_draft_deletion
     return if lifecycle_status == "draft" && financial_entries.none? && funding_sources.none?(&:receipt_entry)
 
