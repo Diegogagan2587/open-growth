@@ -34,6 +34,10 @@ class Financial::Plan < ApplicationRecord
   def expected_amount
     @expected_amount || funding_sources.sum(:expected_amount)
   end
+  
+  def status=(value)
+    self.lifecycle_status = value == "pending" ? "active" : value
+  end
 
   private
 
