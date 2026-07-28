@@ -32,6 +32,8 @@ class Financial::Plan < ApplicationRecord
   scope :chronological, -> { order(:planned_for, :id) }
 
   validates :name, :planned_for, presence: true
+  validate :budget_period_belongs_to_account
+
   # Compatibility readers for views during the legacy-route retirement window.
   alias_attribute :description, :name
   alias_attribute :expected_date, :planned_for
