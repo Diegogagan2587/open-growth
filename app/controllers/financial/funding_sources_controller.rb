@@ -35,9 +35,9 @@ class Financial::FundingSourcesController < ApplicationController
       description: params.dig(:funding_source, :description)
     )
     if result.success?
-      redirect_to finance_plan_path(@plan), notice: "Funding received"
+      redirect_back fallback_location: finance_plan_path(@plan), notice: "Funding received"
     else
-      redirect_to finance_plan_path(@plan), alert: result.error_message
+      redirect_back fallback_location: finance_plan_path(@plan), alert: result.error_message
     end
   end
 
