@@ -1,4 +1,4 @@
-<div class="container mx-auto px-4 py-8" data-controller="doc-links">
+<div class="container mx-auto max-w-6xl px-4 py-8" data-controller="doc-links">
   <div class="mb-8">
     <div class="flex items-center justify-between">
       <div>
@@ -14,10 +14,8 @@
     </div>
   </div>
 
-  <div class="bg-card rounded-lg shadow p-6 mb-8">
-    <div class="markdown-content">
-      <%= render_markdown(@doc.content) %>
-    </div>
+  <div class="mb-8">
+    <%= render Projects::MarkdownDocumentComponent.new(markdown: @doc.content) %>
   </div>
 
   <!-- Projects using this doc -->
@@ -56,12 +54,13 @@
       <div class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-foreground mb-2"><%= t('projects.links.search_link') %></label>
-          <input 
-            type="text" 
+          <input
+            type="text"
+            autocomplete="off"
             data-doc-links-target="search"
             data-action="input->doc-links#filterLinks"
             placeholder="<%= t('projects.links.search_placeholder') %>"
-            class="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:ring-primary focus:border-primary" 
+            class="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:ring-primary focus:border-primary"
 >
         </div>
 
@@ -70,7 +69,7 @@
             <% Projects::Link.for_account(Current.account).order(:title).each do |link| %>
               <%= form_with url: doc_doc_links_path(@doc), method: :post, local: true, class: "border-b border-border last:border-0" do |f| %>
                 <%= f.hidden_field :link_id, value: link.id %>
-                <button 
+                <button
                   type="submit"
                   data-doc-links-target="linkItem"
                   data-link-title="<%= link.title.downcase %>"
