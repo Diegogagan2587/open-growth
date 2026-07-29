@@ -10,6 +10,12 @@
   </section>
 
   <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div class="rounded-2xl border border-border bg-card p-5 shadow-sm border-t-4 border-t-accent">
+      <p class="text-sm text-muted-foreground">Pending expectations</p>
+      <p class="mt-2 text-3xl font-bold text-foreground"><%= @pending_expectation_count %></p>
+      <p class="mt-2 text-sm text-muted-foreground">Review expected movements that have not been registered as entries.</p>
+      <%= link_to "Review pending expectations", finance_pending_expectations_path, class: "mt-4 inline-block text-accent hover:underline" %>
+    </div>
     <div class="rounded-2xl border border-border bg-card p-5 shadow-sm border-t-4 border-t-primary">
       <p class="text-sm text-muted-foreground">Financial plans</p>
       <p class="mt-2 text-3xl font-bold text-foreground"><%= @plan_count %></p>
