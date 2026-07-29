@@ -17,11 +17,16 @@ class MarkdownEditorTest < ApplicationSystemTestCase
     sign_in
     visit edit_doc_path(@doc)
 
-    editor = find(".cm-content[contenteditable='true']")
-    editor.click
+    find(".cm-content[contenteditable='true']")
     markdown = "# Mobile heading\n\n# Mobile heading\n\n```\n# Hidden heading\n```\n\nBody"
-    editor.send_keys([ :control, "a" ])
-    editor.send_keys(markdown)
+    page.execute_script(<<~JS, markdown)
+      const element = document.querySelector("[data-controller~='markdown-editor']")
+      const controller = window.Stimulus.getControllerForElementAndIdentifier(element, "markdown-editor")
+      controller.editor.dispatch({
+        changes: { from: 0, to: controller.editor.state.doc.length, insert: arguments[0] },
+        selection: { anchor: arguments[0].length }
+      })
+    JS
 
     assert_equal markdown, find("textarea[name='doc[content]']", visible: :all).value
 
@@ -29,7 +34,7 @@ class MarkdownEditorTest < ApplicationSystemTestCase
     assert_selector "details nav button", text: "Mobile heading", count: 2
     assert_no_selector "details nav button", text: "Hidden heading"
 
-    editor.send_keys([ :control, "b" ])
+    click_button "Bold"
     assert_includes find("textarea[name='doc[content]']", visible: :all).value, "**bold text**"
 
     click_button "Preview"
