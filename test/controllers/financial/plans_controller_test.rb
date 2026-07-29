@@ -24,6 +24,7 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", text: "Financial plans"
+    assert_select "a[href='#{finance_pending_expectations_path}']", text: "Pending transactions"
     assert_select "a[href='#{finance_plan_path(@plan)}']", text: /Migrated July plan/
     assert_select "h1", text: /Income Events/, count: 0
 
@@ -32,6 +33,16 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", text: "Migrated July plan"
     assert_select "a[href='#{income_event_path(@plan)}']", count: 0
+  end
+
+  test "renders long plan dates in Spanish" do
+    @user.update!(locale: "es")
+
+    get finance_plans_path
+
+    assert_response :success
+    assert_includes response.body, "15 de Julio de 2026"
+    assert_select "a[href='#{finance_pending_expectations_path}']", text: "Transacciones pendientes"
   end
 
   test "filters plans by month and lifecycle status" do
