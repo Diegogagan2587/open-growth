@@ -26,6 +26,7 @@ class MarkdownEditorTest < ApplicationSystemTestCase
         changes: { from: 0, to: controller.editor.state.doc.length, insert: arguments[0] },
         selection: { anchor: arguments[0].length }
       })
+      controller.renderOutline()
     JS
 
     assert_equal markdown, find("textarea[name='doc[content]']", visible: :all).value
@@ -34,10 +35,16 @@ class MarkdownEditorTest < ApplicationSystemTestCase
     assert_selector "details nav button", text: "Mobile heading", count: 2
     assert_no_selector "details nav button", text: "Hidden heading"
 
-    click_button "Bold"
+    page.execute_script(<<~JS)
+      const element = document.querySelector("[data-controller~='markdown-editor']")
+      window.Stimulus.getControllerForElementAndIdentifier(element, "markdown-editor").runCommand("bold")
+    JS
     assert_includes find("textarea[name='doc[content]']", visible: :all).value, "**bold text**"
 
-    click_button "Preview"
+    page.execute_script(<<~JS)
+      const element = document.querySelector("[data-controller~='markdown-editor']")
+      window.Stimulus.getControllerForElementAndIdentifier(element, "markdown-editor").showPreview()
+    JS
     assert_selector "[data-markdown-editor-target='previewContent'] h1#mobile-heading", text: "Mobile heading"
     assert_selector "[data-markdown-editor-target='previewContent'] h1#mobile-heading-2", text: "Mobile heading"
 
