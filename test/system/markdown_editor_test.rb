@@ -20,7 +20,8 @@ class MarkdownEditorTest < ApplicationSystemTestCase
     editor = find(".cm-content[contenteditable='true']")
     editor.click
     markdown = "# Mobile heading\n\n# Mobile heading\n\n```\n# Hidden heading\n```\n\nBody"
-    editor.send_keys([ :control, "a" ], markdown)
+    editor.send_keys([ :control, "a" ])
+    editor.send_keys(markdown)
 
     assert_equal markdown, find("textarea[name='doc[content]']", visible: :all).value
 
