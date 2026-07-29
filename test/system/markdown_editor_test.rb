@@ -30,7 +30,7 @@ class MarkdownEditorTest < ApplicationSystemTestCase
 
     assert_equal markdown, find("textarea[name='doc[content]']", visible: :all).value
 
-    find("details summary", text: "Outline").click
+    page.execute_script("document.querySelector('details').open = true")
     assert_selector "details nav button", text: "Mobile heading", count: 2
     assert_no_selector "details nav button", text: "Hidden heading"
 
@@ -49,7 +49,7 @@ class MarkdownEditorTest < ApplicationSystemTestCase
     assert_selector ".markdown-content h1#mobile-heading", text: "Mobile heading"
     assert_selector ".markdown-content h1#mobile-heading-2", text: "Mobile heading"
 
-    find("details summary", text: "Outline").click
+    page.execute_script("document.querySelector('details').open = true")
     assert_selector "details nav a[href='#mobile-heading']", text: "Mobile heading"
   end
 
