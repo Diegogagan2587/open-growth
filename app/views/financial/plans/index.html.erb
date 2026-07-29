@@ -4,7 +4,10 @@
       <h1 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Financial plans</h1>
       <p class="mt-1 text-sm text-muted-foreground"><%= @budget_period ? "Plans grouped in #{@budget_period.name}." : "Plan expected funding and transactions without changing the actual ledger." %></p>
     </div>
-    <%= render Ui::ButtonComponent.new(href: new_finance_plan_path(budget_period_id: @budget_period&.id), label: "New plan") %>
+    <div class="flex flex-wrap gap-2">
+      <%= render Ui::ButtonComponent.new(href: finance_pending_expectations_path, label: t("finance.pending_transactions"), variant: :outline) %>
+      <%= render Ui::ButtonComponent.new(href: new_finance_plan_path(budget_period_id: @budget_period&.id), label: "New plan") %>
+    </div>
   </header>
 
   <%= form_with url: finance_plans_path, method: :get, class: "flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-end" do %>
