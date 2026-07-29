@@ -6,6 +6,7 @@ es:
     formats:
       default: "%d/%m/%Y"
       short: "%d %b"
+      long: "%d de %B de %Y"
     abbr_month_names:
       - ~
       - Ene
@@ -52,6 +53,9 @@ es:
     menu_open: "Abrir menú"
     menu_close: "Cerrar menú"
     incomes: "Planeacion de Ingresos"
+
+  finance:
+    pending_transactions: "Transacciones pendientes"
 
   shared:
     view: "Ver"
