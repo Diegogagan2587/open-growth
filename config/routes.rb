@@ -39,6 +39,7 @@ Rails.application.routes.draw do
 
   namespace :finance do
     root to: "finance#index"
+    resources :pending_expectations, only: :index
     resources :plans, controller: "/financial/plans" do
       member do
         post :close
