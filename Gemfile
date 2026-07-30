@@ -71,3 +71,6 @@ gem "view_component", "~> 4.12"
 gem "redcarpet", "~> 3.6"
 # backgroun jobs monitoring errors
 gem "mission_control-jobs"
+
+# Ofitial OPen AI Gem
+gem "openai", "~> 0.74.0"
