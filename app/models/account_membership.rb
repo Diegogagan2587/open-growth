@@ -17,4 +17,25 @@ class AccountMembership < ApplicationRecord
   def owner?
     role == "owner"
   end
+
+  def ai_reports_available?
+    Ai::Configuration.current.reports_enabled? && account.ai_reports_enabled? && ai_reports_enabled?
+  end
+
+  def ai_reports_requests_used(at: Time.current)
+    reporting_usage_events.counted.during(at.beginning_of_month..at.end_of_month).count
+  end
+
+  def ai_reports_requests_remaining(at: Time.current)
+    [ ai_reports_monthly_request_limit - ai_reports_requests_used(at: at), 0 ].max
+  end
+
+  private
+
+  def ai_reports_limit_within_system_maximum
+    return if ai_reports_monthly_request_limit.blank?
+    return if ai_reports_monthly_request_limit <= Ai::Configuration.current.maximum_monthly_request_limit
+
+    errors.add(:ai_reports_monthly_request_limit, "exceeds the system maximum")
+  end
 end
