@@ -44,7 +44,7 @@
         <% end %>
 
         <%= render SidebarMenuItemComponent.new do %>
-          <%= render SidebarMenuButtonComponent.new(href: "/reports", active: active_controller?("reports")) do %>
+          <%= render SidebarMenuButtonComponent.new(href: "/reports", active: active_controller?("reports") || current_controller.start_with?("financial/reports/")) do %>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-sidebar-foreground/90" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 19V9m7 10V5m7 14v-4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 19h18"/></svg>
             <span data-sidebar-collapse="hide" class="<%= nav_label_classes %>"><%= t("nav.reports") %></span>
           <% end %>
