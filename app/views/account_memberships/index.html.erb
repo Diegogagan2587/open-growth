@@ -23,6 +23,9 @@
 <% end %>
 
 <h2 class="text-xl font-semibold mb-4">Current Members</h2>
+<% unless @account.ai_reports_enabled? %>
+  <p class="mb-4 rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">A system administrator must enable AI for this account before member access can be changed.</p>
+<% end %>
 <table class="ui-table">
   <thead>
     <tr class="bg-muted">
