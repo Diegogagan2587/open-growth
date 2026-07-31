@@ -48,7 +48,16 @@ class MarkdownEditorTest < ApplicationSystemTestCase
     assert_selector "[data-markdown-editor-target='previewContent'] h1#mobile-heading", text: "Mobile heading"
     assert_selector "[data-markdown-editor-target='previewContent'] h1#mobile-heading-2", text: "Mobile heading"
 
-    dismiss_confirm("Discard your unsaved document changes?") { click_link "Cancel" }
+    page.execute_script <<~JS
+      window.__markdownEditorConfirmMessages = []
+      window.confirm = (message) => {
+        window.__markdownEditorConfirmMessages.push(message)
+        return false
+      }
+    JS
+    click_link "Cancel"
+    assert_equal [ "Discard your unsaved document changes?" ],
+      page.evaluate_script("window.__markdownEditorConfirmMessages")
     assert_current_path edit_doc_path(@doc)
 
     click_button "Update Document"
