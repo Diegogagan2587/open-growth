@@ -104,7 +104,7 @@ class Reporting::AnswerQuestion
       instructions: instructions,
       input: history + [ { role: :user, content: current_prompt(snapshot) } ],
       reasoning: { effort: :low, context: :current_turn },
-      max_output_tokens: 1_200,
+      max_output_tokens: 4_000,
       safety_identifier: safety_identifier,
       store: false
     }
@@ -140,6 +140,10 @@ class Reporting::AnswerQuestion
   end
 
   def complete(response)
+    if response.status == :incomplete
+      return fail_after_provider(response.incomplete_details&.reason || "incomplete_response", "OpenAI did not finish the answer. Please try again.")
+    end
+
     if response.output_text.blank?
       return fail_after_provider("empty_response", "OpenAI did not return an answer for this request.")
     end
