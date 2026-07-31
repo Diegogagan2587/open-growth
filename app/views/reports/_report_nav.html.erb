@@ -1,5 +1,5 @@
 <%# Navegación entre tipos de reporte. Conserva from, to y period.
-    locals: current (:index | :by_date | :spending_by_category | :category_trends),
+    locals: current (:index | :by_date | :spending_by_category | :category_trends | :ai),
              date_from, date_to,
              period (opcional; en index no hay, en reportes sí) %>
 <%
@@ -19,4 +19,6 @@
       class: "px-4 py-2 rounded-lg text-sm font-medium transition #{current == :spending_by_category ? 'nav-link-active' : 'bg-muted text-foreground hover:bg-muted'}" %>
   <%= link_to t("reports.category_trends_title"), reports_category_trends_path(from: date_from, to: date_to, period: trends_period),
       class: "px-4 py-2 rounded-lg text-sm font-medium transition #{current == :category_trends ? 'nav-link-active' : 'bg-muted text-foreground hover:bg-muted'}" %>
+  <%= link_to "AI analyst", reports_ai_conversations_path(from: date_from, to: date_to),
+      class: "px-4 py-2 rounded-lg text-sm font-medium transition #{current == :ai ? 'nav-link-active' : 'bg-muted text-foreground hover:bg-muted'}" %>
 </nav>

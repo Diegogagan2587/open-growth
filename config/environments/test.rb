@@ -4,6 +4,11 @@
 # and recreated between test runs. Don't rely on the data there!
 
 Rails.application.configure do
+  # Test data is disposable; CI must not require production credentials to exercise encrypted attributes.
+  config.active_record.encryption.primary_key = "0" * 32
+  config.active_record.encryption.deterministic_key = "1" * 32
+  config.active_record.encryption.key_derivation_salt = "2" * 32
+
   config.after_initialize do
     Bullet.enable        = true
     Bullet.bullet_logger = true

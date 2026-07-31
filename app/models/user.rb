@@ -11,6 +11,11 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_many :account_memberships, dependent: :destroy
   has_many :accounts, through: :account_memberships
+  has_many :reporting_usage_events, class_name: "Reporting::UsageEvent", dependent: :restrict_with_error
+
+  def system_admin?
+    system_admin
+  end
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 

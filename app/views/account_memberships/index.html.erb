@@ -23,12 +23,16 @@
 <% end %>
 
 <h2 class="text-xl font-semibold mb-4">Current Members</h2>
+<% unless @account.ai_reports_enabled? %>
+  <p class="mb-4 rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">A system administrator must enable AI for this account before member access can be changed.</p>
+<% end %>
 <table class="ui-table">
   <thead>
     <tr class="bg-muted">
       <th class="px-4 py-2 text-left">Name</th>
       <th class="px-4 py-2 text-left">Email</th>
       <th class="px-4 py-2 text-left">Role</th>
+      <th class="px-4 py-2 text-left">AI reports</th>
       <th class="px-4 py-2 text-left">Actions</th>
     </tr>
   </thead>
@@ -46,6 +50,20 @@
                   class: "px-2 py-1 border rounded text-sm"
                 } %>
           <% end %>
+        </td>
+        <td class="px-4 py-2">
+          <%= form_with url: account_account_membership_ai_access_path(@account, membership), method: :patch, class: "flex flex-wrap items-center gap-2" do %>
+            <%= hidden_field_tag "account_membership[ai_reports_enabled]", "0" %>
+            <label class="flex items-center gap-1 text-sm">
+              <%= check_box_tag "account_membership[ai_reports_enabled]", "1", membership.ai_reports_enabled?, disabled: !@account.ai_reports_enabled? %>
+              Enabled
+            </label>
+            <%= number_field_tag "account_membership[ai_reports_monthly_request_limit]", membership.ai_reports_monthly_request_limit,
+                min: 1, max: Ai::Configuration.current.maximum_monthly_request_limit,
+                disabled: !@account.ai_reports_enabled?, class: "w-20 rounded border border-input bg-background px-2 py-1 text-sm" %>
+            <%= render Ui::ButtonComponent.new(label: "Save", type: "submit", size: :sm, disabled: !@account.ai_reports_enabled?) %>
+          <% end %>
+          <p class="mt-1 text-xs text-muted-foreground"><%= membership.ai_reports_requests_used %> used this month</p>
         </td>
         <td class="px-4 py-2">
           <% unless membership.owner? && @account.account_memberships.owners.count == 1 %>

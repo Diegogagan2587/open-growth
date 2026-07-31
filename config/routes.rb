@@ -128,7 +128,9 @@ Rails.application.routes.draw do
   end
 
   resources :accounts do
-    resources :account_memberships, except: [ :show ]
+    resources :account_memberships, except: [ :show ] do
+      resource :ai_access, only: :update, controller: "account_memberships/ai_accesses"
+    end
   end
   post "account_switches", to: "account_switches#create", as: :account_switch
 
@@ -136,6 +138,21 @@ Rails.application.routes.draw do
   get "reports/by_date", to: "reports#by_date", as: :reports_by_date
   get "reports/spending_by_category", to: "reports#spending_by_category", as: :reports_spending_by_category
   get "reports/category_trends", to: "reports#category_trends", as: :reports_category_trends
+
+  namespace :reports do
+    namespace :ai do
+      resources :conversations, only: %i[index create show destroy] do
+        resources :turns, only: :create
+      end
+    end
+  end
+
+  namespace :admin do
+    namespace :ai do
+      resource :configuration, only: %i[show update], path: ""
+      resources :account_accesses, only: :update
+    end
+  end
 
   get "/task/recurring_tasks", to: redirect("/task")
 

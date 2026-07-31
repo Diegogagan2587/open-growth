@@ -56,6 +56,15 @@
             <span data-sidebar-collapse="hide" class="<%= nav_label_classes %>">Career</span>
           <% end %>
         <% end %>
+
+        <% if Current.user&.system_admin? %>
+          <%= render SidebarMenuItemComponent.new do %>
+            <%= render SidebarMenuButtonComponent.new(href: admin_ai_configuration_path, active: current_controller.start_with?("admin/ai")) do %>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-sidebar-foreground/90" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v3m0 12v3M3 12h3m12 0h3M6.6 6.6l2.1 2.1m6.6 6.6 2.1 2.1m0-10.8-2.1 2.1m-6.6 6.6-2.1 2.1"/><circle cx="12" cy="12" r="3" stroke-width="1.8"/></svg>
+              <span data-sidebar-collapse="hide" class="<%= nav_label_classes %>">AI operations</span>
+            <% end %>
+          <% end %>
+        <% end %>
       <% end %>
     <% end %>
 

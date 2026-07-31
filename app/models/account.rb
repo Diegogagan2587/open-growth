@@ -24,6 +24,8 @@ class Account < ApplicationRecord
   has_many :career_job_applications, class_name: "Career::JobApplication", dependent: :destroy
   has_many :career_events, class_name: "Career::Event", dependent: :destroy
   has_one :career_profile, class_name: "Career::Profile", dependent: :destroy
+  has_many :reporting_conversations, class_name: "Reporting::Conversation", dependent: :destroy
+  has_many :reporting_usage_events, class_name: "Reporting::UsageEvent", dependent: :destroy
 
   validates :name, presence: true
 
