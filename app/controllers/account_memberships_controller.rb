@@ -21,7 +21,11 @@ class AccountMembershipsController < ApplicationController
       return
     end
 
-    @membership = @account.account_memberships.build(user: user, role: params[:role] || "member")
+    @membership = @account.account_memberships.build(
+      user: user,
+      role: params[:role] || "member",
+      ai_reports_monthly_request_limit: Ai::Configuration.current.default_monthly_request_limit
+    )
 
     respond_to do |format|
       if @membership.save
