@@ -10,12 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_26_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_30_225000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "account_memberships", force: :cascade do |t|
     t.bigint "account_id", null: false
+    t.boolean "ai_reports_enabled", default: false, null: false
+    t.integer "ai_reports_monthly_request_limit", default: 50, null: false
     t.datetime "created_at", null: false
     t.string "role", default: "member", null: false
     t.datetime "updated_at", null: false
@@ -26,9 +28,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_000000) do
   end
 
   create_table "accounts", force: :cascade do |t|
+    t.boolean "ai_reports_enabled", default: false, null: false
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "ai_configurations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "default_monthly_request_limit", default: 50, null: false
+    t.string "key", default: "default", null: false
+    t.integer "maximum_monthly_request_limit", default: 500, null: false
+    t.string "model", default: "gpt-5.6-luna", null: false
+    t.text "openai_api_key"
+    t.string "provider", default: "openai", null: false
+    t.boolean "reports_enabled", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_ai_configurations_on_key", unique: true
   end
 
   create_table "budget_line_items", force: :cascade do |t|
@@ -160,40 +176,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_000000) do
     t.index ["account_id"], name: "index_categories_on_account_id"
   end
 
-  create_table "doc_docs", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.bigint "doc_id", null: false
-    t.bigint "related_doc_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["doc_id", "related_doc_id"], name: "index_doc_docs_on_doc_id_and_related_doc_id", unique: true
-    t.index ["doc_id"], name: "index_doc_docs_on_doc_id"
-    t.index ["related_doc_id"], name: "index_doc_docs_on_related_doc_id"
-  end
-
   create_table "doc_links", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "doc_id", null: false
     t.bigint "link_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["doc_id", "link_id"], name: "index_doc_links_on_doc_id_and_link_id", unique: true
     t.index ["doc_id"], name: "index_doc_links_on_doc_id"
     t.index ["link_id"], name: "index_doc_links_on_link_id"
-  end
-
-  create_table "doc_tags", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.bigint "doc_id", null: false
-    t.bigint "tag_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["doc_id", "tag_id"], name: "index_doc_tags_on_doc_id_and_tag_id", unique: true
-    t.index ["doc_id"], name: "index_doc_tags_on_doc_id"
-    t.index ["tag_id"], name: "index_doc_tags_on_tag_id"
   end
 
   create_table "docs", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.text "content"
     t.datetime "created_at", null: false
-    t.bigint "created_by_id"
     t.string "doc_type", default: "note", null: false
     t.bigint "documentable_id"
     t.string "documentable_type"
@@ -202,7 +198,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_000000) do
     t.string "url"
     t.index ["account_id", "title"], name: "index_docs_on_account_id_and_title", unique: true
     t.index ["account_id"], name: "index_docs_on_account_id"
-    t.index ["created_by_id"], name: "index_docs_on_created_by_id"
     t.index ["documentable_type", "documentable_id"], name: "index_docs_on_documentable"
   end
 
@@ -588,6 +583,59 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_000000) do
     t.index ["task_area_id"], name: "index_recurring_tasks_on_task_area_id"
   end
 
+  create_table "reporting_conversations", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "account_membership_id", null: false
+    t.datetime "created_at", null: false
+    t.date "date_from", null: false
+    t.date "date_to", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_reporting_conversations_on_account_id"
+    t.index ["account_membership_id", "updated_at"], name: "idx_on_account_membership_id_updated_at_2ea686a3eb"
+    t.index ["account_membership_id"], name: "index_reporting_conversations_on_account_membership_id"
+  end
+
+  create_table "reporting_turns", force: :cascade do |t|
+    t.text "answer"
+    t.bigint "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.string "error_code"
+    t.text "error_message"
+    t.string "model"
+    t.datetime "processing_started_at"
+    t.string "provider_response_id"
+    t.text "question", null: false
+    t.string "status", default: "queued", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id"], name: "index_reporting_turns_on_conversation_id"
+    t.index ["status", "created_at"], name: "index_reporting_turns_on_status_and_created_at"
+  end
+
+  create_table "reporting_usage_events", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "account_membership_id"
+    t.integer "cached_input_tokens", default: 0, null: false
+    t.bigint "conversation_id"
+    t.datetime "created_at", null: false
+    t.string "error_code"
+    t.integer "input_tokens", default: 0, null: false
+    t.string "model", null: false
+    t.integer "output_tokens", default: 0, null: false
+    t.datetime "provider_called_at"
+    t.string "provider_response_id"
+    t.string "status", default: "reserved", null: false
+    t.bigint "turn_id"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["account_id"], name: "index_reporting_usage_events_on_account_id"
+    t.index ["account_membership_id", "created_at"], name: "idx_reporting_usage_membership_month"
+    t.index ["account_membership_id"], name: "index_reporting_usage_events_on_account_membership_id"
+    t.index ["conversation_id"], name: "index_reporting_usage_events_on_conversation_id"
+    t.index ["turn_id"], name: "index_reporting_usage_events_on_turn_id"
+    t.index ["user_id"], name: "index_reporting_usage_events_on_user_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -622,16 +670,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_000000) do
     t.index ["status"], name: "index_shopping_items_on_status"
   end
 
-  create_table "tags", force: :cascade do |t|
-    t.bigint "account_id", null: false
-    t.datetime "created_at", null: false
-    t.text "description"
-    t.string "name", null: false
-    t.datetime "updated_at", null: false
-    t.index ["account_id", "name"], name: "index_tags_on_account_id_and_name", unique: true
-    t.index ["account_id"], name: "index_tags_on_account_id"
-  end
-
   create_table "task_areas", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -639,16 +677,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_000000) do
     t.datetime "updated_at", null: false
     t.index ["account_id", "name"], name: "index_task_areas_on_account_id_and_name", unique: true
     t.index ["account_id"], name: "index_task_areas_on_account_id"
-  end
-
-  create_table "task_docs", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.bigint "doc_id", null: false
-    t.bigint "task_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["doc_id"], name: "index_task_docs_on_doc_id"
-    t.index ["task_id", "doc_id"], name: "index_task_docs_on_task_id_and_doc_id", unique: true
-    t.index ["task_id"], name: "index_task_docs_on_task_id"
   end
 
   create_table "tasks", force: :cascade do |t|
@@ -683,6 +711,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_000000) do
     t.string "locale", default: "en"
     t.string "name", null: false
     t.string "password_digest", null: false
+    t.boolean "system_admin", default: false, null: false
     t.string "theme_palette", default: "executive-calm", null: false
     t.datetime "updated_at", null: false
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
@@ -703,14 +732,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_000000) do
   add_foreign_key "career_profile_links", "career_profiles"
   add_foreign_key "career_profiles", "accounts"
   add_foreign_key "categories", "accounts"
-  add_foreign_key "doc_docs", "docs"
-  add_foreign_key "doc_docs", "docs", column: "related_doc_id"
   add_foreign_key "doc_links", "docs"
   add_foreign_key "doc_links", "links"
-  add_foreign_key "doc_tags", "docs", on_delete: :cascade
-  add_foreign_key "doc_tags", "tags", on_delete: :cascade
   add_foreign_key "docs", "accounts"
-  add_foreign_key "docs", "users", column: "created_by_id", on_delete: :nullify
   add_foreign_key "expense_templates", "accounts"
   add_foreign_key "expense_templates", "categories"
   add_foreign_key "expenses", "accounts"
@@ -782,16 +806,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_26_000000) do
   add_foreign_key "projects", "users", column: "owner_id"
   add_foreign_key "recurring_tasks", "accounts"
   add_foreign_key "recurring_tasks", "task_areas"
+  add_foreign_key "reporting_conversations", "account_memberships"
+  add_foreign_key "reporting_conversations", "accounts"
+  add_foreign_key "reporting_turns", "reporting_conversations", column: "conversation_id"
+  add_foreign_key "reporting_usage_events", "account_memberships", on_delete: :nullify
+  add_foreign_key "reporting_usage_events", "accounts"
+  add_foreign_key "reporting_usage_events", "reporting_conversations", column: "conversation_id", on_delete: :nullify
+  add_foreign_key "reporting_usage_events", "reporting_turns", column: "turn_id", on_delete: :nullify
+  add_foreign_key "reporting_usage_events", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "shopping_items", "accounts"
   add_foreign_key "shopping_items", "categories"
   add_foreign_key "shopping_items", "expenses"
   add_foreign_key "shopping_items", "financial_entries"
   add_foreign_key "shopping_items", "planned_expenses"
-  add_foreign_key "tags", "accounts", on_delete: :cascade
   add_foreign_key "task_areas", "accounts"
-  add_foreign_key "task_docs", "docs"
-  add_foreign_key "task_docs", "tasks"
   add_foreign_key "tasks", "accounts"
   add_foreign_key "tasks", "projects"
   add_foreign_key "tasks", "users", column: "owner_id"
