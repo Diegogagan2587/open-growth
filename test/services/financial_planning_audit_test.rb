@@ -18,7 +18,7 @@ class FinancialPlanningAuditTest < ActiveSupport::TestCase
     )
 
     assert_no_changes -> { [ IncomeEvent.count, PlannedExpense.count, Financial::Entry.count ] } do
-      report = FinancialPlanningAudit.call
+      report = FinancialPlanningAudit.call(account:)
 
       assert_includes report[:receipt_status_without_date_ids], plan.id
       assert_includes report[:final_transaction_without_entry_ids], transaction.id
@@ -27,5 +27,16 @@ class FinancialPlanningAuditTest < ActiveSupport::TestCase
     end
   ensure
     Current.account = nil
+  end
+
+
+  test "never reports records from another account" do
+    account = Account.create!(name: "Scoped audit household")
+    other_account = Account.create!(name: "Other audit household")
+    other_plan = IncomeEvent.create!(account: other_account, description: "Private receipt", expected_date: Date.current, expected_amount: 100, status: "received")
+
+    report = FinancialPlanningAudit.call(account:)
+
+    refute_includes report[:receipt_status_without_date_ids], other_plan.id
   end
 end
