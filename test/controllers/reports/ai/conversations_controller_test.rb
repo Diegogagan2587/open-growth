@@ -49,4 +49,21 @@ class Reports::Ai::ConversationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "turbo-cable-stream-source"
     assert_select "form[action=?]", reports_ai_conversation_turns_path(conversation)
   end
+
+  test "lists cached question counts without loading every turn" do
+    2.times do |index|
+      conversation = @membership.reporting_conversations.create!(
+        account: @account,
+        title: "Cached count #{index}",
+        date_from: Date.current.beginning_of_month,
+        date_to: Date.current
+      )
+      conversation.turns.create!(question: "Question #{index}")
+    end
+
+    get reports_ai_conversations_path
+
+    assert_response :success
+    assert_select "p", text: /1 question/, count: 2
+  end
 end

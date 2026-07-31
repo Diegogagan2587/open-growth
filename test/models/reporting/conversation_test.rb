@@ -35,4 +35,10 @@ class Reporting::ConversationTest < ActiveSupport::TestCase
     assert_nil event.conversation_id
     assert_nil event.turn_id
   end
+
+  test "keeps a cached turn count for conversation lists" do
+    assert_difference -> { @conversation.reload.turns_count }, 1 do
+      @conversation.turns.create!(question: "What changed?")
+    end
+  end
 end
