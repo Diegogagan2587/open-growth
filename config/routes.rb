@@ -139,6 +139,13 @@ Rails.application.routes.draw do
   get "reports/spending_by_category", to: "reports#spending_by_category", as: :reports_spending_by_category
   get "reports/category_trends", to: "reports#category_trends", as: :reports_category_trends
 
+  namespace :reports do
+    namespace :ai do
+      resources :conversations, only: %i[index create show destroy] do
+        resources :turns, only: :create
+      end
+    end
+  end
   get "/task/recurring_tasks", to: redirect("/task")
 
   namespace :task do
