@@ -101,5 +101,5 @@ production:
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
-    database: diego_app_production_cable
+    url: <%= ENV["DATABASE_CABLE_URL"] %>
     migrations_paths: db/cable_migrate
