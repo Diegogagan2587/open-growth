@@ -18,6 +18,10 @@ production:
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
+  expire_stale_reporting_turns:
+    class: Reporting::ExpireStaleTurnsJob
+    queue: default
+    schedule: every 10 minutes
 development:
   hello_job_test:
     class: HelloJob
