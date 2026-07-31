@@ -13,7 +13,7 @@
     </div>
   </header>
 
-  <div id="analysis_turns" class="max-h-[60vh] space-y-5 overflow-y-auto px-4 py-6 sm:px-6">
+  <div id="analysis_turns" class="max-h-[60vh] space-y-5 overflow-y-auto px-4 py-6 sm:px-6" data-controller="scroll-bottom">
     <% if @conversation.turns.empty? %>
       <div class="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
         Ask about unusual transactions, missing records, category trends, or reconciliation gaps in this period.

@@ -47,6 +47,7 @@ class Reports::Ai::ConversationsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "turbo-cable-stream-source"
+    assert_select "#analysis_turns[data-controller='scroll-bottom']"
     assert_select "form[action=?]", reports_ai_conversation_turns_path(conversation)
   end
 

@@ -3,13 +3,16 @@ require "test_helper"
 class Reporting::AnswerQuestionTest < ActiveSupport::TestCase
   Usage = Struct.new(:input_tokens, :output_tokens, :input_tokens_details)
   InputDetails = Struct.new(:cached_tokens)
-  Response = Struct.new(:id, :model, :output_text, :usage)
+  IncompleteDetails = Struct.new(:reason)
+  Response = Struct.new(:id, :model, :output_text, :usage, :status, :incomplete_details)
 
   class FakeResponses
     attr_reader :params, :calls
 
-    def initialize(output_text: "No confirmed gaps.", error: nil)
+    def initialize(output_text: "No confirmed gaps.", status: :completed, incomplete_reason: nil, error: nil)
       @output_text = output_text
+      @status = status
+      @incomplete_reason = incomplete_reason
       @error = error
       @calls = 0
     end
@@ -19,7 +22,14 @@ class Reporting::AnswerQuestionTest < ActiveSupport::TestCase
       @params = params
       raise @error if @error
 
-      Response.new("resp_123", "gpt-5.6-luna", @output_text, Usage.new(100, 20, InputDetails.new(10)))
+      Response.new(
+        "resp_123",
+        "gpt-5.6-luna",
+        @output_text,
+        Usage.new(100, 20, InputDetails.new(10)),
+        @status,
+        IncompleteDetails.new(@incomplete_reason)
+      )
     end
   end
 
@@ -57,6 +67,7 @@ class Reporting::AnswerQuestionTest < ActiveSupport::TestCase
     assert_equal "No confirmed gaps.", @turn.answer
     assert_equal 100, @turn.usage_event.input_tokens
     assert_equal 20, @turn.usage_event.output_tokens
+    assert_equal 4_000, client.responses.params[:max_output_tokens]
     assert_equal false, client.responses.params[:store]
     assert_empty client.responses.params.fetch(:tools, [])
   end
@@ -117,6 +128,17 @@ class Reporting::AnswerQuestionTest < ActiveSupport::TestCase
     assert_equal "failed", @turn.reload.status
     assert_equal "provider_failed", @turn.usage_event.status
     assert_equal "empty_response", @turn.error_code
+  end
+
+  test "does not present an incomplete provider response as a complete answer" do
+    client = FakeClient.new(output_text: "## Partial answer\n\nThis was cut", status: :incomplete, incomplete_reason: :max_output_tokens)
+
+    Reporting::AnswerQuestion.new(turn: @turn, client:).call
+
+    assert_equal "failed", @turn.reload.status
+    assert_nil @turn.answer
+    assert_equal "provider_failed", @turn.usage_event.status
+    assert_equal "max_output_tokens", @turn.error_code
   end
 
   test "records provider exceptions without retrying the call" do

@@ -49,15 +49,13 @@ class MarkdownEditorTest < ApplicationSystemTestCase
     assert_selector "[data-markdown-editor-target='previewContent'] h1#mobile-heading-2", text: "Mobile heading"
 
     page.execute_script <<~JS
-      window.__markdownEditorConfirmMessages = []
       window.confirm = (message) => {
-        window.__markdownEditorConfirmMessages.push(message)
+        document.documentElement.dataset.confirmMessage = message
         return false
       }
     JS
     click_link "Cancel"
-    assert_equal [ "Discard your unsaved document changes?" ],
-      page.evaluate_script("window.__markdownEditorConfirmMessages")
+    assert_selector "html[data-confirm-message='Discard your unsaved document changes?']", visible: :all
     assert_current_path edit_doc_path(@doc)
 
     click_button "Update Document"
