@@ -146,6 +146,14 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  namespace :admin do
+    namespace :ai do
+      resource :configuration, only: %i[show update], path: ""
+      resources :account_accesses, only: :update
+    end
+  end
+
   get "/task/recurring_tasks", to: redirect("/task")
 
   namespace :task do
