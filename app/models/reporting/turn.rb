@@ -5,7 +5,7 @@ class Reporting::Turn < ApplicationRecord
 
   STATUSES = %w[queued processing completed failed canceled].freeze
 
-  belongs_to :conversation, class_name: "Reporting::Conversation", touch: true
+  belongs_to :conversation, class_name: "Reporting::Conversation", counter_cache: :turns_count, touch: true
   has_one :usage_event, class_name: "Reporting::UsageEvent", dependent: :nullify
 
   validates :question, presence: true, length: { maximum: 4_000 }
