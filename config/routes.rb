@@ -128,7 +128,9 @@ Rails.application.routes.draw do
   end
 
   resources :accounts do
-    resources :account_memberships, except: [ :show ]
+    resources :account_memberships, except: [ :show ] do
+      resource :ai_access, only: :update, controller: "account_memberships/ai_accesses"
+    end
   end
   post "account_switches", to: "account_switches#create", as: :account_switch
 
