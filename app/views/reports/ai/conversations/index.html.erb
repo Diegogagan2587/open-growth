@@ -54,7 +54,7 @@
           <%= link_to reports_ai_conversation_path(conversation), class: "rounded-xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/40 hover:shadow-md" do %>
             <h3 class="font-semibold text-card-foreground"><%= conversation.title %></h3>
             <p class="mt-1 text-sm text-muted-foreground"><%= l(conversation.date_from) %> – <%= l(conversation.date_to) %></p>
-            <p class="mt-3 text-xs text-muted-foreground"><%= pluralize(conversation.turns.count, "question") %> · Updated <%= time_ago_in_words(conversation.updated_at) %> ago</p>
+            <p class="mt-3 text-xs text-muted-foreground"><%= pluralize(conversation.turns_count, "question") %> · Updated <%= time_ago_in_words(conversation.updated_at) %> ago</p>
           <% end %>
         <% end %>
       </div>
