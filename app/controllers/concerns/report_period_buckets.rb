@@ -92,16 +92,16 @@ module ReportPeriodBuckets
     cursor = start_monday
     while cursor <= date_to
       end_sunday = cursor + 6.days
-      next unless end_sunday >= date_from
-
-      b_from = [ cursor, date_from ].max
-      b_to   = [ end_sunday, date_to ].min
-      buckets << {
-        key: cursor,
-        label: report_period_label(cursor, "week"),
-        date_from: b_from,
-        date_to: b_to
-      }
+      if end_sunday >= date_from
+        b_from = [ cursor, date_from ].max
+        b_to   = [ end_sunday, date_to ].min
+        buckets << {
+          key: cursor,
+          label: report_period_label(cursor, "week"),
+          date_from: b_from,
+          date_to: b_to
+        }
+      end
       cursor += 7.days
     end
     buckets
@@ -115,16 +115,16 @@ module ReportPeriodBuckets
     cursor = start_ref
     while cursor <= date_to
       end_date = cursor + 13.days
-      next unless end_date >= date_from
-
-      b_from = [ cursor, date_from ].max
-      b_to   = [ end_date, date_to ].min
-      buckets << {
-        key: cursor,
-        label: report_period_label(cursor..end_date, "biweekly"),
-        date_from: b_from,
-        date_to: b_to
-      }
+      if end_date >= date_from
+        b_from = [ cursor, date_from ].max
+        b_to   = [ end_date, date_to ].min
+        buckets << {
+          key: cursor,
+          label: report_period_label(cursor..end_date, "biweekly"),
+          date_from: b_from,
+          date_to: b_to
+        }
+      end
       cursor += 14.days
     end
     buckets
