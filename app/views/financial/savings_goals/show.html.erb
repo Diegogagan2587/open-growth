@@ -1,0 +1,52 @@
+<section class="container mx-auto space-y-6 px-4 py-6">
+  <%= link_to "← Back to savings goals", finance_savings_goals_path, class: "text-sm text-accent hover:underline" %>
+
+  <header class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-3xl font-bold"><%= @savings_goal.name %></h1>
+      <p class="mt-1 text-muted-foreground"><%= @savings_goal.description %></p>
+    </div><%= render Ui::ButtonComponent.new(href: edit_finance_savings_goal_path(@savings_goal), label: "Edit", variant: :outline) %>
+  </header>
+
+  <dl class="grid gap-3 sm:grid-cols-3">
+    <div class="rounded-xl border border-border bg-card p-4">
+      <dt class="text-sm text-muted-foreground">Target</dt>
+
+      <dd class="text-xl font-bold">
+        <%= number_to_currency(@savings_goal.total_amount) %>
+      </dd>
+    </div>
+
+    <div class="rounded-xl border border-border bg-card p-4">
+      <dt class="text-sm text-muted-foreground">Saved</dt>
+
+      <dd class="text-xl font-bold">
+        <%= number_to_currency(@savings_goal.total_saved) %>
+      </dd>
+    </div>
+
+    <div class="rounded-xl border border-border bg-card p-4">
+      <dt class="text-sm text-muted-foreground">Remaining</dt>
+
+      <dd class="text-xl font-bold">
+        <%= number_to_currency(@savings_goal.remaining_amount) %>
+      </dd>
+    </div>
+  </dl>
+
+  <section>
+    <h2 class="text-xl font-semibold">Contributions</h2>
+
+    <div class="mt-3 divide-y divide-border rounded-xl border border-border bg-card">
+      <% @planned_transactions.each do |transaction| %>
+        <div class="flex justify-between p-4">
+          <span><%= transaction.description %><% if transaction.plan %> · <%= link_to transaction.plan.name, finance_plan_path(transaction.plan), class: "hover:underline" %><% end %></span><strong><%= number_to_currency(transaction.planned_amount) %></strong>
+        </div>
+      <% end %>
+
+      <% if @planned_transactions.empty? %>
+        <p class="p-4 text-sm text-muted-foreground">No contributions yet.</p>
+      <% end %>
+    </div>
+  </section>
+</section>
