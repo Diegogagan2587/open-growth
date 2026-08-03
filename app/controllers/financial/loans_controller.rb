@@ -18,8 +18,8 @@ class Financial::LoansController < ApplicationController
   end
 
   def create
-    @loan = Financial::Loan.new(loan_params.merge(account: Current.account, lifecycle_status: "simulated"))
-    if @loan.save
+    @loan = Financial::Loan.new(account: Current.account, lifecycle_status: "simulated")
+    if assign_loan_attributes(@loan) && @loan.save
       redirect_to finance_loan_path(@loan), notice: "Loan simulation created"
     else
       render :new, status: :unprocessable_entity
