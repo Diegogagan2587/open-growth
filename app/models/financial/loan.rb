@@ -47,6 +47,9 @@ class Financial::Loan < ApplicationRecord
     installments.sum(:expected_interest)
   end
 
+  def remaining_projected_interest
+    installments.where.not(resolution: "paid").sum(:expected_interest)
+  end
 
   private
 
