@@ -27,6 +27,17 @@ class Financial::Loan < ApplicationRecord
     entries.sum(0.to_d) { |entry| entry.liability_delta_for(liability_id) }
   end
 
+  def configure_repayment(terms)
+    self.repayment_basis = terms.repayment_basis
+    self.number_of_payments = terms.number_of_payments
+    self.payment_frequency = terms.payment_frequency
+    self.interest_rate = terms.annual_rate
+    self.payment_amount = terms.regular_payment
+    self.final_payment_amount = terms.final_payment
+    self
+  end
+
+
   private
 
   def active_routing_is_complete
