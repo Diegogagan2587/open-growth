@@ -79,6 +79,45 @@ class Financial::LoansController < ApplicationController
     ])
   end
 
+  def assign_loan_attributes(loan)
+    attributes = loan_params
+    term_keys = %w[repayment_basis interest_rate number_of_payments payment_frequency payment_amount final_payment_amount]
+    loan.assign_attributes(attributes.except(*term_keys))
+
+    explicit_basis = attributes.key?(:repayment_basis)
+    basis = attributes[:repayment_basis].presence
+    basis ||= "payment_amounts" if !explicit_basis && attributes[:payment_amount].present?
+    basis ||= "annual_rate" if !explicit_basis && attributes[:interest_rate].present?
+    return true if basis.blank? && (attributes.keys & term_keys).empty?
+
+    if !explicit_basis && (attributes[:number_of_payments].blank? || attributes[:payment_frequency].blank?)
+      loan.assign_attributes(attributes.slice(*term_keys).except("repayment_basis"))
+      return true
+    end
+
+    if basis.blank?
+      loan.assign_attributes(repayment_basis: nil, interest_rate: nil, number_of_payments: nil, payment_frequency: nil, payment_amount: nil, final_payment_amount: nil)
+      return true
+    end
+
+    terms = Financial::Loans::RepaymentTerms.new(
+      principal: loan.principal_amount,
+      number_of_payments: attributes[:number_of_payments],
+      payment_frequency: attributes[:payment_frequency],
+      repayment_basis: basis,
+      annual_rate: attributes[:interest_rate],
+      regular_payment: attributes[:payment_amount],
+      final_payment: attributes[:final_payment_amount]
+    )
+    loan.configure_repayment(terms)
+    true
+  rescue ArgumentError => error
+    loan.errors.add(:base, error.message)
+    false
+  end
+
+
+
   def load_collections
     @liabilities = Financial::Liability.for_account(Current.account).active.order(:name)
     @assets = Financial::Asset.for_account(Current.account).active.order(:name)
