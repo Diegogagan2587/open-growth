@@ -30,8 +30,11 @@ class Financial::LoansController < ApplicationController
   end
 
   def update
-    if @loan.update(loan_params)
-      redirect_to finance_loan_path(@loan), notice: "Loan updated"
+    assigned = assign_loan_attributes(@loan)
+    repayment_changed = assigned && repayment_attributes_changed?
+    if assigned && @loan.save
+      notice = repayment_changed && @loan.installments.exists? ? "Loan updated. Regenerate the schedule to apply the new repayment terms." : "Loan updated"
+      redirect_to finance_loan_path(@loan), notice: notice
     else
       render :edit, status: :unprocessable_entity
     end
