@@ -79,6 +79,7 @@ class Financial::LoansController < ApplicationController
   def load_collections
     @liabilities = Financial::Liability.for_account(Current.account).active.order(:name)
     @assets = Financial::Asset.for_account(Current.account).active.order(:name)
+    @categories = Category.for_account(Current.account).order(:name)
     @plans = Financial::Plan.for_account(Current.account).where(lifecycle_status: %w[draft active]).chronological
   end
 
