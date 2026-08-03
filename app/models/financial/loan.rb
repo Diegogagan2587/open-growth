@@ -7,6 +7,7 @@ class Financial::Loan < ApplicationRecord
   belongs_to :liability, class_name: "Financial::Liability", optional: true
   belongs_to :destination_asset, class_name: "Financial::Asset", optional: true
   belongs_to :destination_liability, class_name: "Financial::Liability", optional: true
+  belongs_to :interest_category, class_name: "Category", optional: true
   has_many :funding_sources, class_name: "Financial::FundingSource", foreign_key: :financial_loan_id, dependent: :restrict_with_error
   has_many :entries, class_name: "Financial::Entry", foreign_key: :financial_loan_id, dependent: :restrict_with_error
   has_many :installments, class_name: "Financial::LoanInstallment", foreign_key: :financial_loan_id, inverse_of: :financial_loan, dependent: :restrict_with_error
