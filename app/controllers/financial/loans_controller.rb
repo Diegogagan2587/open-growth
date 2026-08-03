@@ -14,6 +14,7 @@ class Financial::LoansController < ApplicationController
 
   def new
     @loan = Financial::Loan.new(lifecycle_status: "simulated", payment_frequency: "monthly")
+    @loan.interest_category = @categories.find { |category| category.name == "Commissions and Interest" }
   end
 
   def create
