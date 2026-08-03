@@ -38,7 +38,18 @@ class Financial::Loan < ApplicationRecord
   end
 
 
+
+  def projected_repayment
+    installments.sum(:expected_amount)
+  end
+
+  def projected_interest
+    installments.sum(:expected_interest)
+  end
+
+
   private
+
 
   def active_routing_is_complete
     return unless lifecycle_status == "active"
