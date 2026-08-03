@@ -68,6 +68,13 @@ class Financial::Loan < ApplicationRecord
 
   private
 
+  def repayment_terms_are_valid
+    return if repayment_basis.blank?
+
+    repayment_terms
+  rescue ArgumentError => error
+    errors.add(:base, error.message)
+  end
 
   def active_routing_is_complete
     return unless lifecycle_status == "active"
