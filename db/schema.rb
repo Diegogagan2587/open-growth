@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_30_233000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_03_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -343,6 +343,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_233000) do
     t.decimal "expected_principal", precision: 12, scale: 2, default: "0.0", null: false
     t.bigint "financial_loan_id", null: false
     t.integer "installment_number", null: false
+    t.bigint "interest_entry_id"
     t.bigint "legacy_loan_payment_schedule_id"
     t.bigint "payment_entry_id"
     t.bigint "planned_transaction_id"
@@ -351,6 +352,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_233000) do
     t.index ["account_id"], name: "index_financial_loan_installments_on_account_id"
     t.index ["financial_loan_id", "installment_number"], name: "index_loan_installments_on_number", unique: true
     t.index ["financial_loan_id"], name: "index_financial_loan_installments_on_financial_loan_id"
+    t.index ["interest_entry_id"], name: "index_financial_loan_installments_on_interest_entry_id"
     t.index ["legacy_loan_payment_schedule_id"], name: "index_loan_installments_on_legacy_schedule", unique: true
     t.index ["payment_entry_id"], name: "index_financial_loan_installments_on_payment_entry_id"
     t.index ["planned_transaction_id"], name: "index_financial_loan_installments_on_planned_transaction_id"
@@ -361,6 +363,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_233000) do
     t.datetime "created_at", null: false
     t.bigint "destination_asset_id"
     t.bigint "destination_liability_id"
+    t.decimal "final_payment_amount", precision: 12, scale: 2
+    t.bigint "interest_category_id"
     t.decimal "interest_rate"
     t.bigint "legacy_income_event_id"
     t.string "lender_name"
@@ -372,10 +376,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_233000) do
     t.decimal "payment_amount", precision: 12, scale: 2
     t.string "payment_frequency"
     t.decimal "principal_amount", precision: 12, scale: 2, null: false
+    t.string "repayment_basis"
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_financial_loans_on_account_id"
     t.index ["destination_asset_id"], name: "index_financial_loans_on_destination_asset_id"
     t.index ["destination_liability_id"], name: "index_financial_loans_on_destination_liability_id"
+    t.index ["interest_category_id"], name: "index_financial_loans_on_interest_category_id"
     t.index ["legacy_income_event_id"], name: "index_financial_loans_on_legacy_income_event_id", unique: true
     t.index ["liability_id"], name: "index_financial_loans_on_liability_id"
   end
@@ -768,10 +774,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_233000) do
   add_foreign_key "financial_funding_sources", "income_events", column: "financial_plan_id"
   add_foreign_key "financial_liabilities", "accounts"
   add_foreign_key "financial_loan_installments", "accounts"
+  add_foreign_key "financial_loan_installments", "financial_entries", column: "interest_entry_id"
   add_foreign_key "financial_loan_installments", "financial_entries", column: "payment_entry_id"
   add_foreign_key "financial_loan_installments", "financial_loans"
   add_foreign_key "financial_loan_installments", "planned_expenses", column: "planned_transaction_id"
   add_foreign_key "financial_loans", "accounts"
+  add_foreign_key "financial_loans", "categories", column: "interest_category_id"
   add_foreign_key "financial_loans", "financial_accounts", column: "destination_asset_id"
   add_foreign_key "financial_loans", "financial_liabilities", column: "destination_liability_id"
   add_foreign_key "financial_loans", "financial_liabilities", column: "liability_id"
