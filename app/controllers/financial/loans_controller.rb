@@ -116,7 +116,9 @@ class Financial::LoansController < ApplicationController
     false
   end
 
-
+  def repayment_attributes_changed?
+    (@loan.changes.keys & %w[principal_amount repayment_basis interest_rate number_of_payments payment_frequency payment_amount final_payment_amount]).any?
+  end
 
   def load_collections
     @liabilities = Financial::Liability.for_account(Current.account).active.order(:name)
