@@ -81,4 +81,16 @@ class Financial::LoansController < ApplicationController
     @assets = Financial::Asset.for_account(Current.account).active.order(:name)
     @plans = Financial::Plan.for_account(Current.account).where(lifecycle_status: %w[draft active]).chronological
   end
+
+  def schedule_start_date
+    first_due_date = @loan.installments.minimum(:due_date)
+    return Date.current unless first_due_date
+
+    case @loan.payment_frequency
+    when "weekly" then first_due_date - 1.week
+    when "biweekly" then first_due_date - 2.weeks
+    when "quincenal" then first_due_date - 15.days
+    else first_due_date.prev_month
+    end
+  end
 end
