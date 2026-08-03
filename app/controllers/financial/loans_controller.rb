@@ -71,7 +71,8 @@ class Financial::LoansController < ApplicationController
   def loan_params
     params.expect(financial_loan: [
       :name, :lender_name, :principal_amount, :interest_rate, :number_of_payments,
-      :payment_frequency, :payment_amount, :liability_id, :destination_asset_id,
+      :payment_frequency, :payment_amount, :final_payment_amount, :repayment_basis,
+      :interest_category_id, :liability_id, :destination_asset_id,
       :destination_liability_id, :notes
     ])
   end
