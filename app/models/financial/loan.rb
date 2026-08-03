@@ -85,7 +85,7 @@ class Financial::Loan < ApplicationRecord
   end
 
   def associations_belong_to_same_account
-    [ :liability, :destination_asset, :destination_liability ].each do |association|
+    [ :liability, :destination_asset, :destination_liability, :interest_category ].each do |association|
       record = public_send(association)
       errors.add(association, "must belong to the current account") if record && record.account_id != account_id
     end
