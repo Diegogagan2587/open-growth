@@ -81,7 +81,7 @@ class Financial::Loans::RepaymentTerms
 
     low = 0.0
     high = 1.0
-    high *= 2 while present_value(payments, high) > principal && high < 128
+    high *= 2 while present_value(payments, high) > principal
 
     80.times do
       midpoint = (low + high) / 2.0
