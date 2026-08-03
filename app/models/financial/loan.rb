@@ -39,6 +39,10 @@ class Financial::Loan < ApplicationRecord
 
 
 
+  def interest_rate_estimated?
+    repayment_basis == "payment_amounts"
+  end
+
   def projected_repayment
     installments.sum(:expected_amount)
   end
