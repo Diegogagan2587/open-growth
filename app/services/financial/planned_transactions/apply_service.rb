@@ -7,14 +7,25 @@ module Financial
         new(...).call
       end
 
-      def initialize(planned_transaction:, amount: nil, entry_date: nil, description: nil, category: nil,
+      def initialize(planned_transaction:, amount: nil, interest_amount: nil, entry_date: nil, description: nil, category: nil,
         financial_account: nil, counterparty_financial_account: nil, financial_liability: nil)
         @transaction = planned_transaction
+        @interest_amount = interest_amount
         @overrides = { amount:, entry_date:, description:, category:, financial_account:, counterparty_financial_account:, financial_liability: }.compact
       end
 
       def call
         return failure("Planned transaction is required") if transaction.blank?
+
+        installment = Financial::LoanInstallment.find_by(planned_transaction_id: transaction.id)
+        if installment
+          return Financial::Loans::ApplyInstallmentPayment.call(
+            installment: installment,
+            total: overrides[:amount] || transaction.amount,
+            interest: interest_amount.presence || installment.expected_interest,
+            entry_date: overrides[:entry_date] || transaction.planned_for || transaction.due_date || Date.current
+          )
+        end
 
         entry = nil
         transaction.with_lock do
@@ -39,7 +50,7 @@ module Financial
 
       private
 
-      attr_reader :transaction, :overrides
+      attr_reader :transaction, :overrides, :interest_amount
 
       def entry_attributes
         installment = Financial::LoanInstallment.find_by(planned_transaction_id: transaction.id)
