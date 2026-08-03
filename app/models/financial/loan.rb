@@ -37,7 +37,18 @@ class Financial::Loan < ApplicationRecord
     self
   end
 
-
+  def repayment_terms
+    basis = repayment_basis.presence || (payment_amount.present? ? "payment_amounts" : (interest_rate.present? ? "annual_rate" : nil))
+    Financial::Loans::RepaymentTerms.new(
+      principal: principal_amount,
+      number_of_payments: number_of_payments,
+      payment_frequency: payment_frequency,
+      repayment_basis: basis,
+      annual_rate: interest_rate,
+      regular_payment: payment_amount,
+      final_payment: final_payment_amount
+    )
+  end
 
   def interest_rate_estimated?
     repayment_basis == "payment_amounts"
