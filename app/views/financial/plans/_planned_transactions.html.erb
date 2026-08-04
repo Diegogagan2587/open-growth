@@ -1,7 +1,7 @@
 <section aria-labelledby="planned-transactions-title" class="space-y-4">
   <div>
     <h2 id="planned-transactions-title" class="text-xl font-semibold">Planned transactions</h2>
-    <p class="text-sm text-muted-foreground">Transfers and liability payments remain visible but do not consume the projected balance.</p>
+    <p class="text-sm text-muted-foreground">Transfers remain visible without consuming the projected balance. Liability payments can explicitly commit funds from this plan.</p>
   </div>
 
   <div class="overflow-x-auto rounded-xl border border-border bg-card">
@@ -14,7 +14,7 @@
         <% planned_transactions.each do |transaction| %>
           <tr class="align-top <%= 'bg-destructive/5' if projection_rows[transaction.id]&.balance&.negative? %>">
             <td class="p-3"><%= transaction.position %></td>
-            <td class="p-3"><p class="font-medium"><%= transaction.description %></p><p class="text-xs text-muted-foreground"><%= transaction.kind.humanize %> · <%= transaction.importance.humanize %></p></td>
+            <td class="p-3"><p class="font-medium"><%= transaction.description %></p><p class="text-xs text-muted-foreground"><%= transaction.kind.humanize %> · <%= transaction.importance.humanize %><%= " · Committed from plan" if transaction.commits_plan_funds? %></p></td>
             <td class="p-3"><%= number_to_currency(transaction.amount) %><p class="text-xs text-muted-foreground"><%= l(transaction.planned_for || transaction.due_date || plan.planned_for) %></p></td>
             <td class="p-3 font-medium"><%= number_to_currency(projection_rows[transaction.id]&.balance) %></td>
             <td class="p-3"><%= render Ui::BadgeComponent.new(label: transaction.execution_status.humanize, variant: transaction.execution_status == "applied" ? :secondary : :outline) %></td>
