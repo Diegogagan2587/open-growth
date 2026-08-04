@@ -40,6 +40,8 @@ class PlannedExpense < ApplicationRecord
     where(counterparty_financial_account_id: nil)
       .where("financial_account_id IS NULL OR financial_liability_id IS NULL")
   }
+  scope :committed_to_plan, -> { where(kind: "liability_payment", commits_plan_funds: true) }
+  scope :balance_reducing, -> { budget_consuming.or(committed_to_plan) }
 
   def percentage_of_income
     return 0 unless budget_consuming?
