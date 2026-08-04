@@ -32,6 +32,13 @@
                     <%= render Ui::InputComponent.new(name: "planned_transaction[amount]", value: transaction.amount, type: "number", min: 0.01, step: 0.01, required: true) %>
                     <%= render Ui::InputComponent.new(name: "planned_transaction[planned_for]", value: transaction.planned_for, type: "date") %>
                     <%= render Ui::SelectComponent.new(name: "planned_transaction[importance]", options: Financial::PlannedTransaction::IMPORTANCES.map { |importance| [ importance.humanize, importance ] }, selected: transaction.importance) %>
+                    <% if transaction.debt_payment? %>
+                      <label class="flex items-start gap-2 text-sm sm:col-span-2">
+                        <%= hidden_field_tag "planned_transaction[commits_plan_funds]", "0" %>
+                        <%= check_box_tag "planned_transaction[commits_plan_funds]", "1", transaction.commits_plan_funds?, class: "mt-1 h-4 w-4 rounded border-input" %>
+                        <span><span class="font-medium">Commit funds from this plan</span><span class="block text-xs text-muted-foreground">Reduces this plan’s available balance without recording the payment as an expense.</span></span>
+                      </label>
+                    <% end %>
                     <div class="flex gap-2 sm:col-span-2">
                       <%= render Ui::ButtonComponent.new(label: "Save expectation", type: "submit", size: :sm) %>
                       <%= render Ui::ButtonComponent.new(href: finance_plan_planned_transaction_path(plan, transaction), label: "Delete", variant: :destructive, method: :delete, size: :sm, data: { turbo_confirm: "Delete this pending planned transaction?" }) %>
