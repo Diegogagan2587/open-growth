@@ -17,20 +17,24 @@ class Financial::PlanProjection
     plan.planned_expenses.budget_consuming.sum(:amount)
   end
 
+  def planned_commitments
+    plan.planned_expenses.committed_to_plan.sum(:amount)
+  end
+
   def opening_balance
     preceding_plans.sum(0.to_d) do |preceding_plan|
-      projected_funding_for(preceding_plan) - preceding_plan.planned_expenses.budget_consuming.sum(:amount).to_d
+      projected_funding_for(preceding_plan) - preceding_plan.planned_expenses.balance_reducing.sum(:amount).to_d
     end
   end
 
   def ending_balance
-    opening_balance + expected_funding - planned_consumption
+    opening_balance + expected_funding - planned_consumption - planned_commitments
   end
 
   def rows
     balance = opening_balance + expected_funding
     plan.planned_expenses.includes(:financial_account, :counterparty_financial_account, :financial_liability).by_position.map do |transaction|
-      balance -= transaction.amount.to_d if transaction.budget_consuming?
+      balance -= transaction.amount.to_d if transaction.reduces_plan_balance?
       Row.new(transaction:, balance:)
     end
   end

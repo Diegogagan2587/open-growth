@@ -180,6 +180,8 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
       assert_select "option[value='asset:#{asset.id}']"
       assert_select "option[value='liability:#{liability.id}']"
     end
+    assert_select "[data-planned-transaction-form-target='commitmentFields'].hidden input[name='planned_transaction[commits_plan_funds]'][type='checkbox']"
+    assert_select "[data-planned-transaction-form-target='commitmentFields']", text: /Reduces this plan’s available balance without recording the payment as an expense/
     assert_select "select[name='planned_transaction[kind]']", count: 0
     assert_select "select[name='planned_transaction[financial_account_id]']", count: 0
     assert_select "select[name='planned_transaction[financial_liability_id]']", count: 0
@@ -244,7 +246,8 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
           amount: "125.00",
           planned_for: "2026-07-15",
           source_selection: "asset:#{asset.id}",
-          destination_selection: "liability:#{liability.id}"
+          destination_selection: "liability:#{liability.id}",
+          commits_plan_funds: "1"
         }
       }
     end
@@ -255,6 +258,12 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     assert_equal asset, transaction.financial_account
     assert_equal liability, transaction.financial_liability
     assert_nil transaction.category
+    assert transaction.commits_plan_funds?
+
+    get finance_plan_path(@plan)
+    assert_response :success
+    assert_select "p", text: "Committed liability payments"
+    assert_select "tr", text: /Pay credit card.*Committed from plan/m
   end
 
   test "expense from an asset becomes a planned outflow" do

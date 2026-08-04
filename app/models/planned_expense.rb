@@ -31,6 +31,7 @@ class PlannedExpense < ApplicationRecord
     financial_liability_id.present?
   }
   validate :planned_values_are_immutable_after_execution, on: :update
+  validate :plan_commitment_is_a_liability_payment
 
   scope :by_position, -> { order(:position, :created_at) }
   scope :by_status, ->(status) { where(status: status) }
@@ -39,6 +40,8 @@ class PlannedExpense < ApplicationRecord
     where(counterparty_financial_account_id: nil)
       .where("financial_account_id IS NULL OR financial_liability_id IS NULL")
   }
+  scope :committed_to_plan, -> { where(kind: "liability_payment", commits_plan_funds: true) }
+  scope :balance_reducing, -> { budget_consuming.or(committed_to_plan) }
 
   def percentage_of_income
     return 0 unless budget_consuming?
@@ -122,7 +125,7 @@ class PlannedExpense < ApplicationRecord
   end
 
   def planned_values_are_immutable_after_execution
-    immutable_fields = %w[amount description category_id due_date financial_account_id counterparty_financial_account_id financial_liability_id income_event_id]
+    immutable_fields = %w[amount description category_id due_date financial_account_id counterparty_financial_account_id financial_liability_id income_event_id commits_plan_funds]
     return if (changes.keys & immutable_fields).empty?
     return if financial_entry.blank?
 
@@ -163,6 +166,10 @@ class PlannedExpense < ApplicationRecord
     !(source_present && destination_present) && !(source_present && liability_present)
   end
 
+  def reduces_plan_balance?
+    budget_consuming? || (debt_payment? && commits_plan_funds?)
+  end
+
   def classification_label
     return category.name if category.present?
     return "Transfer" if transfer?
@@ -180,6 +187,10 @@ class PlannedExpense < ApplicationRecord
   end
 
   private
+
+  def plan_commitment_is_a_liability_payment
+    errors.add(:commits_plan_funds, "is only available for liability payments") if commits_plan_funds? && !debt_payment?
+  end
 
   def assign_source_selection(value)
     return clear_source_selection if value.blank?
