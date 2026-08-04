@@ -122,7 +122,7 @@ class PlannedExpense < ApplicationRecord
   end
 
   def planned_values_are_immutable_after_execution
-    immutable_fields = %w[amount description category_id due_date financial_account_id counterparty_financial_account_id financial_liability_id income_event_id]
+    immutable_fields = %w[amount description category_id due_date financial_account_id counterparty_financial_account_id financial_liability_id income_event_id commits_plan_funds]
     return if (changes.keys & immutable_fields).empty?
     return if financial_entry.blank?
 
