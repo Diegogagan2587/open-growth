@@ -74,7 +74,12 @@
         </label>
         <label class="hidden space-y-1 text-sm" data-planned-transaction-form-target="destinationFields">
           Destination account
-          <%= render Ui::SelectComponent.new(name: "planned_transaction[destination_selection]", options: account_options, include_blank: "Select destination", data: { planned_transaction_form_target: "destination" }) %>
+          <%= render Ui::SelectComponent.new(name: "planned_transaction[destination_selection]", options: account_options, include_blank: "Select destination", data: { planned_transaction_form_target: "destination", action: "planned-transaction-form#toggle" }) %>
+        </label>
+        <label class="hidden items-start gap-2 text-sm md:col-span-2" data-planned-transaction-form-target="commitmentFields">
+          <%= hidden_field_tag "planned_transaction[commits_plan_funds]", "0" %>
+          <%= check_box_tag "planned_transaction[commits_plan_funds]", "1", false, class: "mt-1 h-4 w-4 rounded border-input", data: { planned_transaction_form_target: "commitment" } %>
+          <span><span class="font-medium">Commit funds from this plan</span><span class="block text-xs text-muted-foreground">Reduces this plan’s available balance without recording the payment as an expense.</span></span>
         </label>
         <div class="self-end md:col-span-2"><%= render Ui::ButtonComponent.new(label: "Add transaction", type: "submit", size: :sm) %></div>
       <% end %>
