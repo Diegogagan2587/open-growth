@@ -45,8 +45,20 @@
                     </div>
                   <% end %>
                 </details>
-              <% elsif transaction.financial_entry %>
-                <%= link_to "View actual entry", finance_entry_path(transaction.financial_entry), class: "text-primary hover:underline" %>
+              <% elsif transaction.execution_status == "applied" %>
+                <% if transaction.financial_entry %>
+                  <%= link_to "View actual entry", finance_entry_path(transaction.financial_entry), class: "text-primary hover:underline" %>
+                <% end %>
+                <% if transaction.debt_payment? && !plan.lifecycle_status.in?(%w[closed cancelled]) %>
+                  <%= form_with url: finance_plan_planned_transaction_path(plan, transaction), method: :patch, class: "mt-2 space-y-2" do %>
+                    <label class="flex items-start gap-2 text-sm">
+                      <%= hidden_field_tag "planned_transaction[commits_plan_funds]", "0" %>
+                      <%= check_box_tag "planned_transaction[commits_plan_funds]", "1", transaction.commits_plan_funds?, class: "mt-1 h-4 w-4 rounded border-input" %>
+                      <span><span class="font-medium">Commit funds from this plan</span><span class="block text-xs text-muted-foreground">Reduces this plan’s available balance without recording the payment as an expense.</span></span>
+                    </label>
+                    <%= render Ui::ButtonComponent.new(label: "Save commitment", type: "submit", variant: :outline, size: :sm) %>
+                  <% end %>
+                <% end %>
               <% end %>
             </td>
           </tr>
