@@ -17,6 +17,10 @@ class Financial::PlanProjection
     plan.planned_expenses.budget_consuming.sum(:amount)
   end
 
+  def planned_commitments
+    plan.planned_expenses.committed_to_plan.sum(:amount)
+  end
+
   def opening_balance
     preceding_plans.sum(0.to_d) do |preceding_plan|
       projected_funding_for(preceding_plan) - preceding_plan.planned_expenses.budget_consuming.sum(:amount).to_d
