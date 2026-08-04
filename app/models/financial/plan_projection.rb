@@ -23,7 +23,7 @@ class Financial::PlanProjection
 
   def opening_balance
     preceding_plans.sum(0.to_d) do |preceding_plan|
-      projected_funding_for(preceding_plan) - preceding_plan.planned_expenses.budget_consuming.sum(:amount).to_d
+      projected_funding_for(preceding_plan) - preceding_plan.planned_expenses.balance_reducing.sum(:amount).to_d
     end
   end
 
