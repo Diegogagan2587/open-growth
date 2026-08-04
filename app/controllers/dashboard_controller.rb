@@ -3,6 +3,7 @@ class DashboardController < ApplicationController
   PRIORITY_ORDER = { "high" => 0, "medium" => 1, "low" => 2 }.freeze
 
   def index
+    @user = Current.user.name
     @pending_tasks = Current.account ? combined_pending_tasks : []
   end
 
