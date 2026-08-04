@@ -6,11 +6,13 @@ class Financial::Loans::InstallmentWorkflowTest < ActiveSupport::TestCase
     Current.account = account
     liability = Financial::Liability.create!(account: account, name: "Loan debt", liability_type: "personal_credit", status: "active", opening_balance: 0)
     asset = Financial::Asset.create!(account: account, name: "Checking", account_type: "checking", status: "active", opening_balance: 1_000)
+    interest_category = Category.create!(account: account, name: "Commissions and Interest")
     plan = Financial::Plan.create!(account: account, name: "Payment plan", planned_for: Date.new(2026, 8, 1), expected_amount: 1)
     loan = Financial::Loan.create!(
       account: account,
       liability: liability,
       destination_asset: asset,
+      interest_category: interest_category,
       name: "Small loan",
       principal_amount: 1_000,
       interest_rate: 12,
