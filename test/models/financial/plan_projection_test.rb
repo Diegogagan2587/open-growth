@@ -94,7 +94,7 @@ class Financial::PlanProjectionTest < ActiveSupport::TestCase
 
   test "committed liability payments reduce current and carried plan balances after application" do
     liability = Financial::Liability.create!(account: @account, name: "Closing card", liability_type: "credit_card", status: "active", opening_balance: 300)
-    plan = IncomeEvent.create!(account: @account, description: "Payoff plan", expected_date: Date.new(2026, 9, 1), expected_amount: 500, status: "pending")
+    plan = Financial::Plan.create!(account: @account, name: "Payoff plan", planned_for: Date.new(2026, 9, 1), expected_amount: 500)
     payment = Financial::PlannedTransaction.create!(
       account: @account,
       plan: plan,
