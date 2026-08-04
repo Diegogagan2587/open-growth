@@ -686,6 +686,9 @@ es:
       reset_link: "esta página de restablecimiento"
 
   activerecord:
+    errors:
+      messages:
+        record_invalid: "La validación falló: %{errors}"
     models:
       account: "Cuenta"
       budget_period: "Periodo presupuestario"
