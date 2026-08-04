@@ -91,4 +91,33 @@ class Financial::PlanProjectionTest < ActiveSupport::TestCase
     assert_equal [ [ first.id, 200.to_d ], [ movement.id, 200.to_d ], [ deficit.id, -50.to_d ] ], projection.rows.map { |row| [ row.transaction.id, row.balance ] }
     assert_equal deficit, projection.first_deficit_transaction
   end
+
+  test "committed liability payments reduce current and carried plan balances after application" do
+    liability = Financial::Liability.create!(account: @account, name: "Closing card", liability_type: "credit_card", status: "active", opening_balance: 300)
+    plan = IncomeEvent.create!(account: @account, description: "Payoff plan", expected_date: Date.new(2026, 9, 1), expected_amount: 500, status: "pending")
+    payment = Financial::PlannedTransaction.create!(
+      account: @account,
+      plan: plan,
+      description: "Close card",
+      amount: 300,
+      status: "pending_to_pay",
+      financial_account: @asset,
+      financial_liability: liability,
+      commits_plan_funds: true
+    )
+
+    projection = Financial::PlanProjection.for(plan)
+    assert_equal 0.to_d, projection.planned_consumption
+    assert_equal 300.to_d, projection.planned_commitments
+    assert_equal 200.to_d, projection.ending_balance
+
+    result = Financial::PlannedTransactions::ApplyService.call(planned_transaction: payment)
+    assert result.success?
+    assert_equal "liability_payment", result.entry.entry_type
+    assert_equal 0.to_d, Financial::PlanActuals.for(plan).actual_consumption
+    assert_equal 200.to_d, Financial::PlanProjection.for(plan).ending_balance
+
+    next_plan = IncomeEvent.create!(account: @account, description: "Next plan", expected_date: Date.new(2026, 10, 1), expected_amount: 100, status: "pending")
+    assert_equal 200.to_d, Financial::PlanProjection.for(next_plan).opening_balance
+  end
 end
