@@ -28,7 +28,7 @@ class Financial::PlannedTransaction < PlannedExpense
   end
 
   def plan_accepts_expectation_changes
-    changed_expectation = new_record? || (changes.keys & %w[description amount kind planned_for due_date importance category_id financial_account_id counterparty_financial_account_id financial_liability_id income_event_id position]).any?
+    changed_expectation = new_record? || (changes.keys & %w[description amount kind planned_for due_date importance category_id financial_account_id counterparty_financial_account_id financial_liability_id income_event_id position commits_plan_funds]).any?
     return unless changed_expectation && plan&.lifecycle_status.in?(%w[closed cancelled])
 
     errors.add(:plan, "must be active before changing planned transactions")
