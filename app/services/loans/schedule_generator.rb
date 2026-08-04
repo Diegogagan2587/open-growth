@@ -14,21 +14,13 @@
     end
 
     def self.annual_rate_from_payment(principal:, payment_amount:, number_of_payments:, payment_frequency:)
-      periods_per_year = PERIODS_PER_YEAR.fetch(payment_frequency) { 12.0 }
-      principal = principal.to_d
-      payment_amount = payment_amount.to_d
-      number_of_payments = number_of_payments.to_i
-
-      return 0.to_d if payment_amount * number_of_payments == principal
-      return 0.to_d if payment_amount * number_of_payments < principal
-
-      periodic_rate = solve_periodic_rate(
+      Financial::Loans::RepaymentTerms.new(
         principal: principal,
-        payment_amount: payment_amount,
-        periods: number_of_payments
-      )
-
-      (periodic_rate * periods_per_year * 100).round(3)
+        number_of_payments: number_of_payments,
+        payment_frequency: payment_frequency,
+        repayment_basis: "payment_amounts",
+        regular_payment: payment_amount
+      ).annual_rate
     end
 
     def initialize(loan, preserve_paid: true)
@@ -140,37 +132,4 @@
         loan.expected_date.advance(months: offset)
       end
     end
-
-    def self.solve_periodic_rate(principal:, payment_amount:, periods:)
-      low = 0.0
-      high = 1.0
-
-      while payment_for_rate(principal, high, periods) < payment_amount
-        high *= 2
-        break if high > 100
-      end
-
-      80.times do
-        mid = (low + high) / 2.0
-        payment = payment_for_rate(principal, mid, periods)
-
-        if payment < payment_amount
-          low = mid
-        else
-          high = mid
-        end
-      end
-
-      ((low + high) / 2.0).to_d
-    end
-
-    def self.payment_for_rate(principal, rate, periods)
-      return principal / periods if rate.zero?
-
-      numerator = principal * rate
-      denominator = 1 - (1 + rate)**(-periods)
-      numerator / denominator
-    end
-
-    private_class_method :solve_periodic_rate, :payment_for_rate
   end

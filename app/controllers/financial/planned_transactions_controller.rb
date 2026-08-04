@@ -37,6 +37,7 @@ class Financial::PlannedTransactionsController < ApplicationController
     result = Financial::PlannedTransactions::ApplyService.call(
       planned_transaction: @planned_transaction,
       amount: apply_params[:amount],
+      interest_amount: apply_params[:interest_amount],
       entry_date: apply_params[:entry_date],
       description: apply_params[:description],
       category: scoped_category(apply_params[:category_id]),
@@ -82,7 +83,7 @@ class Financial::PlannedTransactionsController < ApplicationController
   end
 
   def apply_params
-    params.fetch(:planned_transaction, {}).permit(:amount, :entry_date, :description, :category_id, :financial_account_id, :counterparty_financial_account_id, :financial_liability_id)
+    params.fetch(:planned_transaction, {}).permit(:amount, :interest_amount, :entry_date, :description, :category_id, :financial_account_id, :counterparty_financial_account_id, :financial_liability_id)
   end
 
   def scoped_category(id)

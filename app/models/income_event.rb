@@ -371,51 +371,12 @@ class IncomeEvent < ApplicationRecord
   end
 
   def inferred_annual_rate_from_payment
-    periods_per_year = {
-      "weekly" => 52.0,
-      "biweekly" => 26.0,
-      "quincenal" => (365.0 / 15.0),
-      "monthly" => 12.0
-    }.fetch(payment_frequency) { 12.0 }
-
-    principal = loan_amount.to_d
-    installment_amount = payment_amount.to_d
-    periods = number_of_payments.to_i
-
-    return 0.to_d if installment_amount * periods <= principal
-
-    periodic_rate = solve_periodic_rate(principal: principal, payment_amount: installment_amount, periods: periods)
-    (periodic_rate * periods_per_year * 100).round(3)
-  end
-
-  def solve_periodic_rate(principal:, payment_amount:, periods:)
-    low = 0.0
-    high = 1.0
-
-    while payment_for_rate(principal: principal, rate: high, periods: periods) < payment_amount
-      high *= 2
-      break if high > 100
-    end
-
-    80.times do
-      mid = (low + high) / 2.0
-      computed_payment = payment_for_rate(principal: principal, rate: mid, periods: periods)
-
-      if computed_payment < payment_amount
-        low = mid
-      else
-        high = mid
-      end
-    end
-
-    ((low + high) / 2.0).to_d
-  end
-
-  def payment_for_rate(principal:, rate:, periods:)
-    return principal / periods if rate.zero?
-
-    numerator = principal * rate
-    denominator = 1 - (1 + rate)**(-periods)
-    numerator / denominator
+    Financial::Loans::RepaymentTerms.new(
+      principal: loan_amount,
+      number_of_payments: number_of_payments,
+      payment_frequency: payment_frequency,
+      repayment_basis: "payment_amounts",
+      regular_payment: payment_amount
+    ).annual_rate
   end
 end

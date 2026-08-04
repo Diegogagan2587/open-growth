@@ -57,9 +57,12 @@ Rails.application.routes.draw do
       end
     end
     resources :loans, controller: "/financial/loans" do
+      resource :schedule, only: :create, controller: "/financial/loans/schedules"
+      resources :installments, only: [] do
+        resource :payment, only: :create, controller: "/financial/loans/installment_payments"
+      end
       member do
         post :activate
-        post :generate_installments
         post "installments/:installment_id/plan", action: :plan_installment, as: :plan_installment
       end
     end
