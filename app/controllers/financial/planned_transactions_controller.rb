@@ -17,10 +17,11 @@ class Financial::PlannedTransactionsController < ApplicationController
   end
 
   def update
-    if @planned_transaction.execution_status == "pending" && @planned_transaction.update(planned_transaction_params)
+    attributes = editable_planned_transaction_params
+    if attributes && @planned_transaction.update(attributes)
       redirect_to finance_plan_path(@planned_transaction.plan), notice: "Planned transaction updated"
     else
-      redirect_to finance_plan_path(@planned_transaction.plan), alert: @planned_transaction.errors.full_messages.to_sentence.presence || "Only pending transactions can be edited"
+      redirect_to finance_plan_path(@planned_transaction.plan), alert: @planned_transaction.errors.full_messages.to_sentence.presence || "Only pending transactions or applied plan commitments can be edited"
     end
   end
 
@@ -80,6 +81,13 @@ class Financial::PlannedTransactionsController < ApplicationController
     permitted[:kind] = nil
     permitted[:destination_selection] = nil unless transaction_type == "transfer"
     permitted
+  end
+
+  def editable_planned_transaction_params
+    return planned_transaction_params if @planned_transaction.execution_status == "pending"
+
+    commitment_params = params.expect(planned_transaction: [ :commits_plan_funds ])
+    commitment_params if @planned_transaction.execution_status == "applied" && commitment_params.key?(:commits_plan_funds)
   end
 
   def apply_params

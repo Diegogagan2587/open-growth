@@ -161,6 +161,116 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     assert_equal 92.to_d, transaction.financial_entry.amount
   end
 
+  test "corrects an applied liability payment commitment without changing its actual entry" do
+    asset = Financial::Asset.create!(account: @account, name: "Commitment checking", account_type: "checking", status: "active", opening_balance: 500)
+    liability = Financial::Liability.create!(account: @account, name: "Commitment card", liability_type: "credit_card", status: "active", opening_balance: 125)
+    transaction = Financial::PlannedTransaction.create!(
+      account: @account,
+      plan: @plan.becomes(Financial::Plan),
+      description: "Pay commitment card",
+      amount: 125,
+      status: "pending_to_pay",
+      financial_account: asset,
+      financial_liability: liability
+    )
+    result = Financial::PlannedTransactions::ApplyService.call(planned_transaction: transaction)
+    entry = result.entry
+
+    get finance_plan_path(@plan)
+
+    assert_response :success
+    assert_select "form[action='#{finance_plan_planned_transaction_path(@plan, transaction)}']" do
+      assert_select "input[name='planned_transaction[commits_plan_funds]'][type='checkbox']:not([checked])"
+      assert_select "button", text: "Save commitment"
+    end
+
+    patch finance_plan_planned_transaction_path(@plan, transaction), params: {
+      planned_transaction: { commits_plan_funds: "1", description: "Changed history" }
+    }
+
+    assert_redirected_to finance_plan_path(@plan)
+    assert transaction.reload.commits_plan_funds?
+    assert_equal "Pay commitment card", transaction.description
+    assert_equal 125.to_d, Financial::PlanProjection.for(@plan).planned_commitments
+    assert_equal "Pay commitment card", entry.reload.description
+    assert_equal 125.to_d, entry.amount
+
+    patch finance_plan_planned_transaction_path(@plan, transaction), params: {
+      planned_transaction: { commits_plan_funds: "0" }
+    }
+
+    assert_not transaction.reload.commits_plan_funds?
+    assert_equal 0.to_d, Financial::PlanProjection.for(@plan).planned_commitments
+  end
+
+  test "does not edit commitments for non-applied transactions or finalized plans" do
+    asset = Financial::Asset.create!(account: @account, name: "Locked checking", account_type: "checking", status: "active", opening_balance: 500)
+    liability = Financial::Liability.create!(account: @account, name: "Locked card", liability_type: "credit_card", status: "active", opening_balance: 125)
+    %w[cancelled skipped].each do |execution_status|
+      transaction = Financial::PlannedTransaction.create!(
+        account: @account,
+        plan: @plan.becomes(Financial::Plan),
+        description: "#{execution_status.humanize} payment",
+        amount: 25,
+        status: "pending_to_pay",
+        execution_status: execution_status,
+        financial_account: asset,
+        financial_liability: liability
+      )
+
+      patch finance_plan_planned_transaction_path(@plan, transaction), params: {
+        planned_transaction: { commits_plan_funds: "1" }
+      }
+
+      assert_not transaction.reload.commits_plan_funds?
+      assert_equal "Only pending transactions or applied plan commitments can be edited", flash[:alert]
+    end
+
+    applied = Financial::PlannedTransaction.create!(
+      account: @account,
+      plan: @plan.becomes(Financial::Plan),
+      description: "Applied payment",
+      amount: 100,
+      status: "pending_to_pay",
+      financial_account: asset,
+      financial_liability: liability
+    )
+    Financial::PlannedTransactions::ApplyService.call(planned_transaction: applied)
+    @plan.update!(lifecycle_status: "closed")
+
+    patch finance_plan_planned_transaction_path(@plan, applied), params: {
+      planned_transaction: { commits_plan_funds: "1" }
+    }
+
+    assert_not applied.reload.commits_plan_funds?
+    assert_equal "Plan must be active before changing planned transactions", flash[:alert]
+
+    get finance_plan_path(@plan)
+    assert_select "form[action='#{finance_plan_planned_transaction_path(@plan, applied)}']", count: 0
+  end
+
+  test "does not commit an applied non-liability transaction to the plan" do
+    category = Category.create!(account: @account, name: "Non-commitment expense")
+    asset = Financial::Asset.create!(account: @account, name: "Expense checking", account_type: "checking", status: "active", opening_balance: 100)
+    transaction = Financial::PlannedTransaction.create!(
+      account: @account,
+      plan: @plan.becomes(Financial::Plan),
+      category: category,
+      description: "Ordinary expense",
+      amount: 25,
+      status: "pending_to_pay",
+      financial_account: asset
+    )
+    Financial::PlannedTransactions::ApplyService.call(planned_transaction: transaction)
+
+    patch finance_plan_planned_transaction_path(@plan, transaction), params: {
+      planned_transaction: { commits_plan_funds: "1" }
+    }
+
+    assert_not transaction.reload.commits_plan_funds?
+    assert_equal "Commits plan funds is only available for liability payments", flash[:alert]
+  end
+
   test "planned transaction form exposes expense or transfer with unified account routing" do
     asset = Financial::Asset.create!(account: @account, name: "Everyday cash", account_type: "checking", status: "active", opening_balance: 0)
     liability = Financial::Liability.create!(account: @account, name: "Rewards card", liability_type: "credit_card", status: "active", opening_balance: 0)
