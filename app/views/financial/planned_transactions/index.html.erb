@@ -16,11 +16,7 @@
               <p class="text-sm text-muted-foreground"><%= transaction.kind.humanize %> · <%= number_to_currency(transaction.amount) %> · <%= transaction.execution_status.humanize %></p>
             </div>
             <% if transaction.execution_status == "pending" %>
-              <%= form_with url: apply_finance_planned_transaction_path(transaction), method: :patch, class: "flex flex-wrap items-end gap-2" do |form| %>
-                <%= form.number_field :amount, name: "planned_transaction[amount]", value: transaction.amount, step: 0.01, min: 0.01, class: "w-28 rounded border border-border bg-background px-2 py-1" %>
-                <%= form.date_field :entry_date, name: "planned_transaction[entry_date]", value: transaction.planned_for || Date.current, class: "rounded border border-border bg-background px-2 py-1" %>
-                <%= render Ui::ButtonComponent.new(label: "Apply", type: "submit", size: "sm") %>
-              <% end %>
+              <%= render Financial::InstallmentPaymentFormComponent.new(transaction: transaction) %>
               <% unless @plan %>
                 <%= form_with url: move_finance_planned_transaction_path(transaction), method: :patch, class: "mt-2 flex items-end gap-2" do %>
                   <%= render Ui::SelectComponent.new(name: "target_plan_id", options: @plans.map { |plan| [ plan.name, plan.id ] }, include_blank: "Select plan", required: true) %>
