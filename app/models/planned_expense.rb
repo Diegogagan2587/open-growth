@@ -185,6 +185,10 @@ class PlannedExpense < ApplicationRecord
 
   private
 
+  def plan_commitment_is_a_liability_payment
+    errors.add(:commits_plan_funds, "is only available for liability payments") if commits_plan_funds? && !debt_payment?
+  end
+
   def assign_source_selection(value)
     return clear_source_selection if value.blank?
 
