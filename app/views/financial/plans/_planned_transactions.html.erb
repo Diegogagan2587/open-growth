@@ -20,11 +20,7 @@
             <td class="p-3"><%= render Ui::BadgeComponent.new(label: transaction.execution_status.humanize, variant: transaction.execution_status == "applied" ? :secondary : :outline) %></td>
             <td class="min-w-72 space-y-2 p-3">
               <% if transaction.execution_status == "pending" %>
-                <%= form_with url: apply_finance_planned_transaction_path(transaction), method: :patch, class: "flex flex-wrap items-end gap-2" do %>
-                  <%= render Ui::InputComponent.new(name: "planned_transaction[amount]", value: transaction.amount, type: "number", min: 0.01, step: 0.01, css_class: "w-24") %>
-                  <%= render Ui::InputComponent.new(name: "planned_transaction[entry_date]", value: transaction.planned_for || transaction.due_date || Date.current, type: "date", css_class: "w-auto") %>
-                  <%= render Ui::ButtonComponent.new(label: "Apply", type: "submit", size: :sm) %>
-                <% end %>
+                <%= render Financial::InstallmentPaymentFormComponent.new(transaction: transaction) %>
                 <%= form_with url: move_finance_planned_transaction_path(transaction), method: :patch, class: "flex items-end gap-2" do %>
                   <%= render Ui::SelectComponent.new(name: "target_plan_id", options: [ [ plan.name, plan.id ], [ "Unassigned", "" ] ] + other_plans.map { |candidate| [ candidate.name, candidate.id ] }, selected: transaction.income_event_id, css_class: "min-w-40") %>
                   <%= render Ui::ButtonComponent.new(label: "Move", type: "submit", variant: :outline, size: :sm) %>
