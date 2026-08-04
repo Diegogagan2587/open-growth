@@ -31,6 +31,7 @@ class PlannedExpense < ApplicationRecord
     financial_liability_id.present?
   }
   validate :planned_values_are_immutable_after_execution, on: :update
+  validate :plan_commitment_is_a_liability_payment
 
   scope :by_position, -> { order(:position, :created_at) }
   scope :by_status, ->(status) { where(status: status) }
