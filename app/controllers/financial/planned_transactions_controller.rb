@@ -72,7 +72,7 @@ class Financial::PlannedTransactionsController < ApplicationController
     permitted = params.expect(planned_transaction: [
       :description, :amount, :kind, :planned_for, :due_date, :importance, :category_id,
       :financial_account_id, :counterparty_financial_account_id, :financial_liability_id,
-      :transaction_type, :source_selection, :destination_selection
+      :transaction_type, :source_selection, :destination_selection, :commits_plan_funds
     ])
     transaction_type = permitted.delete(:transaction_type)
     return permitted if transaction_type.blank?
