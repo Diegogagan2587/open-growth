@@ -11,7 +11,7 @@
       <div class="border-b border-border p-4 last:border-b-0 sm:border-r lg:border-b-0">
         <p class="text-sm text-muted-foreground"><%= label %></p>
         <p class="mt-2 text-xl font-bold"><%= number_to_currency(projected) %></p>
-        <p class="mt-1 text-xs text-muted-foreground">Actual <%= number_to_currency(actual) %></p>
+        <% if actual %><p class="mt-1 text-xs text-muted-foreground">Actual <%= number_to_currency(actual) %></p><% end %>
       </div>
     <% end %>
   </div>
