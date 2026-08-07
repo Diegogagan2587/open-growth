@@ -207,7 +207,7 @@ GEM
       racc (~> 1.4)
     nokogiri (1.19.4-x86_64-linux-musl)
       racc (~> 1.4)
-    openai (0.74.0)
+    openai (0.77.0)
       base64
       cgi
       connection_pool
@@ -421,7 +421,7 @@ DEPENDENCIES
   jbuilder
   kamal
   mission_control-jobs
-  openai (~> 0.74.0)
+  openai (~> 0.77.0)
   pg (~> 1.6)
   propshaft
   puma (>= 5.0)
