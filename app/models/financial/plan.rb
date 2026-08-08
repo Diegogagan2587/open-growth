@@ -24,6 +24,8 @@ class Financial::Plan < ApplicationRecord
     class_name: "Financial::Transaction",
     inverse_of: :plan,
     dependent: :restrict_with_error
+
+  before_validation :set_owner_account, on: :create
   before_destroy :allow_safe_draft_deletion
 
   scope :for_account, ->(account) { where(account: account) }
