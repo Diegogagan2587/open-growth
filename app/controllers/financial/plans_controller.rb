@@ -34,7 +34,7 @@ class Financial::PlansController < ApplicationController
   end
 
   def create
-    @plan = Financial::Plan.new(plan_params.merge(account: Current.account, expected_amount: initial_funding_params[:expected_amount], status: "pending", income_type: "regular"))
+    @plan = Financial::Plan.new(plan_params.merge(account: Current.account))
     @funding_source = @plan.funding_sources.new(initial_funding_params.merge(account: Current.account))
 
     if save_plan_with_initial_funding
