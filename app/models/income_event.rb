@@ -22,6 +22,8 @@ class IncomeEvent < ApplicationRecord
   before_validation :apply_loan_defaults
   before_validation :assign_destination_selection
   before_validation :infer_loan_interest_rate
+  after_commit :sync_compatibility_plan, on: %i[create update]
+  after_commit :sync_regular_income_transaction, on: %i[create update], unless: :loan?
   after_commit :sync_loan_side_effects, if: :loan?
 
   scope :for_account, ->(account) { where(account: account) }
