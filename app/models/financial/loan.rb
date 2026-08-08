@@ -10,7 +10,7 @@ class Financial::Loan < ApplicationRecord
   belongs_to :interest_category, class_name: "Category", optional: true
   has_many :funding_sources, class_name: "Financial::FundingSource", foreign_key: :financial_loan_id, dependent: :restrict_with_error
   has_many :transactions, class_name: "Financial::Transaction", foreign_key: :financial_loan_id, inverse_of: :financial_loan, dependent: :restrict_with_error
-  has_many :installments, class_name: "Financial::LoanInstallment", foreign_key: :financial_loan_id, inverse_of: :financial_loan, dependent: :restrict_with_error
+  has_many :installments, class_name: "Financial::LoanInstallment", inverse_of: :financial_loan, dependent: :restrict_with_error
 
   before_validation :set_owner_account, on: :create
 
