@@ -25,6 +25,7 @@ class Financial::PlansController < ApplicationController
     applied_transactions = @planned_transactions.reject { |transaction| transaction.execution_status == "pending" }
     ActiveRecord::Associations::Preloader.new(records: applied_transactions, associations: :financial_entry).call if applied_transactions.any?
     @actual_entries = @plan.transactions.includes(:category).by_date
+    @recurring_transactions = Financial::RecurringTransaction.for_account(Current.account).active.ordered
   end
 
   def new
