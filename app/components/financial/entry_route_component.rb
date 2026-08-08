@@ -21,18 +21,7 @@ class Financial::EntryRouteComponent < ViewComponent::Base
   end
 
   def destination
-    case @entry.entry_type
-    when "inflow"
-      asset_endpoint("Destination", @entry.financial_account) ||
-        liability_endpoint("Destination", @entry.counterparty_financial_liability)
-    when "transfer"
-      asset_endpoint("Destination", @entry.counterparty_financial_account)
-    when "liability_payment"
-      liability_endpoint("Destination", @entry.financial_liability)
-    when "loan_disbursement"
-      asset_endpoint("Destination", @entry.financial_account) ||
-        liability_endpoint("Destination", @entry.counterparty_financial_liability)
-    end
+    account_endpoint("Destination", @entry.routed_destination_account)
   end
 
   def asset_endpoint(role, asset)
