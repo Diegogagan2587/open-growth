@@ -10,11 +10,11 @@ class Financial::PlanActuals
   end
 
   def actual_funding
-    entries.where(entry_type: FUNDING_ENTRY_TYPES).sum(:amount)
+    transactions.where(transaction_type: FUNDING_TRANSACTION_TYPES).sum(:amount)
   end
 
   def actual_consumption
-    entries.where(entry_type: Financial::Entry::EXPENSE_ENTRY_TYPES).sum(:amount)
+    transactions.where(transaction_type: "expense").sum(:amount)
   end
 
   def opening_balance
