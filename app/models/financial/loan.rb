@@ -35,6 +35,22 @@ class Financial::Loan < ApplicationRecord
     self.liability_account = value
   end
 
+  def destination_asset
+    destination_account if destination_account&.asset?
+  end
+
+  def destination_asset=(value)
+    self.destination_account = value
+  end
+
+  def destination_liability
+    destination_account if destination_account&.liability?
+  end
+
+  def destination_liability=(value)
+    self.destination_account = value
+  end
+
   def actual_balance
     return 0.to_d unless liability_account
 
