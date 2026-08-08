@@ -20,7 +20,7 @@ class BudgetPeriod < ApplicationRecord
   end
 
   def remaining_budget
-    total_income - total_planned
+    opening_balance + total_income - total_planned
   end
 
   def income_events_ordered
