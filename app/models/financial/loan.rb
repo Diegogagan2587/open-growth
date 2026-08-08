@@ -72,6 +72,10 @@ class Financial::Loan < ApplicationRecord
 
   private
 
+  def set_owner_account
+    self.account ||= Current.account if Current.account
+  end
+
   def repayment_terms_are_valid
     return if repayment_basis.blank?
 
