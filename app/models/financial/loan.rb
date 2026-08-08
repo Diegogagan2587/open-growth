@@ -25,6 +25,8 @@ class Financial::Loan < ApplicationRecord
   validate :active_routing_is_complete
   validate :associations_belong_to_same_account
 
+  alias_method :entries, :transactions
+  
   def actual_balance
     return 0.to_d unless liability_account
 
