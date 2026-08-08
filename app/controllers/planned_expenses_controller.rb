@@ -179,8 +179,8 @@ class PlannedExpensesController < ApplicationController
     end
 
     result = Financial::PlannedTransactions::MoveService.call(
-      planned_transaction: @planned_expense.becomes(Financial::PlannedTransaction),
-      target_plan: target_income_event.becomes(Financial::Plan)
+      planned_transaction: Financial::PlannedTransaction.for_account(Current.account).find(@planned_expense.id),
+      target_plan: Financial::Plan.for_account(Current.account).find(target_income_event.id)
     )
     if result.success?
       redirect_to income_event_planned_expenses_path(target_income_event), notice: t("planned_expenses.flash.moved_to", description: target_income_event.description)
