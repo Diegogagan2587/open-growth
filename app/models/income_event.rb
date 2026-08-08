@@ -51,6 +51,38 @@ class IncomeEvent < ApplicationRecord
   scope :applied, -> { where(status: "applied") }
   scope :by_date, -> { order(expected_date: :desc) }
 
+  private def sync_compatibility_plan
+    attributes = {
+      id: id,
+      account_id: account_id,
+      budget_period_id: budget_period_id,
+      name: description,
+      planned_for: expected_date,
+      lifecycle_status: lifecycle_status.presence || "active",
+      closed_at: closed_at,
+      actual_ending_balance_at_close: actual_ending_balance_at_close,
+      legacy_income_event_id: id,
+      created_at: created_at,
+      updated_at: updated_at
+    }
+    Financial::Plan.upsert(attributes, unique_by: :id)
+    Financial::FundingSource.upsert({
+      account_id: account_id,
+      financial_plan_id: id,
+      description: description,
+      expected_amount: expected_amount,
+      expected_date: expected_date,
+      kind: loan? ? "borrowed" : "income",
+      resolution: status.in?(%w[received applied]) ? "received" : "pending",
+      expected_destination_account_id: legacy_destination_account&.id,
+      legacy_income_event_id: id,
+      created_at: created_at,
+      updated_at: updated_at
+    }, unique_by: :index_financial_funding_sources_on_legacy_income_event_id)
+    source = Financial::FundingSource.find_by(legacy_income_event_id: id)
+    source&.resolve_from!(source.receipt_transaction) if source&.receipt_transaction
+  end
+
   def total_planned
     return loan_total_planned if loan?
 
