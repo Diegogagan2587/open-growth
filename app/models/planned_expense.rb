@@ -17,6 +17,7 @@ class PlannedExpense < ApplicationRecord
 
   before_validation :set_account, on: :create
   before_validation :infer_transaction_kind
+  after_commit :sync_compatibility_planned_transaction, on: %i[create update]
 
   scope :for_account, ->(account) { where(account: account) }
 
