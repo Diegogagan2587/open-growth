@@ -24,7 +24,7 @@ class Financial::PlansController < ApplicationController
     @planned_transactions = @plan.planned_transactions.includes(:source_account, :destination_account).by_position.to_a
     applied_transactions = @planned_transactions.reject { |transaction| transaction.execution_status == "pending" }
     ActiveRecord::Associations::Preloader.new(records: applied_transactions, associations: :financial_entry).call if applied_transactions.any?
-    @actual_entries = @plan.financial_entries.includes(:category).by_date
+    @actual_entries = @plan.transactions.includes(:category).by_date
   end
 
   def new
