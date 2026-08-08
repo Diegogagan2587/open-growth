@@ -6,6 +6,7 @@ class Account < ApplicationRecord
   has_many :categories, dependent: :destroy
   has_many :expenses, dependent: :destroy
   has_many :financial_savings_goals, class_name: "Financial::SavingsGoal", dependent: :destroy
+  has_many :financial_recurring_transactions, class_name: "Financial::RecurringTransaction", dependent: :destroy
   has_many :income_events, dependent: :destroy
   has_many :financial_plans, class_name: "Financial::Plan", dependent: :destroy
   has_many :financial_funding_sources, class_name: "Financial::FundingSource", dependent: :destroy
