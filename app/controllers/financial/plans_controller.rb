@@ -9,7 +9,7 @@ class Financial::PlansController < ApplicationController
     @status = params[:status].to_s if params[:status].to_s.in?(Financial::Plan::LIFECYCLE_STATUSES)
     @plans = Financial::Plan.for_account(Current.account)
     @plans = @plans.where(budget_period: @budget_period) if @budget_period
-    @plans = @plans.where(expected_date: Date.strptime(@month, "%Y-%m").all_month) if @month
+    @plans = @plans.where(planned_for: Date.strptime(@month, "%Y-%m").all_month) if @month
     @plans = @plans.where(lifecycle_status: @status) if @status
     @plans = @plans
       .includes(:funding_sources)
