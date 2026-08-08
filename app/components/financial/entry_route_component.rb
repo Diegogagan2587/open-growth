@@ -17,16 +17,7 @@ class Financial::EntryRouteComponent < ViewComponent::Base
   private
 
   def source
-    case @entry.entry_type
-    when "inflow"
-      endpoint("Plan", "Financial plan", @entry.income_event, helpers.finance_plan_path(@entry.income_event)) if @entry.income_event
-    when "outflow", "transfer", "adjustment"
-      asset_endpoint("Source", @entry.financial_account)
-    when "liability_charge", "loan_disbursement"
-      liability_endpoint("Source", @entry.financial_liability)
-    when "liability_payment"
-      asset_endpoint("Source", @entry.financial_account) || income_event_endpoint("Source", @entry.income_event)
-    end
+    account_endpoint("Source", @entry.routed_source_account)
   end
 
   def destination
