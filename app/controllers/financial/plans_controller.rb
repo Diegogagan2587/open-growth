@@ -29,7 +29,7 @@ class Financial::PlansController < ApplicationController
 
   def new
     budget_period = BudgetPeriod.for_account(Current.account).find_by(id: params[:budget_period_id])
-    @plan = Financial::Plan.new(planned_for: Date.current, lifecycle_status: "draft", budget_period: budget_period)
+    @plan = Financial::Plan.new(planned_for: Date.current, lifecycle_status: "draft", budget_period: budget_period, account: Current.account)
     @funding_source = Financial::FundingSource.new(expected_date: Date.current, kind: "income")
   end
 
