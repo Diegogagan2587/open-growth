@@ -91,6 +91,10 @@ class IncomeEvent < ApplicationRecord
     end
   end
 
+  private def sync_regular_income_transaction
+    IncomeEvents::TransactionSyncService.call(self)
+  end
+
   def total_planned
     return loan_total_planned if loan?
 
