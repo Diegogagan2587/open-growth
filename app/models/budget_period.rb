@@ -1,6 +1,8 @@
 class BudgetPeriod < ApplicationRecord
   belongs_to :account
   has_many :income_events, dependent: :nullify
+  has_many :financial_plans, class_name: "Financial::Plan", dependent: :nullify
+  has_many :financial_planned_transactions, through: :financial_plans, source: :planned_transactions
   has_many :planned_expenses, through: :income_events
   has_many :budget_line_items, dependent: :destroy
   has_many :expenses, dependent: :nullify
