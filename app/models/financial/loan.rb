@@ -87,9 +87,8 @@ class Financial::Loan < ApplicationRecord
   def active_routing_is_complete
     return unless lifecycle_status == "active"
 
-    errors.add(:liability, "must be selected") if liability.blank?
-    destinations = [ destination_asset, destination_liability ].compact
-    errors.add(:base, "active loan requires exactly one destination") unless destinations.one?
+    errors.add(:liability_account, "must be selected") unless liability_account&.liability?
+    errors.add(:destination_account, "must be an asset account") unless destination_account&.asset?
   end
 
   def associations_belong_to_same_account
