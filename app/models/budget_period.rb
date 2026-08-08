@@ -24,7 +24,7 @@ class BudgetPeriod < ApplicationRecord
   end
 
   def income_events_ordered
-    income_events.order(:expected_date)
+    financial_plans.chronological
   end
 
   private
