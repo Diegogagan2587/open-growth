@@ -4,7 +4,7 @@ class Financial::Loan < ApplicationRecord
   LIFECYCLE_STATUSES = %w[simulated active paid cancelled].freeze
 
   belongs_to :account, class_name: "::Account"
-  belongs_to :liability, class_name: "Financial::Liability", optional: true
+  belongs_to :liability_account, class_name: "Financial::Account", optional: true
   belongs_to :destination_asset, class_name: "Financial::Asset", optional: true
   belongs_to :destination_liability, class_name: "Financial::Liability", optional: true
   belongs_to :interest_category, class_name: "Category", optional: true
