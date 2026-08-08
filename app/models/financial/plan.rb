@@ -14,7 +14,6 @@ class Financial::Plan < ApplicationRecord
     foreign_key: :financial_plan_id,
     inverse_of: :financial_plan,
     dependent: :destroy
-  has_many :funding_transactions, through: :funding_sources, source: :receipt_transaction
   has_many :planned_transactions,
     class_name: "Financial::PlannedTransaction",
     inverse_of: :plan,
@@ -23,6 +22,7 @@ class Financial::Plan < ApplicationRecord
     class_name: "Financial::Transaction",
     inverse_of: :plan,
     dependent: :restrict_with_error
+  has_many :funding_transactions, through: :funding_sources, source: :receipt_transaction
 
   before_validation :set_owner_account, on: :create
   before_destroy :allow_safe_draft_deletion
