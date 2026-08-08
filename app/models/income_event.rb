@@ -83,6 +83,14 @@ class IncomeEvent < ApplicationRecord
     source&.resolve_from!(source.receipt_transaction) if source&.receipt_transaction
   end
 
+  private def legacy_destination_account
+    if loan?
+      loan_disbursement_destination_asset || loan_disbursement_destination_liability
+    else
+      regular_income_destination_asset || regular_income_destination_liability
+    end
+  end
+
   def total_planned
     return loan_total_planned if loan?
 
