@@ -6,7 +6,7 @@ class Financial::PlanActuals
   end
 
   def initialize(plan)
-    @plan = plan
+    @plan = plan.is_a?(Financial::Plan) ? plan : Financial::Plan.find(plan.id)
   end
 
   def actual_funding
