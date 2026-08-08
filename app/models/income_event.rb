@@ -138,8 +138,7 @@ class IncomeEvent < ApplicationRecord
       expected_amount: expected_amount,
       expected_date: expected_date,
       kind: loan? ? "borrowed" : "income",
-      expected_destination_asset: loan? ? loan_disbursement_destination_asset : regular_income_destination_asset,
-      expected_destination_liability: loan? ? loan_disbursement_destination_liability : regular_income_destination_liability
+      expected_destination_account: legacy_destination_account
     )
     source.save!
 
