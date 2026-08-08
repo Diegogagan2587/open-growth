@@ -86,22 +86,6 @@ class PlannedExpense < ApplicationRecord
     final_status? && financial_entry.blank?
   end
 
-  def template_progress
-    return nil unless expense_template
-
-    saved = expense_template.total_saved
-    total = expense_template.total_amount
-    percentage = expense_template.progress_percentage
-
-    {
-      saved: saved,
-      total: total,
-      percentage: percentage,
-      remaining: expense_template.remaining_amount,
-      complete: expense_template.is_complete?
-    }
-  end
-
   private
 
   def set_account
