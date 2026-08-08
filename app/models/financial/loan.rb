@@ -26,9 +26,9 @@ class Financial::Loan < ApplicationRecord
   validate :associations_belong_to_same_account
 
   def actual_balance
-    return 0.to_d unless liability
+    return 0.to_d unless liability_account
 
-    entries.sum(0.to_d) { |entry| entry.liability_delta_for(liability_id) }
+    transactions.sum(0.to_d) { |transaction| transaction.account_delta_for(liability_account_id) }
   end
 
   def configure_repayment(terms)
