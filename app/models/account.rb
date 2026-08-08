@@ -11,8 +11,8 @@ class Account < ApplicationRecord
   has_many :financial_funding_sources, class_name: "Financial::FundingSource", dependent: :destroy
   has_many :financial_loans, class_name: "Financial::Loan", dependent: :destroy
   has_many :financial_accounts, class_name: "Financial::Account", dependent: :destroy
-  has_many :financial_liabilities, class_name: "Financial::Liability", dependent: :destroy
   has_many :financial_entries, class_name: "Financial::Entry", dependent: :destroy
+  has_many :financial_liabilities, -> { liabilities }, class_name: "Financial::Account"
   has_many :planned_expenses, dependent: :destroy
   has_many :financial_planned_transactions, class_name: "Financial::PlannedTransaction", dependent: :destroy
   has_many :budget_line_items, dependent: :destroy
