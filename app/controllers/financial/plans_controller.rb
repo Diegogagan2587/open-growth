@@ -100,8 +100,9 @@ class Financial::PlansController < ApplicationController
 
   def load_form_collections
     @budget_periods = BudgetPeriod.for_account(Current.account).order(start_date: :desc)
-    @assets = Financial::Asset.for_account(Current.account).active.order(:name)
-    @liabilities = Financial::Liability.for_account(Current.account).active.order(:name)
+    accounts = Financial::Account.for_account(Current.account).active.order(:name)
+    @assets = accounts.select(&:asset?)
+    @liabilities = accounts.select(&:liability?)
   end
 
   def load_plan_collections
