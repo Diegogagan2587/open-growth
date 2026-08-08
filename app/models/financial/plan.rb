@@ -17,7 +17,6 @@ class Financial::Plan < ApplicationRecord
   has_many :funding_transactions, through: :funding_sources, source: :receipt_transaction
   has_many :planned_transactions,
     class_name: "Financial::PlannedTransaction",
-    foreign_key: :income_event_id,
     inverse_of: :plan,
     dependent: :destroy
   has_many :transactions,
