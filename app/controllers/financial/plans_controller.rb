@@ -105,8 +105,9 @@ class Financial::PlansController < ApplicationController
   end
 
   def load_plan_collections
-    @assets = Financial::Asset.for_account(Current.account).active.order(:name)
-    @liabilities = Financial::Liability.for_account(Current.account).active.order(:name)
+    accounts = Financial::Account.for_account(Current.account).active.order(:name)
+    @assets = accounts.select(&:asset?)
+    @liabilities = accounts.select(&:liability?)
     @categories = Category.for_account(Current.account).order(:name)
     @other_plans = Financial::Plan.for_account(Current.account).where.not(id: @plan.id).chronological
   end
