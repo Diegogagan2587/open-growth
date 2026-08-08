@@ -16,7 +16,7 @@ class BudgetPeriod < ApplicationRecord
   end
 
   def total_planned
-    planned_expenses.budget_consuming.sum(:amount)
+    financial_planned_transactions.budget_consuming.sum(:planned_amount)
   end
 
   def remaining_budget
