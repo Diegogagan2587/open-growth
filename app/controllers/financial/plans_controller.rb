@@ -83,8 +83,7 @@ class Financial::PlansController < ApplicationController
       :expected_amount,
       :expected_date,
       :kind,
-      :expected_destination_asset_id,
-      :expected_destination_liability_id
+      :expected_destination_account_id
     ])
   end
 
