@@ -26,7 +26,15 @@ class Financial::Loan < ApplicationRecord
   validate :associations_belong_to_same_account
 
   alias_method :entries, :transactions
-  
+
+  def liability
+    liability_account
+  end
+
+  def liability=(value)
+    self.liability_account = value
+  end
+
   def actual_balance
     return 0.to_d unless liability_account
 
