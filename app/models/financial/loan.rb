@@ -12,6 +12,8 @@ class Financial::Loan < ApplicationRecord
   has_many :entries, class_name: "Financial::Entry", foreign_key: :financial_loan_id, dependent: :restrict_with_error
   has_many :installments, class_name: "Financial::LoanInstallment", foreign_key: :financial_loan_id, inverse_of: :financial_loan, dependent: :restrict_with_error
 
+  scope :for_account, ->(account) { where(account: account) }
+
   validates :name, presence: true
   validates :principal_amount, numericality: { greater_than: 0 }
   validates :interest_rate, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
@@ -21,8 +23,6 @@ class Financial::Loan < ApplicationRecord
   validate :repayment_terms_are_valid
   validate :active_routing_is_complete
   validate :associations_belong_to_same_account
-
-  scope :for_account, ->(account) { where(account: account) }
 
   def actual_balance
     return 0.to_d unless liability
