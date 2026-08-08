@@ -12,6 +12,8 @@ class Financial::Loan < ApplicationRecord
   has_many :entries, class_name: "Financial::Entry", foreign_key: :financial_loan_id, dependent: :restrict_with_error
   has_many :installments, class_name: "Financial::LoanInstallment", foreign_key: :financial_loan_id, inverse_of: :financial_loan, dependent: :restrict_with_error
 
+  before_validation :set_owner_account, on: :create
+
   scope :for_account, ->(account) { where(account: account) }
 
   validates :name, presence: true
