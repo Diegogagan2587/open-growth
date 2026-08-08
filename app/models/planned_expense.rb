@@ -78,6 +78,36 @@ class PlannedExpense < ApplicationRecord
     FINAL_STATUSES.include?(value.to_s)
   end
 
+  private def sync_compatibility_planned_transaction
+    income_event&.send(:sync_compatibility_plan) unless Financial::Plan.exists?(income_event_id)
+    return unless income_event_id.nil? || Financial::Plan.exists?(income_event_id)
+
+    execution_status = final_status? ? "applied" : status == "cancelled" ? "cancelled" : "pending"
+    Financial::PlannedTransaction.upsert({
+      id: id,
+      account_id: account_id,
+      plan_id: income_event_id,
+      origin_plan_id: origin_income_event_id,
+      category_id: category_id,
+      recurring_transaction_id: expense_template_id,
+      shopping_item_id: shopping_item_id,
+      source_account_id: financial_account_id || financial_liability_id,
+      destination_account_id: counterparty_financial_account_id || (kind == "liability_payment" ? financial_liability_id : nil),
+      description: description,
+      planned_amount: amount,
+      kind: kind || "outflow",
+      budget_consuming: budget_consuming?,
+      planned_execution_date: planned_for,
+      due_date: due_date,
+      importance: importance || "normal",
+      execution_status: execution_status,
+      position: position,
+      legacy_planned_expense_id: id,
+      created_at: created_at,
+      updated_at: updated_at
+    }, unique_by: :id)
+  end
+
   def final_status?
     self.class.final_status?(status)
   end
