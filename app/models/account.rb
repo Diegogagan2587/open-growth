@@ -5,7 +5,6 @@ class Account < ApplicationRecord
   has_many :budget_periods, dependent: :destroy
   has_many :categories, dependent: :destroy
   has_many :expenses, dependent: :destroy
-  has_many :expense_templates, dependent: :destroy
   has_many :financial_savings_goals, class_name: "Financial::SavingsGoal", dependent: :destroy
   has_many :income_events, dependent: :destroy
   has_many :financial_plans, class_name: "Financial::Plan", dependent: :destroy
