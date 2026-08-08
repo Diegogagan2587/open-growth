@@ -24,14 +24,14 @@ class Financial::Plan < ApplicationRecord
     class_name: "Financial::Transaction",
     inverse_of: :plan,
     dependent: :restrict_with_error
-  validates :lifecycle_status, inclusion: { in: LIFECYCLE_STATUSES }
-  validate :closed_chronology_is_immutable, on: :update
   before_destroy :allow_safe_draft_deletion
 
   scope :for_account, ->(account) { where(account: account) }
   scope :chronological, -> { order(:planned_for, :id) }
 
   validates :name, :planned_for, presence: true
+  validates :lifecycle_status, inclusion: { in: LIFECYCLE_STATUSES }
+  validate :closed_chronology_is_immutable, on: :update
   validate :budget_period_belongs_to_account
 
   # Compatibility readers for views during the legacy-route retirement window.
