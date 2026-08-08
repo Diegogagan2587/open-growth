@@ -8,7 +8,7 @@ class Account < ApplicationRecord
   has_many :expense_templates, dependent: :destroy
   has_many :financial_savings_goals, class_name: "Financial::SavingsGoal", dependent: :destroy
   has_many :income_events, dependent: :destroy
-  has_many :financial_plans, class_name: "Financial::Plan"
+  has_many :financial_plans, class_name: "Financial::Plan", dependent: :destroy
   has_many :financial_funding_sources, class_name: "Financial::FundingSource", dependent: :destroy
   has_many :financial_loans, class_name: "Financial::Loan", dependent: :destroy
   has_many :financial_accounts, class_name: "Financial::Asset", dependent: :destroy
