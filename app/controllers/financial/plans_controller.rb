@@ -63,21 +63,6 @@ class Financial::PlansController < ApplicationController
     end
   end
 
-  def close
-    result = Financial::Plans::CloseService.call(plan: @plan)
-    redirect_to finance_plan_path(@plan),
-      notice: ("Plan closed" if result.success?),
-      alert: (result.error_message unless result.success?)
-  end
-
-  def cancel
-    if @plan.update(lifecycle_status: "cancelled")
-      redirect_to finance_plan_path(@plan), notice: "Plan cancelled"
-    else
-      redirect_to finance_plan_path(@plan), alert: @plan.errors.full_messages.to_sentence
-    end
-  end
-
   private
 
   def set_plan
