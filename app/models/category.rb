@@ -2,6 +2,7 @@ class Category < ApplicationRecord
   belongs_to :account
   has_many :financial_transactions, class_name: "Financial::Transaction", dependent: :restrict_with_error
   has_many :financial_savings_goals, class_name: "Financial::SavingsGoal", dependent: :destroy
+  has_many :financial_recurring_transactions, class_name: "Financial::RecurringTransaction", dependent: :restrict_with_error
   has_many :expenses, dependent: :destroy
   has_many :financial_budget_allocations, class_name: "Financial::BudgetAllocation", dependent: :destroy
   has_many :planned_expenses, dependent: :destroy
