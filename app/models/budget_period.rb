@@ -12,7 +12,7 @@ class BudgetPeriod < ApplicationRecord
   scope :for_account, ->(account) { where(account: account) }
 
   def total_income
-    income_events.sum { |ie| ie.received_amount || ie.expected_amount }
+    financial_plans.sum { |plan| plan.funding_sources.sum { |source| source.actual_amount || source.expected_amount } }
   end
 
   def total_planned
