@@ -20,7 +20,7 @@ class Financial::PlansController < ApplicationController
   def show
     @projection = Financial::PlanProjection.for(@plan)
     @actuals = Financial::PlanActuals.for(@plan)
-    @funding_sources = @plan.funding_sources.includes(:receipt_entry).order(:expected_date, :id)
+    @funding_sources = @plan.funding_sources.includes(:receipt_transaction).order(:expected_date, :id)
     @planned_transactions = @plan.planned_transactions.by_position.to_a
     applied_transactions = @planned_transactions.reject { |transaction| transaction.execution_status == "pending" }
     ActiveRecord::Associations::Preloader.new(records: applied_transactions, associations: :financial_entry).call if applied_transactions.any?
