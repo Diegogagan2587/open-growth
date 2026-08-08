@@ -1,5 +1,5 @@
 class Financial::PlansController < ApplicationController
-  before_action :set_plan, only: [ :show, :edit, :update, :destroy, :close, :cancel ]
+  before_action :set_plan, only: %i[show edit update destroy]
   before_action :load_form_collections, only: [ :new, :create, :edit, :update ]
   before_action :load_plan_collections, only: :show
 
