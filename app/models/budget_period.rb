@@ -23,6 +23,12 @@ class BudgetPeriod < ApplicationRecord
     opening_balance + total_income - total_planned
   end
 
+  def opening_balance
+    account.financial_plans.where("planned_for < ?", start_date).sum do |plan|
+      plan.funding_sources.sum(:expected_amount).to_d - plan.planned_transactions.budget_consuming.sum(:planned_amount).to_d
+    end
+  end
+
   def income_events_ordered
     financial_plans.chronological
   end
