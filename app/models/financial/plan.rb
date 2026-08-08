@@ -67,7 +67,7 @@ class Financial::Plan < ApplicationRecord
 
   def closed_chronology_is_immutable
     return unless lifecycle_status.in?(%w[closed cancelled])
-    return unless will_save_change_to_expected_date? || will_save_change_to_budget_period_id?
+    return unless will_save_change_to_planned_for? || will_save_change_to_budget_period_id?
 
     errors.add(:base, "closed or cancelled plan chronology cannot be changed")
   end
