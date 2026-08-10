@@ -1,4 +1,6 @@
-class Financial::PlannedTransaction < PlannedExpense
+class Financial::PlannedTransaction < ApplicationRecord
+  self.table_name = "financial_planned_transactions"
+
   KINDS = %w[outflow liability_charge transfer liability_payment].freeze
   EXECUTION_STATUSES = %w[pending applied cancelled skipped].freeze
   IMPORTANCES = %w[low normal high essential].freeze
