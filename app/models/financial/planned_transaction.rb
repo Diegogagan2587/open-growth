@@ -16,6 +16,10 @@ class Financial::PlannedTransaction < PlannedExpense
     class_name: "Financial::Transaction",
     inverse_of: :planned_transaction,
     dependent: :restrict_with_error
+
+  before_validation :set_owner_account, on: :create
+  before_validation :infer_kind
+  before_validation :set_budget_consuming_default, on: :create
   before_validation :append_to_plan, on: :create
 
   scope :unassigned, -> { where(plan_id: nil) }
