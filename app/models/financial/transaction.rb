@@ -27,6 +27,7 @@ class Financial::Transaction < ApplicationRecord
   belongs_to :planned_expense, optional: true
 
   before_validation :set_owner_account, on: :create
+  before_validation :infer_transaction_type_from_account_route
   before_validation :synchronize_compatibility_routing
 
   scope :for_account, ->(account) { where(account: account) }
