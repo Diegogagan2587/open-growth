@@ -1,9 +1,11 @@
 class Financial::Transaction < ApplicationRecord
   self.table_name = "financial_transactions"
 
-  TRANSACTION_TYPES = %w[income expense transfer debt_payment loan_disbursement adjustment refund].freeze
-  EXPENSE_TYPES = %w[expense].freeze
   BANK_VISIBLE_FIELDS = %w[amount transaction_date transaction_type source_account_id destination_account_id].freeze
+
+  def self.transaction_types
+    Financial::Transactions::AccountRoute.transaction_types
+  end
 
   belongs_to :account, class_name: "::Account"
   belongs_to :category, optional: true
