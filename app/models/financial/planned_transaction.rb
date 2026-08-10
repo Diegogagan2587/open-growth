@@ -5,7 +5,6 @@ class Financial::PlannedTransaction < PlannedExpense
 
   belongs_to :plan, class_name: "Financial::Plan", foreign_key: :income_event_id, optional: true
 
-  alias_attribute :planned_amount, :amount
   alias_attribute :planned_execution_date, :planned_for
 
   before_validation :append_to_plan, on: :create
@@ -17,6 +16,7 @@ class Financial::PlannedTransaction < PlannedExpense
   validate :plan_accepts_expectation_changes
 
   scope :unassigned, -> { where(income_event_id: nil) }
+  alias_attribute :amount, :planned_amount
 
   def status
     {
