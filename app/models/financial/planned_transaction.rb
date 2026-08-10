@@ -6,13 +6,13 @@ class Financial::PlannedTransaction < PlannedExpense
   belongs_to :plan, class_name: "Financial::Plan", foreign_key: :income_event_id, optional: true
   before_validation :append_to_plan, on: :create
 
+  scope :unassigned, -> { where(plan_id: nil) }
   validates :kind, inclusion: { in: KINDS }
   validates :execution_status, inclusion: { in: EXECUTION_STATUSES }
   validates :importance, inclusion: { in: IMPORTANCES }
   validates :position, numericality: { only_integer: true, greater_than: 0 }, uniqueness: { scope: :plan_id }, if: :plan_id?
   validate :plan_accepts_expectation_changes
 
-  scope :unassigned, -> { where(income_event_id: nil) }
   alias_attribute :amount, :planned_amount
   alias_attribute :planned_for, :planned_execution_date
 
