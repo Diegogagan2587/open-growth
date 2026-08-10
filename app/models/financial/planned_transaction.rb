@@ -2,8 +2,7 @@ class Financial::PlannedTransaction < PlannedExpense
   KINDS = %w[outflow liability_charge transfer liability_payment].freeze
   EXECUTION_STATUSES = %w[pending applied cancelled skipped].freeze
   IMPORTANCES = %w[low normal high essential].freeze
-
-  belongs_to :income_event, optional: true
+  
   belongs_to :plan, class_name: "Financial::Plan", foreign_key: :income_event_id, optional: true
 
   alias_attribute :planned_amount, :amount
