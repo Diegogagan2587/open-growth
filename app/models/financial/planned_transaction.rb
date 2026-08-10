@@ -116,6 +116,50 @@ class Financial::PlannedTransaction < PlannedExpense
     self.position = self.class.where(income_event_id: income_event_id).maximum(:position).to_i + 1
   end
 
+  def set_owner_account
+    self.account ||= plan&.account || Current.account
+  end
+
+  def account_id_from_selection(value)
+    value.to_s.split(":", 2).last.presence
+  end
+
+  def infer_kind
+    self.kind ||= if destination_account&.liability?
+      "liability_payment"
+    elsif source_account&.liability?
+      "liability_charge"
+    elsif destination_account
+      "transfer"
+    else
+      "outflow"
+    end
+  end
+
+  def set_budget_consuming_default
+    self.budget_consuming = kind.in?(%w[outflow liability_charge]) if budget_consuming.nil?
+  end
+
+  def append_to_plan
+    return if plan_id.blank? || position.present?
+
+    self.position = self.class.where(plan_id: plan_id).maximum(:position).to_i + 1
+  end
+
+  def route_is_valid
+    errors.add(:destination_account, "must differ from source account") if source_account_id.present? && source_account_id == destination_account_id
+    errors.add(:destination_account, "must be selected") if kind.in?(%w[transfer liability_payment]) && destination_account.blank?
+  end
+
+  def associations_belong_to_same_account
+    return if account.blank?
+
+    %i[plan category savings_goal recurring_transaction shopping_item source_account destination_account].each do |association|
+      record = public_send(association)
+      errors.add(association, "must belong to the current account") if record.respond_to?(:account_id) && record.account_id != account_id
+    end
+  end
+
   def plan_accepts_expectation_changes
     changed_expectation = new_record? || (changes.keys & %w[description amount kind planned_for due_date importance category_id financial_account_id counterparty_financial_account_id financial_liability_id income_event_id position commits_plan_funds]).any?
     return unless changed_expectation && plan&.lifecycle_status.in?(%w[closed cancelled])
