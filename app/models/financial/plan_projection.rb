@@ -33,8 +33,8 @@ class Financial::PlanProjection
 
   def rows
     balance = opening_balance + expected_funding
-    plan.planned_expenses.includes(:financial_account, :counterparty_financial_account, :financial_liability).by_position.map do |transaction|
-      balance -= transaction.amount.to_d if transaction.reduces_plan_balance?
+    plan.planned_transactions.by_position.map do |transaction|
+      balance -= transaction.planned_amount.to_d if transaction.budget_consuming?
       Row.new(transaction:, balance:)
     end
   end
