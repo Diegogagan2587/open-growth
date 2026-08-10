@@ -58,6 +58,6 @@ class Financial::PlanProjection
     sources = Financial::FundingSource.where(financial_plan_id: candidate.id)
     return sources.sum(:expected_amount).to_d if sources.exists?
 
-    candidate.expected_amount.to_d
+    0.to_d
   end
 end
