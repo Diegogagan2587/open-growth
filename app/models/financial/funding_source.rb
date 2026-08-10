@@ -21,7 +21,6 @@ class Financial::FundingSource < ApplicationRecord
   validates :kind, inclusion: { in: KINDS }
   validates :resolution, inclusion: { in: RESOLUTIONS }
   validate :associations_belong_to_same_account
-  validate :single_expected_destination
   validate :plan_accepts_expectation_changes
 
   alias_method :receipt_entry, :receipt_transaction
@@ -49,12 +48,6 @@ class Financial::FundingSource < ApplicationRecord
       errors.add(:expected_destination_asset, "must belong to the current account") if association == :expected_destination_account && record.asset?
       errors.add(:expected_destination_liability, "must belong to the current account") if association == :expected_destination_account && record.liability?
     end
-  end
-
-  def single_expected_destination
-    return unless expected_destination_asset.present? && expected_destination_liability.present?
-
-    errors.add(:base, "select only one expected destination")
   end
 
   def plan_accepts_expectation_changes
