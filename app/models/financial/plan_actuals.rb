@@ -42,8 +42,8 @@ class Financial::PlanActuals
   end
 
   def preceding_plans
-    plan.account.income_events
-      .where("expected_date < :date OR (expected_date = :date AND id < :id)", date: plan.expected_date, id: plan.id)
-      .order(:expected_date, :id)
+    plan.account.financial_plans
+      .where("planned_for < :date OR (planned_for = :date AND id < :id)", date: plan.planned_for, id: plan.id)
+      .order(:planned_for, :id)
   end
 end
