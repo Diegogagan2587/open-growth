@@ -28,7 +28,7 @@ class Financial::Transaction < ApplicationRecord
   before_validation :synchronize_compatibility_routing
 
   scope :for_account, ->(account) { where(account: account) }
-  scope :by_date, -> { order(transaction_date: :desc, created_at: :desc) }
+  scope :by_date, -> { order(transaction_date: :desc, entry_time: :desc, created_at: :desc) }
   scope :reconciled, -> { where.not(reconciled_at: nil) }
   scope :unreconciled, -> { where(reconciled_at: nil) }
 
