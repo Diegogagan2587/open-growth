@@ -12,6 +12,10 @@ class Financial::PlannedTransaction < PlannedExpense
   belongs_to :shopping_item, optional: true
   belongs_to :source_account, class_name: "Financial::Account", optional: true
   belongs_to :destination_account, class_name: "Financial::Account", optional: true
+  has_one :actual_transaction,
+    class_name: "Financial::Transaction",
+    inverse_of: :planned_transaction,
+    dependent: :restrict_with_error
   before_validation :append_to_plan, on: :create
 
   scope :unassigned, -> { where(plan_id: nil) }
