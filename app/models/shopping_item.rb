@@ -45,18 +45,18 @@ class ShoppingItem < ApplicationRecord
     return nil unless estimated_amount.present? && estimated_amount > 0
     return nil unless financial_account&.account_id == account_id
 
-    entry = Financial::Entry.create!(
+    entry = Financial::Transaction.create!(
       account: account,
       budget_period: budget_period,
       category: category || Category.for_account(account).first,
       description: name,
       amount: estimated_amount,
-      entry_date: Date.current,
-      entry_type: "outflow",
-      financial_account: financial_account
+      transaction_date: Date.current,
+      transaction_type: "expense",
+      source_account: financial_account
     )
 
-    update!(financial_entry: entry)
+    update!(financial_transaction: entry)
     entry
   end
 
