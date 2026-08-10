@@ -110,12 +110,6 @@ class Financial::PlannedTransaction < PlannedExpense
 
   private
 
-  def append_to_plan
-    return if income_event_id.blank? || position.present?
-
-    self.position = self.class.where(income_event_id: income_event_id).maximum(:position).to_i + 1
-  end
-
   def set_owner_account
     self.account ||= plan&.account || Current.account
   end
