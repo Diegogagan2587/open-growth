@@ -26,7 +26,7 @@ class Financial::FundingSource < ApplicationRecord
   validate :plan_accepts_expectation_changes
 
   def actual_amount
-    receipt_entry&.amount
+    receipt_transaction&.amount
   end
 
   def actual_date
