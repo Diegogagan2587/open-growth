@@ -27,10 +27,15 @@ class Financial::PlannedTransaction < PlannedExpense
   scope :by_position, -> { order(:position, :created_at) }
   scope :budget_consuming, -> { where(budget_consuming: true) }
 
+  validates :description, presence: true
+  validates :planned_amount, numericality: { greater_than: 0 }
   validates :kind, inclusion: { in: KINDS }
   validates :execution_status, inclusion: { in: EXECUTION_STATUSES }
   validates :importance, inclusion: { in: IMPORTANCES }
   validates :position, numericality: { only_integer: true, greater_than: 0 }, uniqueness: { scope: :plan_id }, if: :plan_id?
+  validates :category, presence: true, if: :budget_consuming?
+  validate :route_is_valid
+  validate :associations_belong_to_same_account
   validate :plan_accepts_expectation_changes
 
   alias_attribute :amount, :planned_amount
