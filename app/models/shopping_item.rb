@@ -3,7 +3,7 @@ class ShoppingItem < ApplicationRecord
   belongs_to :category, optional: true
   belongs_to :planned_transaction, class_name: "Financial::PlannedTransaction", optional: true
   belongs_to :expense, optional: true
-  belongs_to :financial_entry, class_name: "Financial::Entry", optional: true
+  belongs_to :financial_transaction, class_name: "Financial::Transaction", optional: true
 
   before_validation :set_account, on: :create
 
