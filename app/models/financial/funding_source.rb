@@ -33,6 +33,22 @@ class Financial::FundingSource < ApplicationRecord
     receipt_transaction&.transaction_date
   end
 
+  def expected_destination_asset
+    expected_destination_account if expected_destination_account&.asset?
+  end
+
+  def expected_destination_asset=(value)
+    self.expected_destination_account = value
+  end
+
+  def expected_destination_liability
+    expected_destination_account if expected_destination_account&.liability?
+  end
+
+  def expected_destination_liability=(value)
+    self.expected_destination_account = value
+  end
+
   def resolve_from!(transaction)
     resolved = transaction.amount == expected_amount ? "received" : "closed_with_variance"
     update!(resolution: resolved)
