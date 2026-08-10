@@ -37,7 +37,7 @@ class Financial::Transaction < ApplicationRecord
   scope :funding, -> { where(transaction_type: Financial::Transactions::AccountRoute.funding_transaction_types) }
   scope :expenses, -> { where(transaction_type: "expense") }
 
-  validates :transaction_type, inclusion: { in: TRANSACTION_TYPES }
+  validates :transaction_type, inclusion: { in: ->(_) { Financial::Transaction.transaction_types } }
   validates :transaction_date, presence: true
   validates :amount, numericality: { greater_than: 0 }
   validates :description, presence: true
