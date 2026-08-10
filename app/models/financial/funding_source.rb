@@ -15,7 +15,7 @@ class Financial::FundingSource < ApplicationRecord
     inverse_of: :funding_source,
     dependent: :restrict_with_error
 
-  before_validation :set_account, on: :create
+  before_validation :set_owner_account, on: :create
 
   validates :description, :expected_date, presence: true
   validates :expected_amount, numericality: { greater_than: 0 }
