@@ -22,7 +22,11 @@ class Financial::PlannedTransaction < PlannedExpense
   before_validation :set_budget_consuming_default, on: :create
   before_validation :append_to_plan, on: :create
 
+  scope :for_account, ->(account) { where(account: account) }
   scope :unassigned, -> { where(plan_id: nil) }
+  scope :by_position, -> { order(:position, :created_at) }
+  scope :budget_consuming, -> { where(budget_consuming: true) }
+
   validates :kind, inclusion: { in: KINDS }
   validates :execution_status, inclusion: { in: EXECUTION_STATUSES }
   validates :importance, inclusion: { in: IMPORTANCES }
