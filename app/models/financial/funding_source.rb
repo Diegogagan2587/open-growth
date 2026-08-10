@@ -24,6 +24,8 @@ class Financial::FundingSource < ApplicationRecord
   validate :single_expected_destination
   validate :plan_accepts_expectation_changes
 
+  alias_method :receipt_entry, :receipt_transaction
+
   def actual_amount
     receipt_transaction&.amount
   end
