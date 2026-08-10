@@ -23,9 +23,9 @@ class Financial::PlanActuals
         next preceding_plan.actual_ending_balance_at_close.to_d
       end
 
-      preceding_entries = preceding_plan.financial_entries
-      balance + preceding_entries.where(entry_type: FUNDING_ENTRY_TYPES).sum(:amount).to_d -
-        preceding_entries.where(entry_type: Financial::Entry::EXPENSE_ENTRY_TYPES).sum(:amount).to_d
+      preceding_transactions = preceding_plan.transactions
+      balance + preceding_transactions.where(transaction_type: FUNDING_TRANSACTION_TYPES).sum(:amount).to_d -
+        preceding_transactions.where(transaction_type: "expense").sum(:amount).to_d
     end
   end
 
