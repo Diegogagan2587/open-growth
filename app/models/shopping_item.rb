@@ -60,10 +60,10 @@ class ShoppingItem < ApplicationRecord
     entry
   end
 
-  def link_to_planned_expense(planned_expense)
-    update!(planned_expense_id: planned_expense.id)
-    planned_expense.update!(shopping_item_id: id) if planned_expense.respond_to?(:shopping_item_id=)
-    planned_expense
+  def link_to_planned_expense(planned_transaction)
+    update!(planned_transaction: planned_transaction)
+    planned_transaction.update!(shopping_item: self)
+    planned_transaction
   end
 
   private
