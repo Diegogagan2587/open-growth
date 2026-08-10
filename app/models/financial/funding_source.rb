@@ -35,7 +35,7 @@ class Financial::FundingSource < ApplicationRecord
 
   private
 
-  def set_account
+  def set_owner_account
     self.account ||= financial_plan&.account || Current.account
   end
 
