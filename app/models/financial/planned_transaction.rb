@@ -3,7 +3,7 @@ class Financial::PlannedTransaction < PlannedExpense
   EXECUTION_STATUSES = %w[pending applied cancelled skipped].freeze
   IMPORTANCES = %w[low normal high essential].freeze
 
-  belongs_to :plan, class_name: "Financial::Plan", foreign_key: :income_event_id, optional: true
+  belongs_to :plan, class_name: "Financial::Plan", optional: true, inverse_of: :planned_transactions
   before_validation :append_to_plan, on: :create
 
   scope :unassigned, -> { where(plan_id: nil) }
