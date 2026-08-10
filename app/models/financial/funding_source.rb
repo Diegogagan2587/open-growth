@@ -41,16 +41,13 @@ class Financial::FundingSource < ApplicationRecord
   end
 
   def associations_belong_to_same_account
-    return if account.blank?
+    %i[financial_plan financial_loan expected_destination_account].each do |association|
+      record = public_send(association)
+      next unless record.respond_to?(:account_id) && record.account_id != account_id
 
-    if financial_plan.present? && financial_plan.account_id != account_id
-      errors.add(:financial_plan, "must belong to the current account")
-    end
-    if expected_destination_asset.present? && expected_destination_asset.account_id != account_id
-      errors.add(:expected_destination_asset, "must belong to the current account")
-    end
-    if expected_destination_liability.present? && expected_destination_liability.account_id != account_id
-      errors.add(:expected_destination_liability, "must belong to the current account")
+      errors.add(association, "must belong to the current account")
+      errors.add(:expected_destination_asset, "must belong to the current account") if association == :expected_destination_account && record.asset?
+      errors.add(:expected_destination_liability, "must belong to the current account") if association == :expected_destination_account && record.liability?
     end
   end
 
