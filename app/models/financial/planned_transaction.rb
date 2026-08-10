@@ -3,7 +3,15 @@ class Financial::PlannedTransaction < PlannedExpense
   EXECUTION_STATUSES = %w[pending applied cancelled skipped].freeze
   IMPORTANCES = %w[low normal high essential].freeze
 
+  belongs_to :account, class_name: "::Account"
   belongs_to :plan, class_name: "Financial::Plan", optional: true, inverse_of: :planned_transactions
+  belongs_to :origin_plan, class_name: "Financial::Plan", optional: true
+  belongs_to :category, optional: true
+  belongs_to :savings_goal, class_name: "Financial::SavingsGoal", optional: true
+  belongs_to :recurring_transaction, class_name: "Financial::RecurringTransaction", optional: true, inverse_of: :planned_transactions
+  belongs_to :shopping_item, optional: true
+  belongs_to :source_account, class_name: "Financial::Account", optional: true
+  belongs_to :destination_account, class_name: "Financial::Account", optional: true
   before_validation :append_to_plan, on: :create
 
   scope :unassigned, -> { where(plan_id: nil) }
