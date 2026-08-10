@@ -8,6 +8,13 @@ class Financial::LoanInstallment < ApplicationRecord
   belongs_to :planned_transaction, class_name: "Financial::PlannedTransaction", optional: true
   belongs_to :payment_transaction, class_name: "Financial::Transaction", optional: true
   belongs_to :interest_entry, class_name: "Financial::Entry", optional: true
+
+  alias_method :payment_entry, :payment_transaction
+
+  def payment_entry=(value)
+    self.payment_transaction = value
+  end
+
   validates :installment_number, numericality: { only_integer: true, greater_than: 0 }, uniqueness: { scope: :financial_loan_id }
   validates :due_date, presence: true
   validates :expected_amount, numericality: { greater_than: 0 }
