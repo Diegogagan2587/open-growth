@@ -14,7 +14,7 @@ class Financial::PlanProjection
   end
 
   def planned_consumption
-    plan.planned_expenses.budget_consuming.sum(:amount)
+    plan.planned_transactions.budget_consuming.sum(:planned_amount)
   end
 
   def planned_commitments
