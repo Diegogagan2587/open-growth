@@ -6,7 +6,7 @@ class Financial::PlanProjection
   end
 
   def initialize(plan)
-    @plan = plan
+    @plan = plan.is_a?(Financial::Plan) ? plan : Financial::Plan.find(plan.id)
   end
 
   def expected_funding
