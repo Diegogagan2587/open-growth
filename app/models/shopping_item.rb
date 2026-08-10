@@ -25,20 +25,19 @@ class ShoppingItem < ApplicationRecord
     )
   end
 
-  def convert_to_planned_expense(income_event)
+  def convert_to_planned_expense(plan)
     return nil unless estimated_amount.present? && estimated_amount > 0
 
     planned_expense = Financial::PlannedTransaction.create!(
-      plan: income_event.becomes(Financial::Plan),
+      plan: Financial::Plan.for_account(account).find(plan.id),
       category: category || Category.for_account(account).first,
       description: name,
-      amount: estimated_amount,
-      status: "pending_to_pay",
+      planned_amount: estimated_amount,
       account_id: account_id,
       shopping_item_id: id
     )
 
-    update!(planned_expense_id: planned_expense.id)
+    update!(planned_transaction_id: planned_expense.id)
     planned_expense
   end
 
