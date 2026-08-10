@@ -34,6 +34,8 @@ class Financial::Transaction < ApplicationRecord
   scope :by_date, -> { order(transaction_date: :desc, entry_time: :desc, created_at: :desc) }
   scope :reconciled, -> { where.not(reconciled_at: nil) }
   scope :unreconciled, -> { where(reconciled_at: nil) }
+  scope :funding, -> { where(transaction_type: Financial::Transactions::AccountRoute.funding_transaction_types) }
+  scope :expenses, -> { where(transaction_type: "expense") }
 
   validates :transaction_type, inclusion: { in: TRANSACTION_TYPES }
   validates :transaction_date, presence: true
