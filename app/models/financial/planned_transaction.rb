@@ -2,7 +2,7 @@ class Financial::PlannedTransaction < PlannedExpense
   KINDS = %w[outflow liability_charge transfer liability_payment].freeze
   EXECUTION_STATUSES = %w[pending applied cancelled skipped].freeze
   IMPORTANCES = %w[low normal high essential].freeze
-  
+
   belongs_to :plan, class_name: "Financial::Plan", foreign_key: :income_event_id, optional: true
 
   alias_attribute :planned_amount, :amount
@@ -101,7 +101,7 @@ class Financial::PlannedTransaction < PlannedExpense
     return "Transfer from #{source_account.name} to #{destination_account.name}" if transfer?
     return "Pay #{destination_account.name} from #{source_account.name}" if debt_payment?
     return "Charged to #{source_account.name}" if kind == "liability_charge" && source_account
-    return "Pay from #{source_account.name}" if source_account
+    "Pay from #{source_account.name}" if source_account
   end
 
   def classification_label
@@ -155,8 +155,8 @@ class Financial::PlannedTransaction < PlannedExpense
   end
 
   def plan_accepts_expectation_changes
-    changed_expectation = new_record? || (changes.keys & %w[description amount kind planned_for due_date importance category_id financial_account_id counterparty_financial_account_id financial_liability_id income_event_id position commits_plan_funds]).any?
-    return unless changed_expectation && plan&.lifecycle_status.in?(%w[closed cancelled])
+    fields = %w[description planned_amount kind budget_consuming planned_execution_date due_date importance category_id source_account_id destination_account_id plan_id position commits_plan_funds]
+    return if (changes.keys & fields).empty? || !plan&.lifecycle_status.in?(%w[closed cancelled])
 
     errors.add(:plan, "must be active before changing planned transactions")
   end
