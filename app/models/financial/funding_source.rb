@@ -8,7 +8,6 @@ class Financial::FundingSource < ApplicationRecord
   belongs_to :financial_plan, class_name: "Financial::Plan", inverse_of: :funding_sources
   belongs_to :financial_loan, class_name: "Financial::Loan", optional: true, inverse_of: :funding_sources
   belongs_to :expected_destination_account, class_name: "Financial::Account", optional: true
-  belongs_to :expected_destination_liability, class_name: "Financial::Liability", optional: true
   has_one :receipt_entry,
     class_name: "Financial::Entry",
     foreign_key: :funding_source_id,
