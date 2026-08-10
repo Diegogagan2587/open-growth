@@ -4,9 +4,6 @@ class Financial::PlannedTransaction < PlannedExpense
   IMPORTANCES = %w[low normal high essential].freeze
 
   belongs_to :plan, class_name: "Financial::Plan", foreign_key: :income_event_id, optional: true
-
-  alias_attribute :planned_execution_date, :planned_for
-
   before_validation :append_to_plan, on: :create
 
   validates :kind, inclusion: { in: KINDS }
@@ -17,6 +14,7 @@ class Financial::PlannedTransaction < PlannedExpense
 
   scope :unassigned, -> { where(income_event_id: nil) }
   alias_attribute :amount, :planned_amount
+  alias_attribute :planned_for, :planned_execution_date
 
   def status
     {
