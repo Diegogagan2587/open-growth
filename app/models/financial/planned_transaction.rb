@@ -40,6 +40,7 @@ class Financial::PlannedTransaction < PlannedExpense
 
   alias_attribute :amount, :planned_amount
   alias_attribute :planned_for, :planned_execution_date
+  alias_method :financial_entry, :actual_transaction
 
   def status
     {
