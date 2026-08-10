@@ -33,6 +33,11 @@ class Financial::FundingSource < ApplicationRecord
     receipt_transaction&.transaction_date
   end
 
+  def resolve_from!(transaction)
+    resolved = transaction.amount == expected_amount ? "received" : "closed_with_variance"
+    update!(resolution: resolved)
+  end
+
   private
 
   def set_owner_account
