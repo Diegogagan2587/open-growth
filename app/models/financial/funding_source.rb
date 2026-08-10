@@ -30,7 +30,7 @@ class Financial::FundingSource < ApplicationRecord
   end
 
   def actual_date
-    receipt_entry&.entry_date
+    receipt_transaction&.transaction_date
   end
 
   private
