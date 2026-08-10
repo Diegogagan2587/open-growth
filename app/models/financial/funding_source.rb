@@ -51,8 +51,8 @@ class Financial::FundingSource < ApplicationRecord
   end
 
   def plan_accepts_expectation_changes
-    changed_expectation = new_record? || (changes.keys & %w[description expected_amount expected_date kind expected_destination_asset_id expected_destination_liability_id]).any?
-    return unless changed_expectation && financial_plan&.lifecycle_status.in?(%w[closed cancelled])
+    fields = %w[description expected_amount expected_date kind expected_destination_account_id]
+    return if (changes.keys & fields).empty? || !financial_plan&.lifecycle_status.in?(%w[closed cancelled])
 
     errors.add(:financial_plan, "must be active before changing funding expectations")
   end
