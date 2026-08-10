@@ -37,8 +37,8 @@ class Financial::PlanActuals
 
   attr_reader :plan
 
-  def entries
-    plan.financial_entries
+  def transactions
+    plan.transactions
   end
 
   def preceding_plans
