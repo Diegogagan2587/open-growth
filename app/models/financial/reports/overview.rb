@@ -28,7 +28,7 @@ class Financial::Reports::Overview < Financial::Reports::Base
     @expenses_by_category_values = by_category.values.map(&:to_f)
     category_ids = by_category.keys.map(&:first)
 
-    income_total = transactions.where(transaction_type: %w[income loan_disbursement refund]).sum(:amount)
+    income_total = transactions.funding.sum(:amount)
     @income_vs_expenses_labels = [ I18n.t("reports.income"), I18n.t("reports.expenses") ]
     @income_vs_expenses_values = [ income_total.to_f, expenses.sum(:amount).to_f ]
 
