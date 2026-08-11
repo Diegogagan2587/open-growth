@@ -113,6 +113,10 @@ class Financial::Transaction < ApplicationRecord
 
   alias_method :inflow?, :income?
 
+  def funding?
+    transaction_type.in?(Financial::Transactions::AccountRoute.funding_transaction_types)
+  end
+
   def expense?
     transaction_type == "expense"
   end
