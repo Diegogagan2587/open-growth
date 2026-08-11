@@ -14,7 +14,7 @@ class Financial::PlanActuals
   end
 
   def actual_consumption
-    transactions.where(transaction_type: "expense").sum(:amount)
+    transactions.expenses.sum(:amount)
   end
 
   def opening_balance
