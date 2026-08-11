@@ -94,6 +94,10 @@ class Financial::RecurringTransaction < ApplicationRecord
     end
   end
 
+  def account_route
+    Financial::Transactions::AccountRoute.for_planning(source: source_account, destination: destination_account, kind: transaction_kind)
+  end
+
   def associations_belong_to_same_account
     return if account.blank?
 
