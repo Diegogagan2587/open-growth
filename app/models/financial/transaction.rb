@@ -176,18 +176,9 @@ class Financial::Transaction < ApplicationRecord
   end
 
   def required_route
-    case transaction_type
-    when "income", "refund", "adjustment"
-      errors.add(:destination_account, "must be selected") if destination_account.blank?
-    when "expense"
-      errors.add(:source_account, "must be selected") if source_account.blank?
-    when "transfer", "debt_payment", "loan_disbursement"
-      errors.add(:source_account, "must be selected") if source_account.blank?
-      errors.add(:destination_account, "must be selected") if destination_account.blank?
+    account_route.validation_errors.each do |attribute, messages|
+      messages.each { |message| errors.add(attribute, message) }
     end
-    errors.add(:destination_account, "must differ from source account") if source_account_id.present? && source_account_id == destination_account_id
-    errors.add(:source_account, "must be a liability") if transaction_type == "loan_disbursement" && source_account && !source_account.liability?
-    errors.add(:destination_account, "must be a liability") if transaction_type == "debt_payment" && destination_account && !destination_account.liability?
   end
 
   def associations_belong_to_same_account
