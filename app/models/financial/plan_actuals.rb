@@ -1,6 +1,4 @@
 class Financial::PlanActuals
-  FUNDING_TRANSACTION_TYPES = %w[income loan_disbursement refund].freeze
-
   def self.for(plan)
     new(plan)
   end
