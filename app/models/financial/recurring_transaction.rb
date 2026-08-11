@@ -77,20 +77,8 @@ class Financial::RecurringTransaction < ApplicationRecord
   end
 
   def route_is_valid
-    if transaction_kind.in?(%w[transfer liability_payment]) && destination_account.blank?
-      errors.add(:destination_account, "must be selected")
-    end
-    if transaction_kind.in?(%w[outflow liability_charge]) && destination_account.present?
-      errors.add(:destination_account, "must be blank for an expense")
-    end
-    if source_account_id.present? && source_account_id == destination_account_id
-      errors.add(:destination_account, "must differ from source account")
-    end
-    errors.add(:source_account, "must be an asset account") if transaction_kind == "outflow" && source_account && !source_account.asset?
-    errors.add(:source_account, "must be a liability account") if transaction_kind == "liability_charge" && source_account && !source_account.liability?
-    if transaction_kind == "liability_payment"
-      errors.add(:source_account, "must be an asset account") if source_account && !source_account.asset?
-      errors.add(:destination_account, "must be a liability account") if destination_account && !destination_account.liability?
+    account_route.validation_errors.each do |attribute, messages|
+      messages.each { |message| errors.add(attribute, message) }
     end
   end
 
