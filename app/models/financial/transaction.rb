@@ -181,6 +181,36 @@ class Financial::Transaction < ApplicationRecord
     end
   end
 
+  def infer_transaction_type_from_account_route
+    return unless transaction_type.blank? || route_semantics_changed?
+
+    requested_type = transaction_type.presence || planned_route&.transaction_type
+    inferred_type = Financial::Transactions::AccountRoute.for_actual(
+      source: source_account,
+      destination: destination_account,
+      transaction_type: requested_type
+    ).transaction_type
+    self.transaction_type = inferred_type || requested_type
+  end
+
+  def route_semantics_changed?
+    new_record? || will_save_change_to_transaction_type? || will_save_change_to_source_account_id? || will_save_change_to_destination_account_id?
+  end
+
+  def account_route
+    Financial::Transactions::AccountRoute.for_actual(source: source_account, destination: destination_account, transaction_type: transaction_type)
+  end
+
+  def planned_route
+    return unless planned_transaction
+
+    Financial::Transactions::AccountRoute.for_planning(
+      source: source_account,
+      destination: destination_account,
+      kind: planned_transaction.kind
+    )
+  end
+
   def associations_belong_to_same_account
     return if account.blank?
 
