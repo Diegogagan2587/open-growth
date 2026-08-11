@@ -69,7 +69,7 @@ class Financial::RecurringTransaction < ApplicationRecord
   end
 
   def set_budget_consuming_default
-    self.budget_consuming = transaction_kind.in?(%w[outflow liability_charge]) if budget_consuming.nil?
+    self.budget_consuming = account_route.budget_consuming? if budget_consuming.nil?
   end
 
   def set_transaction_kind_default
