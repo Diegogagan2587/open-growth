@@ -10,7 +10,7 @@ class Financial::PlanActuals
   end
 
   def actual_funding
-    transactions.where(transaction_type: FUNDING_TRANSACTION_TYPES).sum(:amount)
+    transactions.funding.sum(:amount)
   end
 
   def actual_consumption
