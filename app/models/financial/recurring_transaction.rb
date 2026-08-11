@@ -18,7 +18,7 @@ class Financial::RecurringTransaction < ApplicationRecord
     dependent: :restrict_with_error
 
   before_validation :set_owner_account, on: :create
-  before_validation :set_transaction_kind_default, on: :create
+  before_validation :infer_transaction_kind
   before_validation :set_budget_consuming_default, on: :create
 
   scope :for_account, ->(account) { where(account: account) }
@@ -28,7 +28,7 @@ class Financial::RecurringTransaction < ApplicationRecord
   validates :name, presence: true
   validates :amount, numericality: { greater_than: 0 }
   validates :frequency, inclusion: { in: FREQUENCIES }
-  validates :transaction_kind, inclusion: { in: Financial::PlannedTransaction::KINDS }
+  validates :transaction_kind, inclusion: { in: ->(_) { Financial::PlannedTransaction.kinds } }
   validates :importance, inclusion: { in: Financial::PlannedTransaction::IMPORTANCES }
   validates :status, inclusion: { in: STATUSES }
   validates :category, presence: true, if: :budget_consuming?
