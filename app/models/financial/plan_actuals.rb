@@ -24,8 +24,8 @@ class Financial::PlanActuals
       end
 
       preceding_transactions = preceding_plan.transactions
-      balance + preceding_transactions.where(transaction_type: FUNDING_TRANSACTION_TYPES).sum(:amount).to_d -
-        preceding_transactions.where(transaction_type: "expense").sum(:amount).to_d
+      balance + preceding_transactions.funding.sum(:amount).to_d -
+        preceding_transactions.expenses.sum(:amount).to_d
     end
   end
 
