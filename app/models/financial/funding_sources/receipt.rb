@@ -11,7 +11,7 @@ class Financial::FundingSources::Receipt
         plan: funding_source.financial_plan,
         funding_source: funding_source,
         financial_loan: funding_source.financial_loan,
-        transaction_type: funding_source.kind == "borrowed" ? "loan_disbursement" : funding_source.kind == "refund" ? "refund" : "income",
+        transaction_type: ("refund" if funding_source.kind == "refund"),
         transaction_date: transaction_date.presence || funding_source.expected_date,
         amount: amount.presence || funding_source.expected_amount,
         description: description.presence || funding_source.description,
