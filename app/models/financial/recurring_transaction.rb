@@ -72,8 +72,11 @@ class Financial::RecurringTransaction < ApplicationRecord
     self.budget_consuming = account_route.budget_consuming? if budget_consuming.nil?
   end
 
-  def set_transaction_kind_default
-    self.transaction_kind ||= "outflow"
+  def infer_transaction_kind
+    return if transaction_kind.present? && !new_record? && !will_save_change_to_source_account_id? && !will_save_change_to_destination_account_id?
+    return if transaction_kind.present? && source_account.blank? && destination_account.blank?
+
+    self.transaction_kind = account_route.kind
   end
 
   def route_is_valid
