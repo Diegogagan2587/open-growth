@@ -59,12 +59,7 @@ class Financial::RecurringTransaction < ApplicationRecord
   end
 
   def routing_summary
-    return "Transfer from #{source_account.name} to #{destination_account.name}" if transaction_kind == "transfer" && source_account && destination_account
-    return "Pay #{destination_account.name} from #{source_account.name}" if transaction_kind == "liability_payment" && source_account && destination_account
-    return "Charged to #{source_account.name}" if transaction_kind == "liability_charge" && source_account
-    return "Pay from #{source_account.name}" if source_account
-
-    "Choose routing before using"
+    account_route.routing_summary
   end
 
   private
