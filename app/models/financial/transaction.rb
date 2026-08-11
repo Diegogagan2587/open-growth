@@ -155,18 +155,18 @@ class Financial::Transaction < ApplicationRecord
 
   def routed_source_account
     source_account || case entry_type
-    when "outflow", "transfer", "liability_payment", "adjustment" then financial_account
-    when "liability_charge", "loan_disbursement" then financial_liability
-    end
+                      when "outflow", "transfer", "liability_payment", "adjustment" then financial_account
+                      when "liability_charge", "loan_disbursement" then financial_liability
+                      end
   end
 
   def routed_destination_account
     destination_account || case entry_type
-    when "inflow" then financial_account || counterparty_financial_liability
-    when "transfer" then counterparty_financial_account
-    when "liability_payment" then financial_liability
-    when "loan_disbursement" then financial_account || counterparty_financial_liability
-    end
+                           when "inflow" then financial_account || counterparty_financial_liability
+                           when "transfer" then counterparty_financial_account
+                           when "liability_payment" then financial_liability
+                           when "loan_disbursement" then financial_account || counterparty_financial_liability
+                           end
   end
 
   private
