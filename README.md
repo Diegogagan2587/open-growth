@@ -150,6 +150,32 @@ npm run herb:lint
 npm run herb:lint-fix
 ```
 [herb docs here](https://herb-tools.dev/projects/linter)
+
+## Spec-Driven Development
+
+This repository is configured with [GitHub Spec Kit](https://github.com/github/spec-kit) and its Codex integration. Spec Kit keeps feature discovery, design, and implementation tasks versioned alongside the application.
+
+Use the workflow commands in this order for a new feature:
+
+```text
+$speckit-specify Describe the feature you want to build
+$speckit-clarify              # Resolve open questions, when needed
+$speckit-plan                 # Create the implementation plan and design artifacts
+$speckit-tasks                # Generate an actionable task list
+$speckit-implement            # Execute the task list
+```
+
+Additional commands are available for reviewing and maintaining feature artifacts, including `$speckit-analyze`, `$speckit-checklist`, `$speckit-converge`, `$speckit-constitution`, and `$speckit-taskstoissues`.
+
+Feature artifacts are created under `specs/<feature>/` and may include:
+
+- `spec.md` — feature requirements and user scenarios
+- `plan.md` — implementation approach and technical design
+- `research.md`, `data-model.md`, `contracts/`, and `quickstart.md` — supporting design artifacts
+- `tasks.md` — dependency-ordered implementation tasks
+
+The project constitution is stored in `.specify/memory/constitution.md`. The Spec Kit configuration and scripts live in `.specify/`, while the Codex skill instructions live in `.agents/skills/`. Keep these directories under version control so contributors can use the same workflow.
+
 ## Usage
 
 * **Dashboard**: Homepage shows quick links to manage budgets, income events, expenses, categories, shopping list, and inventory.
