@@ -52,7 +52,6 @@ class ShoppingItem < ApplicationRecord
       description: name,
       amount: estimated_amount,
       transaction_date: Date.current,
-      transaction_type: "expense",
       source_account: financial_account
     )
 
