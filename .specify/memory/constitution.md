@@ -1,50 +1,106 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+- Version change: unratified scaffold -> 1.0.0
+- Modified principles: placeholder principles -> five project principles
+- Added sections: Technical Constraints; Development Workflow
+- Removed sections: none
+- Follow-up TODOs: ratification date requires project-owner confirmation
+-->
+
+# Open Budget Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Financial Correctness Is Non-Negotiable
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Budget, income, planned-expense, actual-expense, account, loan, and balance
+behavior MUST preserve financial meaning across create, update, transfer, apply,
+and delete flows. Planned spending MUST remain distinguishable from actual
+spending. Changes affecting calculations, carryovers, dates, statuses, or money
+values MUST include tests covering normal and boundary cases. Rationale: users
+make financial decisions from these calculations, so plausible-looking but
+incorrect results are unacceptable.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Domain Rules Belong in the Domain
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+Business invariants MUST live in models, domain services, or other named domain
+objects rather than being duplicated across controllers and views. Controllers
+MUST coordinate requests and responses; views MUST present state; JavaScript MUST
+handle interaction state only. New behavior MUST reuse an existing domain object
+when its responsibility matches, or document why a new abstraction is needed.
+Rationale: centralized rules reduce contradictory financial behavior and make
+changes testable.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Test Behavior at Its Boundary
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+Every behavior change MUST add or update the narrowest meaningful automated test.
+Model and service tests MUST cover domain rules; controller and integration tests
+MUST cover request and workflow contracts; system tests MUST cover user-visible
+flows that cannot be validated at a lower boundary. The full relevant test suite
+MUST pass before merge. Rationale: boundary-focused tests expose regressions while
+keeping feedback fast.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Accessible, Consistent User Experience
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+User-facing screens MUST remain usable on supported screen sizes and preserve
+clear labels, meaningful status indicators, keyboard-accessible controls, and
+readable contrast. Shared navigation and repeated UI patterns MUST use existing
+ViewComponents or shared partials when available. Styling MUST use semantic
+design tokens and the established Tailwind/shadcn conventions; direct color
+duplication requires justification. Rationale: budget work is frequent and
+detail-heavy, so clarity and consistency directly affect user accuracy.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. Simple, Reviewable Changes
+
+Implementations MUST use the smallest design that satisfies documented behavior.
+New dependencies, generalized abstractions, callbacks with non-local effects,
+and data migrations MUST have a concrete reason recorded in the plan or review.
+Features MUST be delivered as focused vertical slices with explicit acceptance
+criteria. Rationale: a personal finance application benefits more from reliable,
+understandable code than speculative flexibility.
+
+## Technical Constraints
+
+The application MUST remain compatible with Ruby on Rails 8.1, PostgreSQL, and
+the repository's configured test and asset toolchain unless a constitution
+amendment or feature plan explicitly changes that baseline. Database changes
+MUST use reversible migrations where practical and MUST preserve existing user
+financial data. Monetary values MUST use precise database-backed numeric handling;
+floating-point arithmetic MUST NOT be used for persisted money calculations.
+
+Authentication and authorization MUST protect user-owned financial data. Logs,
+fixtures, tests, and error messages MUST NOT expose passwords, tokens, or other
+secrets. Security-sensitive changes MUST be checked with the repository's
+security tooling or an equivalent documented review.
+
+## Development Workflow
+
+Feature work MUST follow the repository's Spec Kit sequence when the change is
+more than a local defect fix: specify, clarify when needed, plan, generate tasks,
+then implement. Each plan MUST identify affected domain rules, data changes,
+user-visible behavior, and verification steps. Pull requests MUST explain the
+behavior changed, tests run, migration impact, and any known follow-up.
+
+Before merge, applicable checks MUST pass, including the Rails test suite,
+security analysis for security-sensitive changes, and Herb linting for modified
+HTML/ERB views. Reviewers MUST reject changes that violate financial correctness,
+data safety, or required test coverage unless an explicit exception is recorded
+with owner and follow-up.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution defines non-negotiable project quality rules. Where another
+practice conflicts with it, this document takes precedence unless amended.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+Amendments MUST be proposed as a change to this file, include a Sync Impact
+Report, explain affected principles and migration needs, and receive project-owner
+approval. The amendment MUST update the version and last-amended date. Changes
+that remove or redefine a principle are MAJOR; additions or material expansions
+are MINOR; clarifications and non-semantic corrections are PATCH changes.
+
+Every feature plan and pull-request review MUST check applicable principles.
+Exceptions MUST state the violated rule, reason, risk, approver, and expiration
+or follow-up condition. The constitution MUST be reviewed whenever the technology
+baseline, data model, security model, or development workflow materially changes.
+
+**Version**: 1.0.0 | **Ratified**: TODO(RATIFICATION_DATE): confirm original adoption date | **Last Amended**: 2026-08-12
