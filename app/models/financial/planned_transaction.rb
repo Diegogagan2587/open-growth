@@ -74,22 +74,6 @@ class Financial::PlannedTransaction < ApplicationRecord
     plan
   end
 
-  def source_selection
-    source_account_id
-  end
-
-  def source_selection=(value)
-    self.source_account_id = account_id_from_selection(value)
-  end
-
-  def destination_selection
-    destination_account_id
-  end
-
-  def destination_selection=(value)
-    self.destination_account_id = account_id_from_selection(value)
-  end
-
   def financial_account
     source_account if source_account&.asset?
   end
