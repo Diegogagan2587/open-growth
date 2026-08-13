@@ -129,15 +129,10 @@ class Financial::PlannedTransaction < ApplicationRecord
   end
 
   def infer_kind
-    self.kind ||= if destination_account&.liability?
-      "liability_payment"
-    elsif source_account&.liability?
-      "liability_charge"
-    elsif destination_account
-      "transfer"
-    else
-      "outflow"
-    end
+    return if kind.present? && !new_record? && !will_save_change_to_source_account_id? && !will_save_change_to_destination_account_id?
+    return if kind.present? && source_account.blank? && destination_account.blank?
+
+    self.kind = account_route.kind
   end
 
   def set_budget_consuming_default
