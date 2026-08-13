@@ -1,9 +1,12 @@
 class Financial::PlannedTransaction < ApplicationRecord
   self.table_name = "financial_planned_transactions"
 
-  KINDS = %w[outflow liability_charge transfer liability_payment].freeze
   EXECUTION_STATUSES = %w[pending applied cancelled skipped].freeze
   IMPORTANCES = %w[low normal high essential].freeze
+
+  def self.kinds
+    Financial::Transactions::AccountRoute.planning_kinds
+  end
 
   belongs_to :account, class_name: "::Account"
   belongs_to :plan, class_name: "Financial::Plan", optional: true, inverse_of: :planned_transactions
@@ -31,7 +34,7 @@ class Financial::PlannedTransaction < ApplicationRecord
 
   validates :description, presence: true
   validates :planned_amount, numericality: { greater_than: 0 }
-  validates :kind, inclusion: { in: KINDS }
+  validates :kind, inclusion: { in: ->(_) { Financial::PlannedTransaction.kinds } }
   validates :execution_status, inclusion: { in: EXECUTION_STATUSES }
   validates :importance, inclusion: { in: IMPORTANCES }
   validates :position, numericality: { only_integer: true, greater_than: 0 }, uniqueness: { scope: :plan_id }, if: :plan_id?
