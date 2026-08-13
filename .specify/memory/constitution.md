@@ -1,8 +1,8 @@
 <!--
 Sync Impact Report
-- Version change: unratified scaffold -> 1.0.0
-- Modified principles: placeholder principles -> five project principles
-- Added sections: Technical Constraints; Development Workflow
+- Version change: 1.0.0 -> 1.1.0
+- Modified principles: II. Domain Rules Belong in the Domain -> clarified invariant ownership
+- Added sections: none
 - Removed sections: none
 - Follow-up TODOs: ratification date requires project-owner confirmation
 -->
@@ -23,13 +23,16 @@ incorrect results are unacceptable.
 
 ### II. Domain Rules Belong in the Domain
 
-Business invariants MUST live in models, domain services, or other named domain
-objects rather than being duplicated across controllers and views. Controllers
-MUST coordinate requests and responses; views MUST present state; JavaScript MUST
-handle interaction state only. New behavior MUST reuse an existing domain object
-when its responsibility matches, or document why a new abstraction is needed.
-Rationale: centralized rules reduce contradictory financial behavior and make
-changes testable.
+Business invariants MUST live in the model or explicit domain object whose state
+they constrain. Invariants MUST NOT be owned by workflow services, controllers,
+views, or JavaScript. Services MUST only orchestrate complex workflows involving
+multiple domain objects, transactions, or external effects; they MUST delegate
+state validity to the relevant models or domain objects. Controllers MUST
+coordinate requests and responses; views MUST present state. New behavior MUST
+reuse an existing domain object when its responsibility matches, or document why
+a new domain object is needed. Rationale: explicit invariant ownership supports
+domain-modeling practice, prevents contradictory rules, and keeps workflows
+reusable.
 
 ### III. Test Behavior at Its Boundary
 
@@ -103,4 +106,4 @@ Exceptions MUST state the violated rule, reason, risk, approver, and expiration
 or follow-up condition. The constitution MUST be reviewed whenever the technology
 baseline, data model, security model, or development workflow materially changes.
 
-**Version**: 1.0.0 | **Ratified**: TODO(RATIFICATION_DATE): confirm original adoption date | **Last Amended**: 2026-08-12
+**Version**: 1.1.0 | **Ratified**: TODO(RATIFICATION_DATE): confirm original adoption date | **Last Amended**: 2026-08-12
