@@ -111,10 +111,7 @@ class Financial::PlannedTransaction < ApplicationRecord
   end
 
   def routing_summary
-    return "Transfer from #{source_account.name} to #{destination_account.name}" if transfer?
-    return "Pay #{destination_account.name} from #{source_account.name}" if debt_payment?
-    return "Charged to #{source_account.name}" if kind == "liability_charge" && source_account
-    "Pay from #{source_account.name}" if source_account
+    account_route.routing_summary
   end
 
   def classification_label
