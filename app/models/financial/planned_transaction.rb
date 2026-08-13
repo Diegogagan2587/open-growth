@@ -124,10 +124,6 @@ class Financial::PlannedTransaction < ApplicationRecord
     self.account ||= plan&.account || Current.account
   end
 
-  def account_id_from_selection(value)
-    value.to_s.split(":", 2).last.presence
-  end
-
   def infer_kind
     return if kind.present? && !new_record? && !will_save_change_to_source_account_id? && !will_save_change_to_destination_account_id?
     return if kind.present? && source_account.blank? && destination_account.blank?
