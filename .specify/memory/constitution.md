@@ -55,7 +55,7 @@ User-facing screens MUST remain usable on supported screen sizes and preserve
 clear labels, meaningful status indicators, keyboard-accessible controls, and
 readable contrast. Shared navigation and repeated UI patterns MUST use existing
 ViewComponents or shared partials when available. Styling MUST use semantic
-design tokens and the established Tailwind/shadcn conventions; direct color
+design tokens and the established Tailwind/shadcn-inspired conventions; direct color
 duplication requires justification. Rationale: budget work is frequent and
 detail-heavy, so clarity and consistency directly affect user accuracy.
 
