@@ -14,13 +14,12 @@ class Financial::PlannedTransactions::Execution
 
       installment = Financial::LoanInstallment.find_by(planned_transaction: planned_transaction)
       overrides = attributes.to_h.symbolize_keys.slice(*OVERRIDABLE_ATTRIBUTES).compact
-      actual = Financial::Transaction.create!(
+      actual = Financial::Transaction.new(
         {
           account: planned_transaction.account,
           plan: planned_transaction.plan,
           planned_transaction: planned_transaction,
           budget_period: planned_transaction.plan&.budget_period,
-          transaction_type: transaction_type_for(planned_transaction.kind),
           transaction_date: planned_transaction.planned_execution_date || planned_transaction.due_date || Date.current,
           amount: planned_transaction.planned_amount,
           description: planned_transaction.description,
@@ -30,6 +29,7 @@ class Financial::PlannedTransactions::Execution
           financial_loan: installment&.financial_loan
         }.merge(overrides)
       )
+      actual.save!
       planned_transaction.update!(execution_status: "applied")
       installment&.update!(payment_transaction: actual, resolution: "paid")
     end
