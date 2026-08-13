@@ -1,7 +1,7 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 -> 1.1.0
-- Modified principles: II. Domain Rules Belong in the Domain -> clarified invariant ownership
+- Version change: 1.1.0 -> 1.2.0
+- Modified principles: III. Test Behavior at Its Boundary -> test-first workflow and test structure clarified
 - Added sections: none
 - Removed sections: none
 - Follow-up TODOs: ratification date requires project-owner confirmation
@@ -36,12 +36,18 @@ reusable.
 
 ### III. Test Behavior at Its Boundary
 
-Every behavior change MUST add or update the narrowest meaningful automated test.
-Model and service tests MUST cover domain rules; controller and integration tests
-MUST cover request and workflow contracts; system tests MUST cover user-visible
-flows that cannot be validated at a lower boundary. The full relevant test suite
-MUST pass before merge. Rationale: boundary-focused tests expose regressions while
-keeping feedback fast.
+Every behavior change MUST follow test-first development: write or update a test,
+run it and confirm it fails for the expected reason, implement the smallest change
+that makes it pass, then refactor with tests passing. Tests MUST use Arrange, Act,
+Assert sections in that order, with each section clear and focused. Tests MUST
+prefer Active Record fixtures for shared or representative data; inline records are
+permitted only when data is unique to the scenario or fixture use would obscure
+the behavior. Model and service tests MUST cover domain rules; controller and
+integration tests MUST cover request and workflow contracts; system tests MUST
+cover user-visible flows that cannot be validated at a lower boundary. The full
+relevant test suite MUST pass before merge. Rationale: test-first feedback exposes
+regressions early, AAA improves readability, and fixtures keep scenarios
+consistent without repetitive setup.
 
 ### IV. Accessible, Consistent User Experience
 
@@ -106,4 +112,4 @@ Exceptions MUST state the violated rule, reason, risk, approver, and expiration
 or follow-up condition. The constitution MUST be reviewed whenever the technology
 baseline, data model, security model, or development workflow materially changes.
 
-**Version**: 1.1.0 | **Ratified**: TODO(RATIFICATION_DATE): confirm original adoption date | **Last Amended**: 2026-08-12
+**Version**: 1.2.0 | **Ratified**: TODO(RATIFICATION_DATE): confirm original adoption date | **Last Amended**: 2026-08-12
