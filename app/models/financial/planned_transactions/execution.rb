@@ -50,9 +50,4 @@ class Financial::PlannedTransactions::Execution
   rescue ActiveRecord::RecordInvalid => error
     Result.new(success?: false, error_message: error.message)
   end
-
-  def self.transaction_type_for(kind)
-    { "outflow" => "expense", "liability_charge" => "expense", "liability_payment" => "debt_payment" }.fetch(kind, kind)
-  end
-  private_class_method :transaction_type_for
 end
