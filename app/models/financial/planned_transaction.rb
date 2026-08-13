@@ -146,8 +146,9 @@ class Financial::PlannedTransaction < ApplicationRecord
   end
 
   def route_is_valid
-    errors.add(:destination_account, "must differ from source account") if source_account_id.present? && source_account_id == destination_account_id
-    errors.add(:destination_account, "must be selected") if kind.in?(%w[transfer liability_payment]) && destination_account.blank?
+    account_route.validation_errors.each do |attribute, messages|
+      messages.each { |message| errors.add(attribute, message) }
+    end
   end
 
   def associations_belong_to_same_account
