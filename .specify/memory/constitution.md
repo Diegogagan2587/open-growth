@@ -1,7 +1,7 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 -> 1.2.0
-- Modified principles: III. Test Behavior at Its Boundary -> test-first workflow and test structure clarified
+- Version change: 1.2.0 -> 1.3.0
+- Modified principles: IV. Accessible, Consistent User Experience -> reusable component porting workflow added
 - Added sections: none
 - Removed sections: none
 - Follow-up TODOs: ratification date requires project-owner confirmation
@@ -54,10 +54,17 @@ consistent without repetitive setup.
 User-facing screens MUST remain usable on supported screen sizes and preserve
 clear labels, meaningful status indicators, keyboard-accessible controls, and
 readable contrast. Shared navigation and repeated UI patterns MUST use existing
-ViewComponents or shared partials when available. Styling MUST use semantic
-design tokens and the established Tailwind/shadcn-inspired conventions; direct color
-duplication requires justification. Rationale: budget work is frequent and
-detail-heavy, so clarity and consistency directly affect user accuracy.
+ViewComponents or shared partials when available. When a genuinely reusable
+component does not exist, developers MUST inspect the closest matching component
+in the official shadcn/ui catalog, identify its relevant behavior and accessibility
+requirements, then port or adapt it to a Rails ViewComponent using the project's
+Tailwind, Hotwire, and Stimulus conventions as applicable. The port MUST preserve
+the needed interaction, semantic markup, keyboard behavior, and accessible states;
+React-specific implementation details MUST NOT be copied blindly. Styling MUST
+use semantic design tokens and the established Tailwind/shadcn-inspired
+conventions; direct color duplication requires justification. Rationale: reuse
+reduces UI drift while a deliberate port preserves proven interaction patterns
+within the Rails architecture.
 
 ### V. Simple, Reviewable Changes
 
@@ -112,4 +119,4 @@ Exceptions MUST state the violated rule, reason, risk, approver, and expiration
 or follow-up condition. The constitution MUST be reviewed whenever the technology
 baseline, data model, security model, or development workflow materially changes.
 
-**Version**: 1.2.0 | **Ratified**: TODO(RATIFICATION_DATE): confirm original adoption date | **Last Amended**: 2026-08-12
+**Version**: 1.3.0 | **Ratified**: TODO(RATIFICATION_DATE): confirm original adoption date | **Last Amended**: 2026-08-12
