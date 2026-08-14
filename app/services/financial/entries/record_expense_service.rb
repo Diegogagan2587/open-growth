@@ -73,6 +73,30 @@ module Financial
         @planned_transaction ||= Financial::PlannedTransaction.for_account(account).find_by(id: planned_expense_id)
       end
 
+      def source_account
+        @source_account ||= account_from_reference(source_account_id, source_selection)
+      end
+
+      def destination_account
+        @destination_account ||= account_from_reference(destination_account_id, destination_selection)
+      end
+
+      def source_reference
+        source_account_id.presence || source_selection.presence
+      end
+
+      def destination_reference
+        destination_account_id.presence || destination_selection.presence
+      end
+
+      def account_from_reference(id, selection)
+        return Financial::Account.for_account(account).find_by(id: id) if id.present?
+        return if selection.blank?
+
+        group, selected_id = selection.to_s.split(":", 2)
+        Financial::Account.for_account(account).where(account_group: group).find_by(id: selected_id)
+      end
+
       def failure(message)
         Result.new(success?: false, error_message: message)
       end
