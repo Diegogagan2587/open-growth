@@ -24,14 +24,13 @@ module Financial::Liabilities
       return failure("Category is required") if category.blank?
       return failure("Budget period is required") if budget_period.blank?
 
-      created_entry = Financial::Entry.create!(
-        account: Current.account,
-        financial_liability: liability,
-        income_event: income_event,
+      created_entry = Financial::Transaction.create!(
+        account: liability.account,
+        source_account: liability,
+        plan: plan,
         category: category,
         budget_period: budget_period,
-        entry_type: "liability_charge",
-        entry_date: entry_date,
+        transaction_date: entry_date,
         amount: amount,
         description: description
       )
@@ -46,17 +45,17 @@ module Financial::Liabilities
     attr_reader :liability, :amount, :description, :entry_date, :category_id, :budget_period_id, :income_event_id
 
     def category
-      @category ||= Category.for_account(Current.account).find_by(id: category_id)
+      @category ||= Category.for_account(liability.account).find_by(id: category_id)
     end
 
     def budget_period
-      @budget_period ||= BudgetPeriod.for_account(Current.account).find_by(id: budget_period_id)
+      @budget_period ||= BudgetPeriod.for_account(liability.account).find_by(id: budget_period_id)
     end
 
-    def income_event
+      def plan
       return nil if income_event_id.blank?
 
-      @income_event ||= IncomeEvent.for_account(Current.account).find_by(id: income_event_id)
+        @plan ||= Financial::Plan.for_account(liability.account).find_by(id: income_event_id)
     end
 
     def failure(message)
