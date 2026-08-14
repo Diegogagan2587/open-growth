@@ -73,12 +73,6 @@ module Financial
         @planned_transaction ||= Financial::PlannedTransaction.for_account(account).find_by(id: planned_expense_id)
       end
 
-      def split_selection(selection)
-        return [ nil, nil ] if selection.blank?
-
-        selection.to_s.split(":", 2)
-      end
-
       def failure(message)
         Result.new(success?: false, error_message: message)
       end
