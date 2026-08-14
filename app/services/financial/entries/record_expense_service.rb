@@ -73,32 +73,6 @@ module Financial
         @planned_transaction ||= Financial::PlannedTransaction.for_account(account).find_by(id: planned_expense_id)
       end
 
-      def apply_routing(entry)
-        source_kind, source_id = split_selection(source_selection)
-        destination_kind, destination_id = split_selection(destination_selection)
-
-        if source_kind == "liability"
-          entry.entry_type = "liability_charge"
-          entry.financial_liability = Financial::Liability.for_account(account).find_by(id: source_id)
-          return
-        end
-
-        source_asset = Financial::Asset.for_account(account).find_by(id: source_id)
-
-        if destination_kind == "asset"
-          entry.entry_type = "transfer"
-          entry.financial_account = source_asset
-          entry.counterparty_financial_account = Financial::Asset.for_account(account).find_by(id: destination_id)
-        elsif destination_kind == "liability"
-          entry.entry_type = "liability_payment"
-          entry.financial_account = source_asset
-          entry.financial_liability = Financial::Liability.for_account(account).find_by(id: destination_id)
-        else
-          entry.entry_type = "outflow"
-          entry.financial_account = source_asset
-        end
-      end
-
       def split_selection(selection)
         return [ nil, nil ] if selection.blank?
 
