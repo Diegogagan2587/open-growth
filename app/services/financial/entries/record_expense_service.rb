@@ -56,15 +56,15 @@ module Financial
           description: description,
           category: Category.for_account(account).find_by(id: category_id),
           budget_period: BudgetPeriod.for_account(account).find_by(id: budget_period_id),
-          income_event: income_event,
+          plan: plan,
           planned_expense: planned_expense
         }
       end
 
-      def income_event
+      def plan
         return nil if income_event_id.blank?
 
-        @income_event ||= IncomeEvent.for_account(account).find_by(id: income_event_id)
+        @plan ||= Financial::Plan.for_account(account).find_by(id: income_event_id)
       end
 
       def planned_expense
