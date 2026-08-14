@@ -10,13 +10,15 @@ module Financial
         new(...).call
       end
 
-      def initialize(account:, amount:, entry_date:, description:, category_id:, budget_period_id:, source_selection:, destination_selection: nil, income_event_id: nil, planned_expense_id: nil, entry_time: nil)
+      def initialize(account:, amount:, entry_date:, description:, category_id:, budget_period_id:, source_account_id: nil, destination_account_id: nil, source_selection: nil, destination_selection: nil, income_event_id: nil, planned_expense_id: nil, entry_time: nil)
         @account = account
         @amount = amount
         @entry_date = entry_date
         @description = description
         @category_id = category_id
         @budget_period_id = budget_period_id
+        @source_account_id = source_account_id
+        @destination_account_id = destination_account_id
         @source_selection = source_selection
         @destination_selection = destination_selection
         @income_event_id = income_event_id
