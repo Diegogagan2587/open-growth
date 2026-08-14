@@ -28,8 +28,14 @@ module Financial
 
       def call
         return failure("Account is required") if account.blank?
+        return failure("Source account must be selected") if source_reference.blank?
+        return failure("Source account is invalid") if source_reference.present? && source_account.blank?
+        return failure("Destination account is invalid") if destination_reference.present? && destination_account.blank?
 
-        entry = Financial::Entry.new(base_attributes)
+        entry = Financial::Transaction.new(base_attributes.merge(
+          source_account: source_account,
+          destination_account: destination_account
+        ))
         apply_routing(entry)
         entry.save!
 
