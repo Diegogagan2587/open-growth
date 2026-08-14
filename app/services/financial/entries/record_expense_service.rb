@@ -36,7 +36,6 @@ module Financial
           source_account: source_account,
           destination_account: destination_account
         ))
-        apply_routing(entry)
         entry.save!
 
         Result.new(success?: true, entry: entry)
