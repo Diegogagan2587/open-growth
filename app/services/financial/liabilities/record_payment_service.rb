@@ -29,7 +29,6 @@ module Financial::Liabilities
         source_account: source_account,
         destination_account: liability,
         plan: income_event,
-        transaction_type: "debt_payment",
         transaction_date: entry_date,
         amount: amount,
         description: description
