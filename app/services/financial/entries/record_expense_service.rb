@@ -57,7 +57,7 @@ module Financial
           category: Category.for_account(account).find_by(id: category_id),
           budget_period: BudgetPeriod.for_account(account).find_by(id: budget_period_id),
           plan: plan,
-          planned_expense: planned_expense
+          planned_transaction: planned_transaction
         }
       end
 
@@ -67,10 +67,10 @@ module Financial
         @plan ||= Financial::Plan.for_account(account).find_by(id: income_event_id)
       end
 
-      def planned_expense
+      def planned_transaction
         return nil if planned_expense_id.blank?
 
-        @planned_expense ||= PlannedExpense.for_account(account).find_by(id: planned_expense_id)
+        @planned_transaction ||= Financial::PlannedTransaction.for_account(account).find_by(id: planned_expense_id)
       end
 
       def apply_routing(entry)
