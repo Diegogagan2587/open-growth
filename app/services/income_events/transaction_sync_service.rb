@@ -31,25 +31,12 @@ module IncomeEvents
       return if source.receipt_transaction
 
       source.update!(expected_destination_account: destination)
-      entry = Financial::Entry.for_account(income_event.account)
-        .find_or_initialize_by(
-          income_event: income_event,
-          entry_type: "inflow",
-          expense_id: nil,
-          planned_expense_id: nil
-        )
-
-      entry.assign_attributes(
-        account: income_event.account,
-        entry_date: income_event.received_date || income_event.expected_date,
+      Financial::FundingSources::Receipt.create(
+        funding_source: source,
         amount: income_event.received_amount || income_event.expected_amount,
-        description: income_event.description,
-        financial_account: income_event.regular_income_destination_asset,
-        financial_liability: nil,
-        counterparty_financial_liability: income_event.regular_income_destination_liability
+        transaction_date: income_event.received_date || income_event.expected_date,
+        description: income_event.description
       )
-
-      entry.save!
     end
   end
 end
