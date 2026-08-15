@@ -1,6 +1,5 @@
-module Financial
-  class AccountsController < ApplicationController
-    before_action :set_financial_account, only: [ :show, :edit, :update, :destroy ]
+class Financial::AccountsController < ApplicationController
+  before_action :set_financial_account, only: %i[show edit update destroy]
 
     def index
       @financial_accounts = Financial::Asset.for_account(Current.account).order(:name)
