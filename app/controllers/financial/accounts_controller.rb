@@ -41,7 +41,7 @@ class Financial::AccountsController < ApplicationController
     end
   end
 
-    private
+  private
 
   def set_financial_account
     @financial_account = Financial::Account.for_account(Current.account).find(params[:id])
