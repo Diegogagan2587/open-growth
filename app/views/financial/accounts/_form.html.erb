@@ -1,4 +1,4 @@
-<% form_url = @financial_account.persisted? ? finance_financial_account_path(@financial_account) : finance_financial_accounts_path %>
+<% form_url = @financial_account.persisted? ? finance_account_path(@financial_account) : finance_accounts_path %>
 <% form_method = @financial_account.persisted? ? :patch : :post %>
 
 <%= form_with model: @financial_account, url: form_url, method: form_method, local: true do |form| %>
