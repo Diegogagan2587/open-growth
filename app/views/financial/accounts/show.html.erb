@@ -1,37 +1,55 @@
-<p style="color: green"><%= notice %></p>
+<section class="container mx-auto space-y-6 px-4 py-6">
+  <%= link_to "← Back to accounts", finance_accounts_path, class: "text-sm text-accent hover:underline" %>
 
-<div class="mb-4">
-  <%= link_to "← Back", finance_financial_accounts_path, class: "text-accent hover:underline" %>
-</div>
+  <header class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <div class="flex gap-2">
+        <h1 class="text-3xl font-bold"><%= @financial_account.name %></h1><%= render Ui::BadgeComponent.new(label: @financial_account.account_group.humanize, variant: :outline) %>
+      </div>
 
-<h1 class="text-2xl font-bold mb-4"><%= @financial_account.name %></h1>
+      <p class="mt-1 text-muted-foreground">
+        <%= @financial_account.account_type.humanize %>
+      </p>
+    </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-  <div class="bg-muted/35 p-4 rounded">
-    <p class="text-sm text-muted-foreground">Type</p>
-    <p class="font-semibold"><%= @financial_account.account_type.humanize %></p>
-  </div>
-  <div class="bg-muted/35 p-4 rounded">
-    <p class="text-sm text-muted-foreground">Status</p>
-    <p class="font-semibold"><%= @financial_account.status.humanize %></p>
-  </div>
-  <div class="bg-muted/35 p-4 rounded">
-    <p class="text-sm text-muted-foreground">Opening Balance</p>
-    <p class="font-semibold"><%= number_to_currency(@financial_account.opening_balance) %></p>
-  </div>
-  <div class="bg-muted/35 p-4 rounded">
-    <p class="text-sm text-muted-foreground">Current Balance</p>
-    <p class="font-semibold"><%= number_to_currency(@financial_account.current_balance) %></p>
-  </div>
-</div>
+    <strong class="text-2xl"><%= number_to_currency(@financial_account.current_balance) %></strong>
+  </header>
 
-<div class="mb-4 flex space-x-2">
-  <%= render Ui::ButtonComponent.new(href: edit_finance_financial_account_path(@financial_account), label: "Edit", variant: "outline") %>
-  <%= render Ui::ButtonComponent.new(
-    href: finance_financial_account_path(@financial_account),
-    label: "Delete",
-    variant: "destructive",
-    method: :delete,
-    data: { turbo_confirm: "Are you sure?" }
-  ) %>
-</div>
+  <dl class="grid gap-3 sm:grid-cols-3">
+    <div class="rounded-xl border border-border bg-card p-4">
+      <dt class="text-sm text-muted-foreground">Opening balance</dt>
+
+      <dd class="mt-1 font-semibold">
+        <%= number_to_currency(@financial_account.opening_balance) %>
+      </dd>
+    </div>
+
+    <div class="rounded-xl border border-border bg-card p-4">
+      <dt class="text-sm text-muted-foreground">Status</dt>
+
+      <dd class="mt-1 font-semibold">
+        <%= @financial_account.status.humanize %>
+      </dd>
+    </div>
+
+    <div class="rounded-xl border border-border bg-card p-4">
+      <dt class="text-sm text-muted-foreground">Unreconciled</dt>
+
+      <dd class="mt-1 font-semibold">
+        <%= link_to @financial_account.transactions.unreconciled.count, finance_transactions_path(account_id: @financial_account.id, reconciliation: "unreconciled"), class: "hover:underline" %>
+      </dd>
+    </div>
+  </dl>
+
+  <div class="flex gap-2">
+    <%= render Ui::ButtonComponent.new(href: edit_finance_account_path(@financial_account), label: "Edit", variant: :outline) %>
+
+    <% unless @financial_account.archived? %>
+      <%= render Ui::ButtonComponent.new(href: finance_account_archive_path(@financial_account), label: "Archive", variant: :outline, method: :post, data: { turbo_confirm: "Archive this account? Its history will remain available." }) %>
+    <% end %>
+
+    <% unless @financial_account.transactions.exists? %>
+      <%= render Ui::ButtonComponent.new(href: finance_account_path(@financial_account), label: "Delete", variant: :destructive, method: :delete, data: { turbo_confirm: "Delete this unused account?" }) %>
+    <% end %>
+  </div>
+</section>
