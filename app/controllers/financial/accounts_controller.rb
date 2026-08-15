@@ -12,17 +12,15 @@ class Financial::AccountsController < ApplicationController
     @financial_account = Financial::Account.new(account_group: params[:account_group].presence || "asset", status: "active", opening_balance: 0)
   end
 
-    def create
-      @financial_account = Financial::Asset.for_account(Current.account).new(financial_account_params)
-      @financial_account.account = Current.account
-
-      if @financial_account.save
-        redirect_to finance_financial_account_path(@financial_account), notice: "Financial account created"
-      else
-        flash.now[:alert] = @financial_account.errors.full_messages.to_sentence
-        render :new, status: :unprocessable_entity
-      end
+  def create
+    @financial_account = Financial::Account.new(financial_account_params.merge(account: Current.account))
+    if @financial_account.save
+      redirect_to finance_account_path(@financial_account), notice: "Financial account created"
+    else
+      flash.now[:alert] = @financial_account.errors.full_messages.to_sentence
+      render :new, status: :unprocessable_entity
     end
+  end
 
     def edit
     end
