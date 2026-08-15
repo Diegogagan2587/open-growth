@@ -30,6 +30,7 @@ module IncomeEvents
       return unless source
       return if source.receipt_transaction
 
+      source.update!(expected_destination_account: destination)
       entry = Financial::Entry.for_account(income_event.account)
         .find_or_initialize_by(
           income_event: income_event,
