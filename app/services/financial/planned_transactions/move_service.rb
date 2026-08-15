@@ -13,7 +13,7 @@ module Financial
       end
 
       def call
-        return failure("Only pending transactions can be moved") unless transaction.execution_status == "pending" && transaction.financial_entry.blank?
+        return failure("Only pending transactions can be moved") unless transaction.execution_status == "pending" && transaction.actual_transaction.blank?
         return failure("Target plan must belong to the same account") if target_plan && target_plan.account_id != transaction.account_id
         return Result.new(success?: true, planned_transaction: transaction) if target_plan&.id == transaction.income_event_id
 
