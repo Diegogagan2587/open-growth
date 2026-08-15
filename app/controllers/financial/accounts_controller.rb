@@ -22,8 +22,7 @@ class Financial::AccountsController < ApplicationController
     end
   end
 
-    def edit
-    end
+  def edit; end
 
     def update
       if @financial_account.update(financial_account_params)
