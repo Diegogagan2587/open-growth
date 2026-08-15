@@ -1,16 +1,6 @@
 <% form_url = @financial_account.persisted? ? finance_account_path(@financial_account) : finance_accounts_path %>
 
 <%= form_with model: @financial_account, scope: :financial_account, url: form_url, class: "grid gap-4 rounded-xl border border-border bg-card p-6 shadow-sm sm:grid-cols-2" do |form| %>
-  <% if @financial_account.errors.any? %>
-    <div class="bg-danger-soft border border-danger-soft text-danger px-4 py-3 rounded mb-4">
-      <h2 class="font-bold"><%= pluralize(@financial_account.errors.count, "error") %> prohibited this record from being saved:</h2>
-      <ul class="list-disc list-inside">
-        <% @financial_account.errors.full_messages.each do |message| %>
-          <li><%= message %></li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
 
   <div class="mb-4">
     <%= form.label :name, class: "block text-sm font-medium text-foreground mb-1" %>
