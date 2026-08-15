@@ -1,5 +1,4 @@
 class Financial::PlannedTransactionsController < ApplicationController
-  before_action :set_plan, only: [ :index, :create ]
   before_action :set_planned_transaction, only: [ :update, :destroy, :apply, :move ]
 
   def index
