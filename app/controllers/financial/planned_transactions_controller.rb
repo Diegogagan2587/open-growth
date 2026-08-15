@@ -14,7 +14,7 @@ class Financial::PlannedTransactionsController < ApplicationController
     if transaction.save
       redirect_to plan ? finance_plan_path(plan) : finance_planned_transactions_path, notice: "Planned transaction added"
     else
-      redirect_to finance_plan_path(@plan), alert: transaction.errors.full_messages.to_sentence
+      redirect_back fallback_location: finance_planned_transactions_path, alert: transaction.errors.full_messages.to_sentence
     end
   end
 
