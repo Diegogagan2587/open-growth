@@ -10,15 +10,14 @@ module Financial
             account: installment.account,
             plan: plan,
             description: "#{installment.financial_loan.name} installment ##{installment.installment_number}",
-            amount: installment.expected_amount,
-            planned_for: installment.due_date,
+            planned_amount: installment.expected_amount,
+            planned_execution_date: installment.due_date,
             due_date: installment.due_date,
             kind: "liability_payment",
             importance: "essential",
             execution_status: "pending",
-            status: "pending_to_pay",
-            financial_account: source_account,
-            financial_liability: installment.financial_loan.liability
+            source_account: source_account,
+            destination_account: installment.financial_loan.liability_account
           )
           installment.update!(planned_transaction: transaction)
         end
