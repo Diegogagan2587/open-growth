@@ -1,5 +1,5 @@
 class Financial::PlannedTransactionsController < ApplicationController
-  before_action :set_planned_transaction, only: [ :update, :destroy, :apply, :move ]
+  before_action :set_planned_transaction, only: %i[update destroy]
 
   def index
     @planned_transactions = @plan ? @plan.planned_transactions.by_position : Financial::PlannedTransaction.for_account(Current.account).unassigned.order(:planned_for, :created_at)
@@ -31,31 +31,6 @@ class Financial::PlannedTransactionsController < ApplicationController
     else
       redirect_to finance_plan_path(plan), alert: "Only pending transactions can be removed"
     end
-  end
-
-  def apply
-    result = Financial::PlannedTransactions::ApplyService.call(
-      planned_transaction: @planned_transaction,
-      amount: apply_params[:amount],
-      interest_amount: apply_params[:interest_amount],
-      entry_date: apply_params[:entry_date],
-      description: apply_params[:description],
-      category: scoped_category(apply_params[:category_id]),
-      financial_account: scoped_asset(apply_params[:financial_account_id]),
-      counterparty_financial_account: scoped_asset(apply_params[:counterparty_financial_account_id]),
-      financial_liability: scoped_liability(apply_params[:financial_liability_id])
-    )
-    redirect_back fallback_location: finance_planned_transactions_path,
-      notice: ("Transaction applied" if result.success?),
-      alert: (result.error_message unless result.success?)
-  end
-
-  def move
-    target = Financial::Plan.for_account(Current.account).find_by(id: params[:target_plan_id]) if params[:target_plan_id].present?
-    result = Financial::PlannedTransactions::MoveService.call(planned_transaction: @planned_transaction, target_plan: target)
-    redirect_back fallback_location: finance_planned_transactions_path,
-      notice: ("Transaction moved" if result.success?),
-      alert: (result.error_message unless result.success?)
   end
 
   private
