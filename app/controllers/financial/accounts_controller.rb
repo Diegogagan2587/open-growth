@@ -47,8 +47,7 @@ class Financial::AccountsController < ApplicationController
     @financial_account = Financial::Account.for_account(Current.account).find(params[:id])
   end
 
-    def financial_account_params
-      params.require(:financial_asset).permit(:name, :account_type, :status, :opening_balance, :notes)
-    end
+  def financial_account_params
+    params.expect(financial_account: %i[name account_group account_type status opening_balance credit_limit notes])
   end
 end
