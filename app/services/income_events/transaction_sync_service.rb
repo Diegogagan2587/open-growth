@@ -11,22 +11,16 @@ module IncomeEvents
     def call
       return if income_event.loan?
 
-      if syncable_status? && destination_selected?
-        upsert_entry!
-      else
-        self.class.remove_for(income_event)
-      end
+      return unless income_event.status.in?(%w[received applied]) && destination
+
+      create_receipt_once!
     end
 
     private
 
     attr_reader :income_event
 
-    def syncable_status?
-      income_event.status.in?(%w[received applied])
-    end
-
-    def destination_selected?
+    def destination
       income_event.regular_income_destination_asset.present? || income_event.regular_income_destination_liability.present?
     end
 
