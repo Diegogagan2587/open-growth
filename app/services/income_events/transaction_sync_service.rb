@@ -21,7 +21,7 @@ module IncomeEvents
     attr_reader :income_event
 
     def destination
-      income_event.regular_income_destination_asset.present? || income_event.regular_income_destination_liability.present?
+      income_event.regular_income_destination_asset || income_event.regular_income_destination_liability
     end
 
     def upsert_entry!
