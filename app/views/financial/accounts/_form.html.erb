@@ -27,8 +27,8 @@
     <%= form.text_area :notes, rows: 3, class: "border rounded px-3 py-2 w-full" %>
   </div>
 
-  <div class="mb-4">
-    <%= form.submit class: "px-4 py-2 bg-primary text-white rounded hover:bg-primary" %>
-    <%= link_to "Cancel", @financial_account.persisted? ? finance_financial_account_path(@financial_account) : finance_financial_accounts_path, class: "px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80 ml-2" %>
+  <div class="flex gap-2 sm:col-span-2">
+    <%= render Ui::ButtonComponent.new(label: @financial_account.persisted? ? "Save account" : "Create account", type: "submit") %>
+    <%= render Ui::ButtonComponent.new(href: @financial_account.persisted? ? finance_account_path(@financial_account) : finance_accounts_path, label: "Cancel", variant: :outline) %>
   </div>
 <% end %>
