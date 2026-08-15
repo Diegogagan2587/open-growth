@@ -32,10 +32,14 @@ class Financial::AccountsController < ApplicationController
     end
   end
 
-    def destroy
+  def destroy
+    if @financial_account.transactions.exists?
+      redirect_to finance_account_path(@financial_account), alert: "Archive accounts with transaction history"
+    else
       @financial_account.destroy!
-      redirect_to finance_financial_accounts_path, status: :see_other, notice: "Financial account removed"
+      redirect_to finance_accounts_path, status: :see_other, notice: "Financial account removed"
     end
+  end
 
     private
 
