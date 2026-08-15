@@ -6,8 +6,7 @@ class Financial::AccountsController < ApplicationController
     @financial_accounts = @financial_accounts.where(account_group: params[:account_group]) if params[:account_group].in?(Financial::Account::ACCOUNT_GROUPS)
   end
 
-    def show
-    end
+  def show; end
 
     def new
       @financial_account = Financial::Asset.new
