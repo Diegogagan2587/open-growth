@@ -4,12 +4,6 @@ module IncomeEvents
       new(...).call
     end
 
-    def self.remove_for(income_event)
-      Financial::Entry.for_account(income_event.account)
-        .where(income_event: income_event, entry_type: "inflow", expense_id: nil, planned_expense_id: nil)
-        .delete_all
-    end
-
     def initialize(income_event)
       @income_event = income_event
     end
