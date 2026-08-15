@@ -25,6 +25,11 @@ module IncomeEvents
     end
 
     def create_receipt_once!
+      plan = Financial::Plan.find(income_event.id)
+      source = plan.funding_sources.find_by(legacy_income_event_id: income_event.id)
+      return unless source
+      return if source.receipt_transaction
+
       entry = Financial::Entry.for_account(income_event.account)
         .find_or_initialize_by(
           income_event: income_event,
