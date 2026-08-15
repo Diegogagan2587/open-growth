@@ -12,7 +12,7 @@ class Financial::PlannedTransactionsController < ApplicationController
   def create
     transaction = @plan.planned_transactions.new(planned_transaction_params.merge(account: Current.account, status: "pending_to_pay"))
     if transaction.save
-      redirect_to finance_plan_path(@plan), notice: "Planned transaction added"
+      redirect_to plan ? finance_plan_path(plan) : finance_planned_transactions_path, notice: "Planned transaction added"
     else
       redirect_to finance_plan_path(@plan), alert: transaction.errors.full_messages.to_sentence
     end
