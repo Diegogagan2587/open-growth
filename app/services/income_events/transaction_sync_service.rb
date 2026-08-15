@@ -24,7 +24,7 @@ module IncomeEvents
       income_event.regular_income_destination_asset || income_event.regular_income_destination_liability
     end
 
-    def upsert_entry!
+    def create_receipt_once!
       entry = Financial::Entry.for_account(income_event.account)
         .find_or_initialize_by(
           income_event: income_event,
