@@ -1,9 +1,10 @@
 class Financial::AccountsController < ApplicationController
   before_action :set_financial_account, only: %i[show edit update destroy]
 
-    def index
-      @financial_accounts = Financial::Asset.for_account(Current.account).order(:name)
-    end
+  def index
+    @financial_accounts = Financial::Account.for_account(Current.account).order(:account_group, :name)
+    @financial_accounts = @financial_accounts.where(account_group: params[:account_group]) if params[:account_group].in?(Financial::Account::ACCOUNT_GROUPS)
+  end
 
     def show
     end
