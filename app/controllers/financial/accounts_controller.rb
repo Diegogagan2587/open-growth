@@ -24,13 +24,13 @@ class Financial::AccountsController < ApplicationController
 
   def edit; end
 
-    def update
-      if @financial_account.update(financial_account_params)
-        redirect_to finance_financial_account_path(@financial_account), notice: "Financial account updated"
-      else
-        render :edit, status: :unprocessable_entity
-      end
+  def update
+    if @financial_account.update(financial_account_params)
+      redirect_to finance_account_path(@financial_account), notice: "Financial account updated"
+    else
+      render :edit, status: :unprocessable_entity
     end
+  end
 
     def destroy
       @financial_account.destroy!
