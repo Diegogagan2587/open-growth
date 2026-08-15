@@ -15,7 +15,7 @@ module Financial
       def call
         return failure("Only pending transactions can be moved") unless transaction.execution_status == "pending" && transaction.actual_transaction.blank?
         return failure("Target plan must belong to the same account") if target_plan && target_plan.account_id != transaction.account_id
-        return Result.new(success?: true, planned_transaction: transaction) if target_plan&.id == transaction.income_event_id
+        return Result.new(success?: true, planned_transaction: transaction) if target_plan&.id == transaction.plan_id
 
         transaction.with_lock do
           position = target_plan&.planned_transactions&.maximum(:position).to_i + 1 if target_plan
