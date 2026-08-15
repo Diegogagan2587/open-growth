@@ -2,8 +2,6 @@ class Financial::PlannedTransactionsController < ApplicationController
   before_action :set_planned_transaction, only: %i[update destroy]
 
   def index
-    @planned_transactions = @plan ? @plan.planned_transactions.by_position : Financial::PlannedTransaction.for_account(Current.account).unassigned.order(:planned_for, :created_at)
-    @plans = Financial::Plan.for_account(Current.account).where(lifecycle_status: %w[draft active]).chronological unless @plan
   end
 
   def create
