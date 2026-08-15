@@ -84,8 +84,8 @@ class FinancialPlanningAudit
     scope.where(due_date: date_range)
   end
 
-  def receipt_events_without_entry(scope, association)
-    scope.where(status: %w[received applied]).left_joins(association).where(financial_entries: { id: nil }).ids
+  def legacy_receipts_without_transaction(scope, transaction_type)
+    scope.where(status: %w[received applied]).where.not(id: Financial::Transaction.where(transaction_type: transaction_type).select(:income_event_id)).ids
   end
 
   def duplicate_ids(scope, column)
