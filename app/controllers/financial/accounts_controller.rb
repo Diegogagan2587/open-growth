@@ -8,9 +8,9 @@ class Financial::AccountsController < ApplicationController
 
   def show; end
 
-    def new
-      @financial_account = Financial::Asset.new
-    end
+  def new
+    @financial_account = Financial::Account.new(account_group: params[:account_group].presence || "asset", status: "active", opening_balance: 0)
+  end
 
     def create
       @financial_account = Financial::Asset.for_account(Current.account).new(financial_account_params)
