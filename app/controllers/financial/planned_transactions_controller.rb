@@ -50,17 +50,14 @@ class Financial::PlannedTransactionsController < ApplicationController
   end
 
   def planned_transaction_params
-    permitted = params.expect(planned_transaction: [
-      :description, :amount, :kind, :planned_for, :due_date, :importance, :category_id,
-      :financial_account_id, :counterparty_financial_account_id, :financial_liability_id,
-      :transaction_type, :source_selection, :destination_selection, :commits_plan_funds
-    ])
-    transaction_type = permitted.delete(:transaction_type)
-    return permitted if transaction_type.blank?
-
-    permitted[:kind] = nil
-    permitted[:destination_selection] = nil unless transaction_type == "transfer"
-    permitted
+    params.expect(planned_transaction: [
+      :plan_id, :description, :planned_amount, :amount, :kind, :planned_execution_date, :planned_for,
+      :due_date, :importance, :category_id, :source_account_id, :destination_account_id,
+      :budget_consuming, :recurring_transaction_id, :commits_plan_funds
+    ]).tap do |permitted|
+      permitted[:planned_amount] ||= permitted.delete(:amount)
+      permitted[:planned_execution_date] ||= permitted.delete(:planned_for)
+    end
   end
 
   def editable_planned_transaction_params
