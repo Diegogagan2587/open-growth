@@ -10,7 +10,10 @@ class Financial::PlannedTransactionsController < ApplicationController
   end
 
   def create
-    transaction = @plan.planned_transactions.new(planned_transaction_params.merge(account: Current.account, status: "pending_to_pay"))
+    requested_plan_id = planned_transaction_params[:plan_id].presence
+    plan = Financial::Plan.for_account(Current.account).find_by(id: requested_plan_id)
+    raise ActiveRecord::RecordNotFound, "Plan not found" if requested_plan_id && plan.nil?
+    transaction = build_planned_transaction(plan)
     if transaction.save
       redirect_to plan ? finance_plan_path(plan) : finance_planned_transactions_path, notice: "Planned transaction added"
     else
@@ -69,6 +72,17 @@ class Financial::PlannedTransactionsController < ApplicationController
 
   def apply_params
     params.fetch(:planned_transaction, {}).permit(:amount, :interest_amount, :entry_date, :description, :category_id, :financial_account_id, :counterparty_financial_account_id, :financial_liability_id)
+  end
+
+  def build_planned_transaction(plan)
+    recurring_id = planned_transaction_params[:recurring_transaction_id].presence
+    return Financial::PlannedTransaction.new(planned_transaction_params.merge(account: Current.account, plan: plan)) unless recurring_id
+
+    recurring = Financial::RecurringTransaction.for_account(Current.account).active.find(recurring_id)
+    recurring.build_occurrence(
+      plan: plan,
+      planned_execution_date: planned_transaction_params[:planned_execution_date]
+    )
   end
 
   def scoped_category(id)
