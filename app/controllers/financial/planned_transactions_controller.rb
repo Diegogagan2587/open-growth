@@ -23,6 +23,12 @@ class Financial::PlannedTransactionsController < ApplicationController
 
   def update
     attributes = editable_planned_transaction_params
+    move_result = move_if_requested(attributes) if attributes
+    if move_result&.success? == false
+      redirect_back fallback_location: finance_planned_transactions_path, alert: move_result.error_message
+      return
+    end
+
     if attributes && @planned_transaction.update(attributes)
       redirect_back fallback_location: finance_planned_transactions_path, notice: "Planned transaction updated"
     else
