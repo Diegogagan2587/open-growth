@@ -35,7 +35,7 @@
       <p class="mt-1 text-sm text-muted-foreground">The loan becomes active when its funds arrive at the destination account.</p>
       <%= form_with url: finance_loan_disbursement_path(@loan), method: :post, class: "mt-4 flex flex-wrap items-end gap-2" do %>
         <label class="min-w-56 space-y-1 text-sm">Financial plan<%= render Ui::SelectComponent.new(name: "plan_id", options: @plans.map { |plan| [ plan.name, plan.id ] }, include_blank: "Select plan", required: true) %></label>
-        <%= render Ui::ButtonComponent.new(label: "Activate loan", type: "submit") %>
+        <%= render Ui::ButtonComponent.new(label: "Record disbursement", type: "submit") %>
       <% end %>
     </section>
   <% end %>
