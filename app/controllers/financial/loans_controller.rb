@@ -7,8 +7,8 @@ class Financial::LoansController < ApplicationController
   end
 
   def show
-    @installments = @loan.installments.includes(:planned_transaction, :payment_entry).order(:installment_number)
-    @entries = @loan.entries.by_date
+    @installments = @loan.installments.includes(:planned_transaction, :payment_transaction).order(:installment_number)
+    @entries = @loan.transactions.by_date
     @schedule_start_date = schedule_start_date
   end
 
