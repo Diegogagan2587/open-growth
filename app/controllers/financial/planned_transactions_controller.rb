@@ -31,11 +31,10 @@ class Financial::PlannedTransactionsController < ApplicationController
   end
 
   def destroy
-    plan = @planned_transaction.plan
     if @planned_transaction.execution_status == "pending" && @planned_transaction.destroy
-      redirect_to finance_plan_path(plan), status: :see_other, notice: "Planned transaction removed"
+      redirect_back fallback_location: finance_planned_transactions_path, status: :see_other, notice: "Planned transaction removed"
     else
-      redirect_to finance_plan_path(plan), alert: "Only pending transactions can be removed"
+      redirect_back fallback_location: finance_planned_transactions_path, alert: "Only pending transactions can be removed"
     end
   end
 
