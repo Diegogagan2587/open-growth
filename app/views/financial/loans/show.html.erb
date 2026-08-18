@@ -46,7 +46,7 @@
         <h2 class="text-xl font-semibold">Expected installments</h2>
         <p class="text-sm text-muted-foreground">Regeneration updates this schedule and synchronizes linked pending plans. Paid installments remain unchanged.</p>
       </div>
-      <%= form_with url: finance_loan_schedule_path(@loan), method: :post, class: "flex items-end gap-2" do %>
+      <%= form_with url: finance_loan_amortization_schedule_path(@loan), method: :post, class: "flex items-end gap-2" do %>
         <label class="space-y-1 text-sm">Loan start date<%= render Ui::InputComponent.new(name: "start_date", value: @schedule_start_date, type: "date", required: true) %></label>
         <%= render Ui::ButtonComponent.new(label: @installments.any? ? "Regenerate schedule" : "Generate schedule", type: "submit", variant: :outline, size: :sm, disabled: @loan.repayment_basis.blank?, data: (@installments.any? ? { turbo_confirm: "Regenerate installments and synchronize linked pending plans?" } : {})) %>
       <% end %>
