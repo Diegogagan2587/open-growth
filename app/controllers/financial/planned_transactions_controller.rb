@@ -93,16 +93,4 @@ class Financial::PlannedTransactionsController < ApplicationController
 
     Financial::PlannedTransactions::MoveService.call(planned_transaction: @planned_transaction, target_plan: target)
   end
-
-  def scoped_category(id)
-    Category.for_account(Current.account).find_by(id: id) if id.present?
-  end
-
-  def scoped_asset(id)
-    Financial::Asset.for_account(Current.account).find_by(id: id) if id.present?
-  end
-
-  def scoped_liability(id)
-    Financial::Liability.for_account(Current.account).find_by(id: id) if id.present?
-  end
 end
