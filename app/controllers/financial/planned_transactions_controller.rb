@@ -82,6 +82,18 @@ class Financial::PlannedTransactionsController < ApplicationController
     )
   end
 
+  def move_if_requested(attributes)
+    return unless attributes.key?(:plan_id)
+
+    target_id = attributes.delete(:plan_id)
+    return if target_id.to_s == @planned_transaction.plan_id.to_s
+
+    target = Financial::Plan.for_account(Current.account).find_by(id: target_id.presence)
+    return Financial::PlannedTransactions::MoveService::Result.new(success?: false, error_message: "Plan not found", planned_transaction: @planned_transaction) if target_id.present? && target.nil?
+
+    Financial::PlannedTransactions::MoveService.call(planned_transaction: @planned_transaction, target_plan: target)
+  end
+
   def scoped_category(id)
     Category.for_account(Current.account).find_by(id: id) if id.present?
   end
