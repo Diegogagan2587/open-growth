@@ -57,6 +57,12 @@
       <p class="mt-2 text-sm text-muted-foreground">Simulations, disbursements, and expected installments.</p>
       <%= link_to "Open loans", finance_loans_path, class: "mt-4 inline-block text-accent hover:underline" %>
     </div>
+    <div class="rounded-2xl border border-border bg-card p-5 shadow-sm border-t-4 border-t-primary">
+      <p class="text-sm text-muted-foreground">Recurring transactions</p>
+      <p class="mt-2 text-3xl font-bold text-foreground"><%= @recurring_transaction_count %></p>
+      <p class="mt-2 text-sm text-muted-foreground">Reusable defaults for expenses, payments, transfers, and goal contributions.</p>
+      <%= link_to "Manage recurring transactions", finance_recurring_transactions_path, class: "mt-4 inline-block text-accent hover:underline" %>
+    </div>
   </section>
 
   <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
