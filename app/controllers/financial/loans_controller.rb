@@ -3,7 +3,7 @@ class Financial::LoansController < ApplicationController
   before_action :load_collections, only: [ :new, :create, :edit, :update, :show ]
 
   def index
-    @loans = Financial::Loan.for_account(Current.account).includes(:liability).order(created_at: :desc)
+    @loans = Financial::Loan.for_account(Current.account).includes(:liability_account).order(created_at: :desc)
   end
 
   def show
