@@ -24,9 +24,9 @@ class Financial::PlannedTransactionsController < ApplicationController
   def update
     attributes = editable_planned_transaction_params
     if attributes && @planned_transaction.update(attributes)
-      redirect_to finance_plan_path(@planned_transaction.plan), notice: "Planned transaction updated"
+      redirect_back fallback_location: finance_planned_transactions_path, notice: "Planned transaction updated"
     else
-      redirect_to finance_plan_path(@planned_transaction.plan), alert: @planned_transaction.errors.full_messages.to_sentence.presence || "Only pending transactions or applied plan commitments can be edited"
+      redirect_back fallback_location: finance_planned_transactions_path, alert: @planned_transaction.errors.full_messages.to_sentence.presence || "Only pending transactions or applied plan commitments can be edited"
     end
   end
 
