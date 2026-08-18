@@ -41,7 +41,7 @@
       <p class="mt-2 text-3xl font-bold text-foreground"><%= @financial_liability_count %></p>
       <p class="mt-2 text-sm text-muted-foreground">Credit cards and personal credits you want to pay down.
       </p>
-      <%= link_to "Manage liabilities", finance_financial_liabilities_path, class: "mt-4 inline-block text-accent hover:underline hover:text-accent-dark" %>
+      <%= link_to "Manage liabilities", finance_accounts_path(account_group: "liability"), class: "mt-4 inline-block text-accent hover:underline hover:text-accent-dark" %>
     </div>
 
     <div class="rounded-2xl border border-border bg-card p-5 shadow-sm border-t-4 border-t-success">
