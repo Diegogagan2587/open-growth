@@ -74,7 +74,7 @@
                 <% if installment.planned_transaction %>
                   <%= link_to installment.planned_transaction.plan&.name || "Unassigned", installment.planned_transaction.plan ? finance_plan_path(installment.planned_transaction.plan) : finance_planned_transactions_path, class: "text-primary hover:underline" %>
                 <% elsif @loan.lifecycle_status == "active" %>
-                  <%= form_with url: plan_installment_finance_loan_path(@loan, installment_id: installment.id), method: :post, class: "flex min-w-80 items-end gap-2" do %>
+                  <%= form_with url: finance_loan_plan_installment_path(@loan, installment_id: installment.id), method: :post, class: "flex min-w-80 items-end gap-2" do %>
                     <%= render Ui::SelectComponent.new(name: "plan_id", options: @plans.map { |plan| [ plan.name, plan.id ] }, include_blank: "Plan", required: true) %>
                     <%= render Ui::SelectComponent.new(name: "financial_account_id", options: @assets.map { |asset| [ asset.name, asset.id ] }, include_blank: "Pay from", required: true) %>
                     <%= render Ui::ButtonComponent.new(label: "Plan", type: "submit", size: :sm) %>
