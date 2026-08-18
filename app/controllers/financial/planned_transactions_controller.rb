@@ -41,10 +41,6 @@ class Financial::PlannedTransactionsController < ApplicationController
 
   private
 
-  def set_plan
-    @plan = Financial::Plan.for_account(Current.account).find(params[:plan_id]) if params[:plan_id]
-  end
-
   def set_planned_transaction
     @planned_transaction = Financial::PlannedTransaction.for_account(Current.account).find(params[:id])
   end
