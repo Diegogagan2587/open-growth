@@ -1,5 +1,5 @@
 class Financial::LoansController < ApplicationController
-  before_action :set_loan, only: [ :show, :edit, :update, :destroy, :activate, :plan_installment ]
+  before_action :set_loan, only: %i[show edit update destroy plan_installment]
   before_action :load_collections, only: [ :new, :create, :edit, :update, :show ]
 
   def index
@@ -46,12 +46,6 @@ class Financial::LoansController < ApplicationController
     else
       redirect_to finance_loan_path(@loan), alert: "Only a simulation without actual entries can be deleted"
     end
-  end
-
-  def activate
-    plan = Financial::Plan.for_account(Current.account).find(params[:plan_id])
-    result = Financial::Loans::ActivateService.call(loan: @loan, plan: plan)
-    redirect_to finance_loan_path(@loan), notice: ("Loan activated and disbursed" if result.success?), alert: (result.error_message unless result.success?)
   end
 
   def plan_installment
