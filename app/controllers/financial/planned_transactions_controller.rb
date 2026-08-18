@@ -63,10 +63,6 @@ class Financial::PlannedTransactionsController < ApplicationController
     commitment_params if @planned_transaction.execution_status == "applied" && commitment_params.key?(:commits_plan_funds)
   end
 
-  def apply_params
-    params.fetch(:planned_transaction, {}).permit(:amount, :interest_amount, :entry_date, :description, :category_id, :financial_account_id, :counterparty_financial_account_id, :financial_liability_id)
-  end
-
   def build_planned_transaction(plan)
     recurring_id = planned_transaction_params[:recurring_transaction_id].presence
     return Financial::PlannedTransaction.new(planned_transaction_params.merge(account: Current.account, plan: plan)) unless recurring_id
