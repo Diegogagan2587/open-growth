@@ -31,9 +31,9 @@
 
   <% if @loan.lifecycle_status == "simulated" %>
     <section class="rounded-xl border border-border bg-card p-5">
-      <h2 class="font-semibold">Activate and disburse</h2>
-      <p class="mt-1 text-sm text-muted-foreground">Activation creates one actual disbursement entry. Configure one liability and one destination before activating.</p>
-      <%= form_with url: activate_finance_loan_path(@loan), method: :post, class: "mt-4 flex flex-wrap items-end gap-2" do %>
+      <h2 class="font-semibold">Disburse loan</h2>
+      <p class="mt-1 text-sm text-muted-foreground">The loan becomes active when its funds arrive at the destination account.</p>
+      <%= form_with url: finance_loan_disbursement_path(@loan), method: :post, class: "mt-4 flex flex-wrap items-end gap-2" do %>
         <label class="min-w-56 space-y-1 text-sm">Financial plan<%= render Ui::SelectComponent.new(name: "plan_id", options: @plans.map { |plan| [ plan.name, plan.id ] }, include_blank: "Select plan", required: true) %></label>
         <%= render Ui::ButtonComponent.new(label: "Activate loan", type: "submit") %>
       <% end %>
