@@ -6,6 +6,7 @@ class Financial::DashboardController < ApplicationController
     @financial_entry_count = Financial::Transaction.for_account(Current.account).count
     @plan_count = Financial::Plan.for_account(Current.account).count
     @loan_count = Financial::Loan.for_account(Current.account).count
+    @recurring_transaction_count = Financial::RecurringTransaction.for_account(Current.account).active.count
 
     render "finance/index"
   end
