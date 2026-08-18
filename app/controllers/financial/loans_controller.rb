@@ -57,7 +57,7 @@ class Financial::LoansController < ApplicationController
   def plan_installment
     installment = @loan.installments.find(params[:installment_id])
     plan = Financial::Plan.for_account(Current.account).find(params[:plan_id])
-    source_account = Financial::Asset.for_account(Current.account).active.find(params[:financial_account_id])
+    source_account = Financial::Account.for_account(Current.account).assets.active.find(params[:financial_account_id])
     result = Financial::Loans::PlanInstallmentService.call(installment: installment, plan: plan, source_account: source_account)
     redirect_to finance_loan_path(@loan), notice: ("Installment added to plan" if result.success?), alert: (result.error_message unless result.success?)
   end
