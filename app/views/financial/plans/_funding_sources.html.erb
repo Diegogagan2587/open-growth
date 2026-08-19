@@ -23,8 +23,8 @@
 
             <p class="mt-2 text-sm text-muted-foreground">
               Expected <%= number_to_currency(source.expected_amount) %> on <%= l(source.expected_date) %>
-              <% if source.receipt_entry %>
-                · Actual <%= number_to_currency(source.actual_amount) %> on <%= l(source.actual_date) %>
+              <% if source.receipt_transaction %>
+                · Received <%= number_to_currency(source.actual_amount) %> on <%= l(source.actual_date) %>
               <% end %>
             </p>
           </div>
