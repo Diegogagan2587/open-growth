@@ -31,34 +31,40 @@
             </p>
           </div>
 
-          <% if source.receipt_entry.nil? && source.kind != "borrowed" && !plan.lifecycle_status.in?(%w[closed cancelled]) %>
+          <% if source.receipt_transaction %>
             <div class="flex gap-2">
               <%= link_to "View transaction", finance_transaction_path(source.receipt_transaction), class: "text-sm text-primary hover:underline" %><%= render Ui::ButtonComponent.new(href: finance_funding_source_receipt_path(source), label: "Remove receipt", variant: :outline, method: :delete, size: :sm, data: { turbo_confirm: "Remove this receipt and restore the expected source to pending?" }) %>
             </div>
-            <div class="space-y-2">
-              <%= form_with url: receive_finance_plan_funding_source_path(plan, source), method: :post, class: "flex flex-wrap items-end gap-2" do %>
-                <label class="w-28 space-y-1 text-xs text-muted-foreground">Actual amount<%= render Ui::InputComponent.new(name: "funding_source[amount]", value: source.expected_amount, type: "number", min: 0.01, step: 0.01, required: true) %></label>
-                <label class="space-y-1 text-xs text-muted-foreground">Actual date<%= render Ui::InputComponent.new(name: "funding_source[entry_date]", value: source.expected_date, type: "date", required: true) %></label>
-                <%= render Ui::ButtonComponent.new(label: "Receive", type: "submit", size: :sm) %>
-              <% end %>
-              <details class="text-sm">
-                <summary class="cursor-pointer text-primary">Edit expectation</summary>
-                <%= form_with url: finance_plan_funding_source_path(plan, source), method: :patch, class: "mt-2 grid gap-2 sm:grid-cols-2" do %>
-                  <%= render Ui::InputComponent.new(name: "funding_source[description]", value: source.description, required: true) %>
-                  <%= render Ui::InputComponent.new(name: "funding_source[expected_amount]", value: source.expected_amount, type: "number", min: 0.01, step: 0.01, required: true) %>
-                  <%= render Ui::InputComponent.new(name: "funding_source[expected_date]", value: source.expected_date, type: "date", required: true) %>
-                  <%= render Ui::SelectComponent.new(name: "funding_source[kind]", options: Financial::FundingSource::KINDS.reject { |kind| kind == "borrowed" }.map { |kind| [ kind.humanize, kind ] }, selected: source.kind, required: true) %>
-                  <%= render Ui::SelectComponent.new(name: "funding_source[expected_destination_asset_id]", options: assets.map { |asset| [ asset.name, asset.id ] }, selected: source.expected_destination_asset_id, include_blank: "No asset") %>
-                  <%= render Ui::SelectComponent.new(name: "funding_source[expected_destination_liability_id]", options: liabilities.map { |liability| [ liability.name, liability.id ] }, selected: source.expected_destination_liability_id, include_blank: "No liability") %>
-                  <div class="flex gap-2 sm:col-span-2">
-                    <%= render Ui::ButtonComponent.new(label: "Save source", type: "submit", size: :sm) %>
-                    <%= render Ui::ButtonComponent.new(href: finance_plan_funding_source_path(plan, source), label: "Delete", variant: :destructive, method: :delete, size: :sm, data: { turbo_confirm: "Delete this expected funding source?" }) %>
-                  </div>
-                <% end %>
-              </details>
-            </div>
+          <% elsif source.kind != "borrowed" && !plan.lifecycle_status.in?(%w[closed cancelled]) %>
+            <%= form_with url: finance_funding_source_receipt_path(source), method: :post, class: "flex flex-wrap items-end gap-2" do %>
+              <label class="space-y-1 text-xs">Actual amount<%= render Ui::InputComponent.new(name: "funding_source[amount]", value: source.expected_amount, type: "number", min: 0.01, step: 0.01, required: true) %></label>
+              <label class="space-y-1 text-xs">Actual date<%= render Ui::InputComponent.new(name: "funding_source[transaction_date]", value: source.expected_date, type: "date", required: true) %></label>
+
+              <%= render Ui::ButtonComponent.new(label: "Receive", type: "submit", size: :sm) %>
+            <% end %>
           <% end %>
         </div>
+
+        <% if source.receipt_transaction.nil? && !plan.lifecycle_status.in?(%w[closed cancelled]) %>
+          <details class="mt-3 text-sm">
+            <summary class="cursor-pointer text-primary">
+              Edit expectation
+            </summary>
+
+            <%= form_with url: finance_funding_source_path(source), method: :patch, class: "mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3" do %>
+              <%= render Ui::InputComponent.new(name: "funding_source[description]", value: source.description, required: true) %>
+              <%= render Ui::InputComponent.new(name: "funding_source[expected_amount]", value: source.expected_amount, type: "number", min: 0.01, step: 0.01, required: true) %>
+              <%= render Ui::InputComponent.new(name: "funding_source[expected_date]", value: source.expected_date, type: "date", required: true) %>
+              <%= render Ui::SelectComponent.new(name: "funding_source[kind]", options: Financial::FundingSource::KINDS.reject { |kind| kind == "borrowed" }.map { |kind| [kind.humanize, kind] }, selected: source.kind, required: true) %>
+              <%= render Ui::SelectComponent.new(name: "funding_source[expected_destination_account_id]", options: (assets + liabilities).map { |account| ["#{account.account_group.humanize}: #{account.name}", account.id] }, selected: source.expected_destination_account_id, include_blank: "Select destination") %>
+
+              <div class="flex gap-2">
+                <%= render Ui::ButtonComponent.new(label: "Save", type: "submit", size: :sm) %>
+                <%= render Ui::ButtonComponent.new(href: finance_funding_source_path(source), label: "Delete", variant: :destructive, method: :delete, size: :sm, data: { turbo_confirm: "Delete this expected funding source?" }) %>
+              </div>
+            <% end %>
+          </details>
+        <% end %>
       </article>
     <% end %>
   </div>
