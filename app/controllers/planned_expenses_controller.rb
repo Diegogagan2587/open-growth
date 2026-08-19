@@ -8,11 +8,12 @@ class PlannedExpensesController < ApplicationController
       :financial_account,
       :counterparty_financial_account,
       :financial_liability,
-      :expense_template,
       :financial_entry,
       :expense
     )
     @planned_expenses, @planned_movements = @planned_transactions.partition(&:budget_consuming?)
+    with_recurrence = @planned_transactions.select(&:expense_template_id?)
+    ActiveRecord::Associations::Preloader.new(records: with_recurrence, associations: :expense_template).call if with_recurrence.any?
     ActiveRecord::Associations::Preloader.new(records: @planned_expenses, associations: :category).call if @planned_expenses.any?
     @running_balance = @income_event.received_amount || @income_event.expected_amount
     @income_events = IncomeEvent.for_account(Current.account).order(:expected_date)
