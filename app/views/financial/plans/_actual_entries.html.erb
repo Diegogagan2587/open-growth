@@ -1,8 +1,13 @@
 <section aria-labelledby="actual-transactions-title" class="space-y-4">
   <div class="flex flex-wrap items-end justify-between gap-3">
     <div>
-      <h2 id="actual-entries-title" class="text-xl font-semibold">Actual entries</h2>
-      <p class="text-sm text-muted-foreground">These ledger records determine actual results. They are never rewritten by planning changes.</p>
+      <h2 id="actual-transactions-title" class="text-xl font-semibold">
+        Actual transactions
+      </h2>
+
+      <p class="text-sm text-muted-foreground">
+        These movements determine balances and actual reports.
+      </p>
     </div>
     <% unless plan.lifecycle_status == "closed" %>
       <%= render Ui::ButtonComponent.new(href: new_finance_entry_path(income_event_id: plan.id), label: "Add unplanned actual", variant: :outline, size: :sm) %>
