@@ -129,7 +129,7 @@
                     <%= render Ui::ButtonComponent.new(href: edit_income_event_planned_expense_path(@income_event, planned_expense), label: "Edit", variant: "outline", size: "sm") %>
                     <button onclick="document.getElementById('move-modal-<%= planned_expense.id %>').classList.remove('hidden')" class="btn btn-secondary">Move</button>
                     <% if planned_expense.financial_entry.present? %>
-                      <%= render Ui::ButtonComponent.new(href: finance_entry_path(planned_expense.financial_entry), label: "View Transaction", variant: "outline", size: "sm") %>
+                      <%= render Ui::ButtonComponent.new(href: finance_transaction_path(planned_expense.financial_entry), label: "View Transaction", variant: "outline", size: "sm") %>
                     <% elsif planned_expense.transaction_missing? %>
                       <%= button_to "Create Transaction", create_transaction_income_event_planned_expense_path(@income_event, planned_expense), method: :post, class: "inline-flex items-center justify-center rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground" %>
                     <% elsif planned_expense.expense.nil? %>
