@@ -62,7 +62,6 @@
             <% transactions.each_with_index do |planned_expense, index| %>
               <% running_total += planned_expense.amount unless movement %>
               <% available_after = @running_balance - running_total unless movement %>
-              <% progress = planned_expense.template_progress %>
 
               <div class="overflow-hidden rounded-xl border border-border bg-card shadow-md transition-all duration-200 hover:shadow-xl">
                 <div class="p-6">
