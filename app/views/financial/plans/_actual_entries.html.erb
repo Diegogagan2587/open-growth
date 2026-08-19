@@ -9,8 +9,9 @@
         These movements determine balances and actual reports.
       </p>
     </div>
-    <% unless plan.lifecycle_status == "closed" %>
-      <%= render Ui::ButtonComponent.new(href: new_finance_entry_path(income_event_id: plan.id), label: "Add unplanned actual", variant: :outline, size: :sm) %>
+
+    <% unless plan.lifecycle_status.in?(%w[closed cancelled]) %>
+      <%= render Ui::ButtonComponent.new(href: new_finance_transaction_path(plan_id: plan.id), label: "Add unplanned actual", variant: :outline, size: :sm) %>
     <% end %>
   </div>
 
