@@ -65,10 +65,9 @@
         <label class="space-y-1 text-sm">Description<%= render Ui::InputComponent.new(name: "funding_source[description]", required: true) %></label>
         <label class="space-y-1 text-sm">Amount<%= render Ui::InputComponent.new(name: "funding_source[expected_amount]", type: "number", min: 0.01, step: 0.01, required: true) %></label>
         <label class="space-y-1 text-sm">Expected date<%= render Ui::InputComponent.new(name: "funding_source[expected_date]", value: plan.planned_for, type: "date", required: true) %></label>
-        <label class="space-y-1 text-sm">Kind<%= render Ui::SelectComponent.new(name: "funding_source[kind]", options: Financial::FundingSource::KINDS.reject { |kind| kind == "borrowed" }.map { |kind| [ kind.humanize, kind ] }, selected: "income", required: true) %></label>
-        <label class="space-y-1 text-sm">Asset destination<%= render Ui::SelectComponent.new(name: "funding_source[expected_destination_asset_id]", options: assets.map { |asset| [ asset.name, asset.id ] }, include_blank: "None") %></label>
-        <label class="space-y-1 text-sm">Or liability destination<%= render Ui::SelectComponent.new(name: "funding_source[expected_destination_liability_id]", options: liabilities.map { |liability| [ liability.name, liability.id ] }, include_blank: "None") %></label>
-        <div class="md:col-span-2 lg:col-span-3"><%= render Ui::ButtonComponent.new(label: "Add source", type: "submit", size: :sm) %></div>
+        <label class="space-y-1 text-sm">Kind<%= render Ui::SelectComponent.new(name: "funding_source[kind]", options: Financial::FundingSource::KINDS.reject { |kind| kind == "borrowed" }.map { |kind| [kind.humanize, kind] }, selected: "income", required: true) %></label>
+        <label class="space-y-1 text-sm">Destination<%= render Ui::SelectComponent.new(name: "funding_source[expected_destination_account_id]", options: (assets + liabilities).map { |account| ["#{account.account_group.humanize}: #{account.name}", account.id] }, include_blank: "Select destination", required: true) %></label>
+        <div class="self-end"><%= render Ui::ButtonComponent.new(label: "Add source", type: "submit", size: :sm) %></div>
       <% end %>
     </details>
   <% end %>
