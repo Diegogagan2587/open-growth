@@ -20,6 +20,7 @@
               <%= render Ui::BadgeComponent.new(label: source.kind.humanize, variant: :outline) %>
               <%= render Ui::BadgeComponent.new(label: source.resolution.humanize, variant: source.receipt_transaction ? :secondary : :outline) %>
             </div>
+
             <p class="mt-2 text-sm text-muted-foreground">
               Expected <%= number_to_currency(source.expected_amount) %> on <%= l(source.expected_date) %>
               <% if source.receipt_entry %>
