@@ -32,6 +32,9 @@
           </div>
 
           <% if source.receipt_entry.nil? && source.kind != "borrowed" && !plan.lifecycle_status.in?(%w[closed cancelled]) %>
+            <div class="flex gap-2">
+              <%= link_to "View transaction", finance_transaction_path(source.receipt_transaction), class: "text-sm text-primary hover:underline" %><%= render Ui::ButtonComponent.new(href: finance_funding_source_receipt_path(source), label: "Remove receipt", variant: :outline, method: :delete, size: :sm, data: { turbo_confirm: "Remove this receipt and restore the expected source to pending?" }) %>
+            </div>
             <div class="space-y-2">
               <%= form_with url: receive_finance_plan_funding_source_path(plan, source), method: :post, class: "flex flex-wrap items-end gap-2" do %>
                 <label class="w-28 space-y-1 text-xs text-muted-foreground">Actual amount<%= render Ui::InputComponent.new(name: "funding_source[amount]", value: source.expected_amount, type: "number", min: 0.01, step: 0.01, required: true) %></label>
