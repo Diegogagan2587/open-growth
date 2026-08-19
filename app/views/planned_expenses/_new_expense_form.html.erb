@@ -1,4 +1,4 @@
-<% templates_json = (@expense_templates || []).map { |template| { id: template.id, category_id: template.category_id, description: template.description, total_amount: template.total_amount.to_f, notes: template.notes, saved: template.total_saved.to_f } }.to_json %>
+<% templates_json = (@expense_templates || []).map { |template| { id: template.id, category_id: template.category_id, description: template.description, amount: template.amount.to_f, frequency: template.frequency, notes: template.notes } }.to_json %>
 <%= form_with model: [income_event, planned_expense],
     url: income_event_planned_expenses_path(income_event, kind: "expense"),
     local: true,
