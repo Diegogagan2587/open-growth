@@ -16,17 +16,26 @@
   </div>
 
   <div class="overflow-hidden rounded-xl border border-border bg-card">
-    <% if actual_entries.any? %>
-      <div class="divide-y divide-border">
-        <% actual_entries.each do |entry| %>
-          <%= link_to finance_entry_path(entry), class: "flex flex-wrap items-center justify-between gap-3 p-4 hover:bg-muted/30" do %>
-            <div><p class="font-medium"><%= entry.description %></p><p class="text-xs text-muted-foreground"><%= entry.entry_type.humanize %> · <%= l(entry.entry_date) %> · <%= entry.category&.name || t("expenses.index.unassigned") %></p></div>
-            <span class="font-semibold"><%= number_to_currency(entry.amount) %></span>
-          <% end %>
-        <% end %>
-      </div>
-    <% else %>
-      <p class="p-5 text-sm text-muted-foreground">No actual entries are associated with this plan.</p>
+    <% actual_entries.each do |transaction| %>
+      <%= link_to finance_transaction_path(transaction), class: "flex flex-wrap items-center justify-between gap-3 border-b border-border p-4 last:border-0 hover:bg-muted/30" do %>
+        <div>
+          <p class="font-medium"><%= transaction.description %></p>
+
+          <p class="text-xs text-muted-foreground">
+            <%= transaction.transaction_type.humanize %> ·
+            <%= l(transaction.transaction_date) %> ·
+            <%= transaction.category&.name || "Uncategorized" %>
+          </p>
+        </div>
+
+        <strong><%= number_to_currency(transaction.amount) %></strong>
+      <% end %>
+    <% end %>
+
+    <% if actual_entries.empty? %>
+      <p class="p-5 text-sm text-muted-foreground">
+        No actual transactions are associated with this plan.
+      </p>
     <% end %>
   </div>
 </section>
