@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Financial::Transactions::AccountRoute
+  ACCOUNT_GROUPS = %w[asset liability].freeze
+
   DEFINITIONS = [
     {
       transaction_type: "income",
