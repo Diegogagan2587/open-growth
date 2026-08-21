@@ -37,5 +37,4 @@ class Financial::FundingSources::Receipt
   rescue ActiveRecord::RecordInvalid => error
     Result.new(success?: false, error_message: error.message)
   end
-
 end
