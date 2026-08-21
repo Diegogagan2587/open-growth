@@ -48,12 +48,12 @@ class Financial::Reports::SpendingByCategory < Financial::Reports::Base
       type: "bar",
       data: {
         labels: categories_summary.map { |category| category[:category_name] },
-        datasets: [{
+        datasets: [ {
           label: I18n.t("reports.expenses"),
           data: categories_summary.map { |category| category[:total] },
           backgroundColor: categories_summary.map { |category| category_chart_rgba(category[:category_id]) },
           borderColor: categories_summary.map { |category| category_chart_rgb(category[:category_id]) }
-        }]
+        } ]
       }
     }
   end

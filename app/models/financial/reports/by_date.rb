@@ -20,12 +20,12 @@ class Financial::Reports::ByDate < Financial::Reports::Base
       type: "bar",
       data: {
         labels: buckets.map { |bucket| bucket[:label] },
-        datasets: [{
+        datasets: [ {
           label: I18n.t("reports.expenses"),
           data: buckets.map { |bucket| bucket[:total_expenses] },
           backgroundColor: "rgba(59, 130, 246, 0.5)",
           borderColor: "rgb(59, 130, 246)"
-        }]
+        } ]
       }
     }
   end

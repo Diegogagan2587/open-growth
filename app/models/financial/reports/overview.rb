@@ -29,8 +29,8 @@ class Financial::Reports::Overview < Financial::Reports::Base
     category_ids = by_category.keys.map(&:first)
 
     income_total = transactions.where(transaction_type: %w[income loan_disbursement refund]).sum(:amount)
-    @income_vs_expenses_labels = [I18n.t("reports.income"), I18n.t("reports.expenses")]
-    @income_vs_expenses_values = [income_total.to_f, expenses.sum(:amount).to_f]
+    @income_vs_expenses_labels = [ I18n.t("reports.income"), I18n.t("reports.expenses") ]
+    @income_vs_expenses_values = [ income_total.to_f, expenses.sum(:amount).to_f ]
 
     @chart_expenses_over_time = bar_chart(@expenses_by_month_labels, @expenses_by_month_values)
     @chart_by_category = bar_chart(
@@ -42,8 +42,8 @@ class Financial::Reports::Overview < Financial::Reports::Base
     @chart_income_vs_expenses = bar_chart(
       @income_vs_expenses_labels,
       @income_vs_expenses_values,
-      background: ["rgba(34, 197, 94, 0.5)", "rgba(239, 68, 68, 0.5)"],
-      border: ["rgb(34, 197, 94)", "rgb(239, 68, 68)"]
+      background: [ "rgba(34, 197, 94, 0.5)", "rgba(239, 68, 68, 0.5)" ],
+      border: [ "rgb(34, 197, 94)", "rgb(239, 68, 68)" ]
     )
   end
 
@@ -52,7 +52,7 @@ class Financial::Reports::Overview < Financial::Reports::Base
       type: "bar",
       data: {
         labels: labels,
-        datasets: [{ label: I18n.t("reports.expenses"), data: values, backgroundColor: background, borderColor: border }]
+        datasets: [ { label: I18n.t("reports.expenses"), data: values, backgroundColor: background, borderColor: border } ]
       }
     }
   end
