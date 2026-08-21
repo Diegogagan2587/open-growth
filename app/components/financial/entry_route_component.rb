@@ -17,43 +17,15 @@ class Financial::EntryRouteComponent < ViewComponent::Base
   private
 
   def source
-    case @entry.entry_type
-    when "inflow"
-      endpoint("Plan", "Financial plan", @entry.income_event, helpers.finance_plan_path(@entry.income_event)) if @entry.income_event
-    when "outflow", "transfer", "adjustment"
-      asset_endpoint("Source", @entry.financial_account)
-    when "liability_charge", "loan_disbursement"
-      liability_endpoint("Source", @entry.financial_liability)
-    when "liability_payment"
-      asset_endpoint("Source", @entry.financial_account) || income_event_endpoint("Source", @entry.income_event)
-    end
+    account_endpoint("Source", @entry.routed_source_account)
   end
 
   def destination
-    case @entry.entry_type
-    when "inflow"
-      asset_endpoint("Destination", @entry.financial_account) ||
-        liability_endpoint("Destination", @entry.counterparty_financial_liability)
-    when "transfer"
-      asset_endpoint("Destination", @entry.counterparty_financial_account)
-    when "liability_payment"
-      liability_endpoint("Destination", @entry.financial_liability)
-    when "loan_disbursement"
-      asset_endpoint("Destination", @entry.financial_account) ||
-        liability_endpoint("Destination", @entry.counterparty_financial_liability)
-    end
+    account_endpoint("Destination", @entry.routed_destination_account)
   end
 
-  def asset_endpoint(role, asset)
-    endpoint(role, "Asset", asset, helpers.finance_financial_account_path(asset)) if asset
-  end
-
-  def liability_endpoint(role, liability)
-    endpoint(role, "Liability", liability, helpers.finance_financial_liability_path(liability)) if liability
-  end
-
-  def income_event_endpoint(role, income_event)
-    endpoint(role, "Financial plan", income_event, helpers.finance_plan_path(income_event)) if income_event
+  def account_endpoint(role, account)
+    endpoint(role, account.account_group.humanize, account, helpers.finance_account_path(account)) if account
   end
 
   def endpoint(role, kind, record, path)

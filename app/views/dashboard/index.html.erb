@@ -9,7 +9,7 @@
       </div>
 
       <div class="grid w-full max-w-xl grid-cols-1 gap-2 sm:grid-cols-2">
-        <%= render Ui::ButtonComponent.new(href: new_finance_entry_path(entry_type: "expenses"), label: t("dashboard.add_expense"), variant: :default, css_class: "h-10 w-full justify-start") %>
+        <%= render Ui::ButtonComponent.new(href: new_finance_transaction_path(transaction_type: "expense"), label: t("dashboard.add_expense"), variant: :default, css_class: "h-10 w-full justify-start") %>
         <%= render Ui::ButtonComponent.new(href: new_finance_plan_path, label: "New financial plan", variant: :outline, css_class: "h-10 w-full justify-start") %>
         <%= render Ui::ButtonComponent.new(href: new_budget_period_path, label: t("dashboard.new_budget_period"), variant: :outline, css_class: "h-10 w-full justify-start") %>
         <%= render Ui::ButtonComponent.new(href: new_shopping_item_path, label: t("dashboard.add_shopping_item"), variant: :ghost, css_class: "h-10 w-full justify-start") %>
@@ -34,7 +34,7 @@
   <section class="space-y-3">
     <h2 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Core Workspace</h2>
     <nav class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-      <%= link_to finance_entries_path(entry_type: "expenses"), class: "group rounded-xl border border-border bg-card p-5 shadow-sm transition-colors hover:bg-muted/35" do %>
+      <%= link_to finance_transactions_path(transaction_type: "expense"), class: "group rounded-xl border border-border bg-card p-5 shadow-sm transition-colors hover:bg-muted/35" do %>
         <h3 class="text-base font-semibold text-foreground">Expenses</h3>
         <p class="mt-1 text-sm text-muted-foreground"><%= t("dashboard.expenses_description") %></p>
       <% end %>
@@ -69,7 +69,7 @@
   <section class="space-y-3">
     <h2 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Supporting Modules</h2>
     <nav class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <%= link_to expense_templates_path, class: "rounded-xl border border-border bg-card p-4 text-sm font-medium text-foreground hover:bg-muted/35" do %>
+      <%= link_to finance_recurring_transactions_path, class: "rounded-xl border border-border bg-card p-4 text-sm font-medium text-foreground hover:bg-muted/35" do %>
         <%= t("dashboard.expense_templates_title") %>
       <% end %>
       <%= link_to finance_categories_path, class: "rounded-xl border border-border bg-card p-4 text-sm font-medium text-foreground hover:bg-muted/35" do %>

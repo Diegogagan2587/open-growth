@@ -8,20 +8,17 @@ class QuickAddController < ApplicationController
   def create_income
     return render plain: "Not authenticated", status: :unauthorized unless Current.account
 
-    @income = Current.account.income_events.new(income_params)
-    @income.status = "applied"
-    @income.income_type ||= "regular"
-    @income.destination_selection = normalize_financial_destination(params.dig(:income, :destination))
+    destination = financial_account_from_selection(params.dig(:income, :destination))
+    @income = Financial::Transaction.new(
+      account: Current.account,
+      transaction_date: income_params[:expected_date],
+      amount: income_params[:expected_amount],
+      description: income_params[:description],
+      destination_account: destination,
+      entry_time: params.dig(:income, :time).presence
+    )
 
     if @income.save
-      source = @income.ensure_primary_funding_source!
-      result = Financial::FundingSources::ReceiveService.call(funding_source: source)
-      unless result.success?
-        @income.errors.add(:base, result.error_message)
-        return render plain: @income.errors.full_messages.join(", "), status: :unprocessable_entity
-      end
-      result.entry.update!(entry_time: params.dig(:income, :time).presence)
-
       respond_to do |format|
         format.turbo_stream do
           render turbo_stream: [
@@ -42,19 +39,21 @@ class QuickAddController < ApplicationController
   def create_expense
     return render plain: "Not authenticated", status: :unauthorized unless Current.account
 
-    # Parse optional origin account (asset or liability)
-    from_type, from_id = parse_financial_type(params.dig(:expense, :origin))
-    result = Financial::Entries::RecordExpenseService.call(
+    source = financial_account_from_selection(params.dig(:expense, :origin))
+    return render plain: "Please choose a valid source account", status: :unprocessable_entity if source.blank?
+
+    transaction = Financial::Transaction.new(
       account: Current.account,
       amount: expense_params[:amount],
-      entry_date: expense_params[:date],
+      transaction_date: expense_params[:date],
       entry_time: expense_params[:time],
       description: expense_params[:description],
-      category_id: expense_params[:category_id],
-      budget_period_id: Current.account.budget_periods.first&.id,
-      source_selection: from_type.present? ? "#{from_type}:#{from_id}" : nil,
-      income_event_id: expense_params[:income_event_id]
+      category: Category.for_account(Current.account).find_by(id: expense_params[:category_id]),
+      budget_period: Current.account.budget_periods.first,
+      plan: Financial::Plan.for_account(Current.account).find_by(id: expense_params[:income_event_id]),
+      source_account: source
     )
+    result = Struct.new(:success?, :error_message).new(transaction.save, transaction.errors.full_messages.to_sentence)
 
     if result.success?
       respond_to do |format|
@@ -77,24 +76,21 @@ class QuickAddController < ApplicationController
   def create_transfer
     return render plain: "Not authenticated", status: :unauthorized unless Current.account
 
-    # Parse origin and destination from form
-    from_type, from_id = parse_financial_type(params.dig(:transfer, :from_type))
-    to_type, to_id = parse_financial_type(params.dig(:transfer, :to_type))
+    source = financial_account_from_selection(params.dig(:transfer, :from_type))
+    destination = financial_account_from_selection(params.dig(:transfer, :to_type))
 
-    same_endpoint = from_type == to_type && from_id == to_id
-    if from_type.nil? || to_type.nil? || same_endpoint
-      return render plain: "Please choose valid and different origin/destination accounts", status: :unprocessable_entity
+    if source.blank? || destination.blank? || source == destination
+      return render plain: "Please choose valid and different source and destination accounts", status: :unprocessable_entity
     end
 
-    entry = build_transfer_entry(
+    entry = Financial::Transaction.new(
+      account: Current.account,
       amount: params.dig(:transfer, :amount),
-      from_type:,
-      from_id:,
-      to_type:,
-      to_id:,
-      description: params.dig(:transfer, :description),
-      entry_date: params.dig(:transfer, :date).presence || Date.current,
-      entry_time: params.dig(:transfer, :time)
+      transaction_date: params.dig(:transfer, :date).presence || Date.current,
+      entry_time: params.dig(:transfer, :time).presence,
+      description: params.dig(:transfer, :description).presence || "Transfer",
+      source_account: source,
+      destination_account: destination
     )
 
     if entry&.save
@@ -170,53 +166,8 @@ class QuickAddController < ApplicationController
     params.require(:doc).permit(:title, :content, :doc_type)
   end
 
-  def parse_financial_type(value)
-    # value format: "asset_123", "liability_456", "asset:123", or "liability:456"
-    return [ nil, nil ] if value.blank?
-
-    separator = value.include?(":") ? ":" : "_"
-    type_str, id_str = value.split(separator, 2)
-    type = type_str == "asset" ? :asset : (type_str == "liability" ? :liability : nil)
-
-    return [ nil, nil ] if type.nil? || id_str.blank?
-
-    [ type, id_str.to_i ]
-  end
-
-  def normalize_financial_destination(value)
-    type, id = parse_financial_type(value)
-    return nil if type.nil? || id.nil?
-
-    "#{type}:#{id}"
-  end
-
-  def build_transfer_entry(amount:, from_type:, from_id:, to_type:, to_id:, entry_date:, entry_time: nil, description: nil)
-    from_asset = from_type == :asset ? Financial::Asset.for_account(Current.account).find_by(id: from_id) : nil
-    to_asset = to_type == :asset ? Financial::Asset.for_account(Current.account).find_by(id: to_id) : nil
-    from_liability = from_type == :liability ? Financial::Liability.for_account(Current.account).find_by(id: from_id) : nil
-    to_liability = to_type == :liability ? Financial::Liability.for_account(Current.account).find_by(id: to_id) : nil
-
-    return nil if from_type == :asset && from_asset.blank?
-    return nil if to_type == :asset && to_asset.blank?
-    return nil if from_type == :liability && from_liability.blank?
-    return nil if to_type == :liability && to_liability.blank?
-
-    base_attrs = {
-      account: Current.account,
-      amount: amount,
-      entry_date: entry_date,
-      entry_time: entry_time.presence,
-      description: description.presence || "Transfer"
-    }
-
-    if from_asset.present? && to_asset.present?
-      Financial::Entry.new(base_attrs.merge(entry_type: "transfer", financial_account: from_asset, counterparty_financial_account: to_asset))
-    elsif from_asset.present? && to_liability.present?
-      Financial::Entry.new(base_attrs.merge(entry_type: "liability_payment", financial_account: from_asset, financial_liability: to_liability))
-    elsif from_liability.present? && to_asset.present?
-      Financial::Entry.new(base_attrs.merge(entry_type: "loan_disbursement", financial_liability: from_liability, financial_account: to_asset))
-    else
-      Financial::Entry.new(base_attrs.merge(entry_type: "loan_disbursement", financial_liability: to_liability, counterparty_financial_liability: from_liability))
-    end
+  def financial_account_from_selection(value)
+    id = value.to_s.split(/[:_]/).last
+    Financial::Account.for_account(Current.account).find_by(id: id) if id.present?
   end
 end

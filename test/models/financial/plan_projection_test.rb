@@ -89,7 +89,7 @@ class Financial::PlanProjectionTest < ActiveSupport::TestCase
     projection = Financial::PlanProjection.for(plan)
 
     assert_equal [ [ first.id, 200.to_d ], [ movement.id, 200.to_d ], [ deficit.id, -50.to_d ] ], projection.rows.map { |row| [ row.transaction.id, row.balance ] }
-    assert_equal deficit, projection.first_deficit_transaction
+    assert_equal Financial::PlannedTransaction.find(deficit.id), projection.first_deficit_transaction
   end
 
   test "committed liability payments reduce current and carried plan balances after application" do

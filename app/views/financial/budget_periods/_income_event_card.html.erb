@@ -19,6 +19,6 @@
     <p class="text-sm font-medium text-foreground mb-3">
       <%= t("budget_periods.show.expected_amount") %>: <%= number_to_currency(income_event.expected_amount) %>
     </p>
-    <%= link_to t("shared.view"), income_event, class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary transition-colors" %>
+    <%= link_to t("shared.view"), finance_plan_path(income_event), class: "inline-flex items-center justify-center min-h-[44px] px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary transition-colors" %>
   </div>
 <% end %>

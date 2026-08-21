@@ -1,0 +1,13 @@
+<% url = @savings_goal.persisted? ? finance_savings_goal_path(@savings_goal) : finance_savings_goals_path %>
+
+<%= form_with model: @savings_goal, scope: :financial_savings_goal, url: url, class: "grid gap-4 rounded-xl border border-border bg-card p-6 sm:grid-cols-2" do |form| %>
+  <% if @savings_goal.errors.any? %>
+    <p class="sm:col-span-2 text-sm text-destructive">
+      <%= @savings_goal.errors.full_messages.to_sentence %>
+    </p>
+  <% end %><label class="space-y-1 text-sm">Name<%= render Ui::InputComponent.new(name: "financial_savings_goal[name]", value: @savings_goal.name, required: true) %></label><label class="space-y-1 text-sm">Category<%= render Ui::SelectComponent.new(name: "financial_savings_goal[category_id]", options: @categories.map { |category| [category.name, category.id] }, selected: @savings_goal.category_id, include_blank: "Select category", required: true) %></label><label class="space-y-1 text-sm">Target amount<%= render Ui::InputComponent.new(name: "financial_savings_goal[total_amount]", value: @savings_goal.total_amount, type: "number", min: 0.01, step: 0.01, required: true) %></label><label class="space-y-1 text-sm">Contribution rhythm<%= render Ui::SelectComponent.new(name: "financial_savings_goal[frequency]", options: %w[weekly biweekly monthly bimonthly quarterly custom].map { |frequency| [frequency.humanize, frequency] }, selected: @savings_goal.frequency, required: true) %></label><label class="space-y-1 text-sm sm:col-span-2">Description<%= render Ui::InputComponent.new(name: "financial_savings_goal[description]", value: @savings_goal.description) %></label><label class="space-y-1 text-sm sm:col-span-2">Notes<%= form.text_area :notes, rows: 3, class: "w-full rounded-md border border-input bg-background px-3 py-2" %></label>
+
+  <div class="flex gap-2 sm:col-span-2">
+    <%= render Ui::ButtonComponent.new(label: @savings_goal.persisted? ? "Save goal" : "Create goal", type: "submit") %><%= render Ui::ButtonComponent.new(href: @savings_goal.persisted? ? finance_savings_goal_path(@savings_goal) : finance_savings_goals_path, label: "Cancel", variant: :outline) %>
+  </div>
+<% end %>

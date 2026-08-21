@@ -4,12 +4,6 @@ module IncomeEvents
       new(...).call
     end
 
-    def self.remove_for(income_event)
-      Financial::Entry.for_account(income_event.account)
-        .where(income_event: income_event, entry_type: "inflow", expense_id: nil, planned_expense_id: nil)
-        .delete_all
-    end
-
     def initialize(income_event)
       @income_event = income_event
     end
@@ -17,45 +11,32 @@ module IncomeEvents
     def call
       return if income_event.loan?
 
-      if syncable_status? && destination_selected?
-        upsert_entry!
-      else
-        self.class.remove_for(income_event)
-      end
+      return unless income_event.status.in?(%w[received applied]) && destination
+
+      create_receipt_once!
     end
 
     private
 
     attr_reader :income_event
 
-    def syncable_status?
-      income_event.status.in?(%w[received applied])
+    def destination
+      income_event.regular_income_destination_asset || income_event.regular_income_destination_liability
     end
 
-    def destination_selected?
-      income_event.regular_income_destination_asset.present? || income_event.regular_income_destination_liability.present?
-    end
+    def create_receipt_once!
+      plan = Financial::Plan.find(income_event.id)
+      source = plan.funding_sources.find_by(legacy_income_event_id: income_event.id)
+      return unless source
+      return if source.receipt_transaction
 
-    def upsert_entry!
-      entry = Financial::Entry.for_account(income_event.account)
-        .find_or_initialize_by(
-          income_event: income_event,
-          entry_type: "inflow",
-          expense_id: nil,
-          planned_expense_id: nil
-        )
-
-      entry.assign_attributes(
-        account: income_event.account,
-        entry_date: income_event.received_date || income_event.expected_date,
+      source.update!(expected_destination_account: destination)
+      Financial::FundingSources::Receipt.create(
+        funding_source: source,
         amount: income_event.received_amount || income_event.expected_amount,
-        description: income_event.description,
-        financial_account: income_event.regular_income_destination_asset,
-        financial_liability: nil,
-        counterparty_financial_liability: income_event.regular_income_destination_liability
+        transaction_date: income_event.received_date || income_event.expected_date,
+        description: income_event.description
       )
-
-      entry.save!
     end
   end
 end

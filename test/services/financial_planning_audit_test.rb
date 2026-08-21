@@ -5,6 +5,7 @@ class FinancialPlanningAuditTest < ActiveSupport::TestCase
     account = Account.create!(name: "Audit household")
     Current.account = account
     plan = IncomeEvent.create!(account:, description: "Ambiguous receipt", expected_date: Date.new(2026, 8, 1), expected_amount: 100, status: "received")
+    Financial::FundingSource.where(financial_plan_id: plan.id).delete_all
     transaction = PlannedExpense.create!(account:, income_event: plan, category: Category.create!(account:, name: "Audit category"), description: "Missing execution", amount: 25, status: "paid")
     review_entry = Financial::Entry.create!(
       account:,

@@ -4,6 +4,7 @@ class Financial::AssetTest < ActiveSupport::TestCase
   def setup
     @account = Account.create!(name: "Tenant Account")
     Current.account = @account
+    @category = Category.create!(account: @account, name: "Account test")
   end
 
   def teardown
@@ -35,7 +36,7 @@ class Financial::AssetTest < ActiveSupport::TestCase
       entry_date: Date.current,
       amount: 20,
       description: "Purchase",
-      category: Category.first
+      category: @category
     )
 
     assert_equal 130.to_d, financial_account.current_balance
@@ -74,7 +75,7 @@ class Financial::AssetTest < ActiveSupport::TestCase
     entry = Financial::Entry.create!(
       account: @account,
       financial_liability: liability,
-      category: Category.first,
+      category: @category,
       entry_type: "liability_charge",
       entry_date: Date.current,
       amount: 50,

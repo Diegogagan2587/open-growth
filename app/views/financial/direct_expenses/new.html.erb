@@ -50,19 +50,19 @@
     </div>
 
     <% account_option_groups = {
-      "Asset Accounts" => (@financial_accounts || []).map { |asset| ["#{asset.name} (#{asset.account_type.humanize})", "asset:#{asset.id}"] },
-      "Liability Accounts" => (@financial_liabilities || []).map { |liability| ["#{liability.name} (#{liability.liability_type.humanize})", "liability:#{liability.id}"] }
+      "Asset Accounts" => (@financial_accounts || []).map { |asset| ["#{asset.name} (#{asset.account_type.humanize})", asset.id] },
+      "Liability Accounts" => (@financial_liabilities || []).map { |liability| ["#{liability.name} (#{liability.liability_type.humanize})", liability.id] }
     } %>
-    <% source_options = grouped_options_for_select(account_option_groups, @financial_entry.source_selection) %>
-    <% destination_options = grouped_options_for_select(account_option_groups, @financial_entry.destination_selection) %>
+    <% source_options = grouped_options_for_select(account_option_groups, @financial_entry.source_account_id) %>
+    <% destination_options = grouped_options_for_select(account_option_groups, @financial_entry.destination_account_id) %>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
-        <%= form.label :source_selection, "Source account", class: "block text-sm font-medium text-foreground mb-2" %>
-        <%= form.select :source_selection, source_options, { include_blank: "Select source account" }, { class: "block w-full rounded-lg border-input shadow-sm focus:border-primary focus:ring-primary" } %>
+        <%= form.label :source_account_id, "Source account", class: "block text-sm font-medium text-foreground mb-2" %>
+        <%= form.select :source_account_id, source_options, { include_blank: "Select source account" }, { class: "block w-full rounded-lg border-input shadow-sm focus:border-primary focus:ring-primary" } %>
       </div>
       <div>
-        <%= form.label :destination_selection, "Destination account", class: "block text-sm font-medium text-foreground mb-2" %>
-        <%= form.select :destination_selection, destination_options, { include_blank: "Leave blank for a normal expense" }, { class: "block w-full rounded-lg border-input shadow-sm focus:border-primary focus:ring-primary" } %>
+        <%= form.label :destination_account_id, "Destination account", class: "block text-sm font-medium text-foreground mb-2" %>
+        <%= form.select :destination_account_id, destination_options, { include_blank: "Leave blank for a normal expense" }, { class: "block w-full rounded-lg border-input shadow-sm focus:border-primary focus:ring-primary" } %>
       </div>
     </div>
 

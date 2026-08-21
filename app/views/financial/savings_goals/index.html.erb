@@ -1,0 +1,50 @@
+<section class="container mx-auto space-y-5 px-4 py-6">
+  <header class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-3xl font-bold">Savings Goals</h1>
+
+      <p class="mt-1 text-sm text-muted-foreground">
+        Named targets funded by executed planned transactions.
+      </p>
+    </div><%= render Ui::ButtonComponent.new(href: new_finance_savings_goal_path, label: "New Savings Goal") %>
+  </header>
+
+  <div class="grid gap-4 md:grid-cols-2">
+    <% @savings_goals.each do |goal| %>
+      <article class="rounded-xl border border-border bg-card p-5">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <%= link_to goal.name, finance_savings_goal_path(goal), class: "text-lg font-semibold hover:underline" %>
+
+            <p class="text-sm text-muted-foreground">
+              <%= goal.category.name %>
+            </p>
+          </div><%= render Ui::BadgeComponent.new(label: goal.complete? ? "Complete" : "In progress", variant: :outline) %>
+        </div>
+
+        <div class="mt-4 h-2 overflow-hidden rounded bg-muted">
+          <div
+            class="h-full bg-primary"
+            style="width: <%= [goal.progress_percentage, 100].min %>%"
+          ></div>
+        </div>
+
+        <p class="mt-2 text-sm">
+          <%= number_to_currency(goal.total_saved) %> of
+          <%= number_to_currency(goal.total_amount) %>
+        </p>
+      </article>
+    <% end %>
+  </div>
+
+  <% if @savings_goals.empty? %>
+    <p
+      class="
+        rounded-xl border border-dashed border-border p-6
+        text-muted-foreground
+      "
+    >
+      No savings goals yet.
+    </p>
+  <% end %>
+</section>

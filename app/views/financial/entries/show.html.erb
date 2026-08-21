@@ -1,126 +1,29 @@
 <% content_for :title, @financial_entry.description %>
-
 <section class="container mx-auto space-y-6 px-4 py-6">
-  <div>
-    <%= link_to "← Back to transactions", finance_entries_path, class: "text-sm font-medium text-accent hover:underline" %>
-  </div>
-
-  <header class="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:flex-row sm:items-start sm:justify-between">
-    <div class="min-w-0">
-      <div class="mb-2 flex flex-wrap items-center gap-2">
-        <%= render Ui::BadgeComponent.new(label: @financial_entry.entry_type.humanize, variant: :outline) %>
-        <span class="text-sm text-muted-foreground">
-          <%= @financial_entry.entry_date.strftime("%d %B %Y") %><%= " · #{@financial_entry.entry_time.strftime('%H:%M')}" if @financial_entry.entry_time %>
-        </span>
-      </div>
-      <h1 class="break-words text-2xl font-bold tracking-tight text-foreground sm:text-3xl"><%= @financial_entry.description %></h1>
-    </div>
-    <p class="whitespace-nowrap text-2xl font-bold <%= financial_entry_amount_class(@financial_entry) %>">
-      <%= financial_entry_amount_prefix(@financial_entry) %><%= number_to_currency(@financial_entry.amount) %>
-    </p>
+  <%= link_to "← Back to transactions", finance_transactions_path, class: "text-sm text-accent hover:underline" %>
+  <header class="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+    <div><div class="flex flex-wrap gap-2"><%= render Ui::BadgeComponent.new(label: @financial_entry.transaction_type.humanize, variant: :outline) %><%= render Ui::BadgeComponent.new(label: @financial_entry.reconciled_at? ? "Verified" : "Not verified", variant: :outline) %></div><h1 class="mt-2 text-3xl font-bold"><%= @financial_entry.description %></h1><p class="mt-1 text-muted-foreground"><%= l(@financial_entry.transaction_date, format: :long) %><%= " · #{@financial_entry.entry_time.strftime('%H:%M')}" if @financial_entry.entry_time %></p></div>
+    <strong class="text-2xl <%= financial_entry_amount_class(@financial_entry) %>"><%= financial_entry_amount_prefix(@financial_entry) %><%= number_to_currency(@financial_entry.amount) %></strong>
   </header>
 
-  <section aria-labelledby="summary-heading">
-    <h2 id="summary-heading" class="mb-3 text-lg font-semibold text-foreground">Summary</h2>
-    <dl class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <div class="rounded-xl border border-border bg-card p-4">
-        <dt class="text-sm text-muted-foreground">Transaction type</dt>
-        <dd class="mt-1 font-semibold text-foreground"><%= @financial_entry.entry_type.humanize %></dd>
-      </div>
-      <div class="rounded-xl border border-border bg-card p-4">
-        <dt class="text-sm text-muted-foreground">Transaction date</dt>
-        <dd class="mt-1 font-semibold text-foreground">
-          <%= @financial_entry.entry_date.strftime("%d %b %Y") %><%= " · #{@financial_entry.entry_time.strftime('%H:%M')}" if @financial_entry.entry_time %>
-        </dd>
-      </div>
-      <div class="rounded-xl border border-border bg-card p-4">
-        <dt class="text-sm text-muted-foreground">Net asset account effect</dt>
-        <dd class="mt-1 font-semibold <%= @financial_entry.net_asset_effect.negative? ? 'text-danger' : 'text-success' %>"><%= number_to_currency(@financial_entry.net_asset_effect) %></dd>
-      </div>
-      <% if @financial_entry.financial_liability || @financial_entry.counterparty_financial_liability %>
-        <div class="rounded-xl border border-border bg-card p-4">
-          <dt class="text-sm text-muted-foreground">Net liability effect</dt>
-          <dd class="mt-1 font-semibold <%= @financial_entry.net_liability_effect.positive? ? 'text-danger' : 'text-success' %>"><%= number_to_currency(@financial_entry.net_liability_effect) %></dd>
-        </div>
-      <% end %>
-    </dl>
-  </section>
-
-  <section aria-labelledby="movement-heading">
-    <h2 id="movement-heading" class="mb-3 text-lg font-semibold text-foreground">Money movement</h2>
-    <%= render Financial::EntryRouteComponent.new(entry: @financial_entry, detailed: true) %>
-  </section>
-
-  <section aria-labelledby="classification-heading">
-    <h2 id="classification-heading" class="mb-3 text-lg font-semibold text-foreground">Classification and planning</h2>
-    <dl class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <div class="rounded-xl border border-border bg-card p-4">
-        <dt class="text-sm text-muted-foreground">Category</dt>
-        <dd class="mt-1 font-medium text-foreground">
-          <% if @financial_entry.category %>
-            <%= link_to @financial_entry.category.name, finance_category_path(@financial_entry.category), class: "hover:text-accent hover:underline" %>
-          <% else %>
-            Not assigned
-          <% end %>
-        </dd>
-      </div>
-      <div class="rounded-xl border border-border bg-card p-4">
-        <dt class="text-sm text-muted-foreground">Budget period</dt>
-        <dd class="mt-1 font-medium text-foreground">
-          <%= @financial_entry.budget_period ? link_to(@financial_entry.budget_period.name, @financial_entry.budget_period, class: "hover:text-accent hover:underline") : "Not assigned" %>
-        </dd>
-      </div>
-      <div class="rounded-xl border border-border bg-card p-4">
-        <dt class="text-sm text-muted-foreground">Income event</dt>
-        <dd class="mt-1 font-medium text-foreground">
-          <%= @financial_entry.income_event ? link_to(@financial_entry.income_event.description, @financial_entry.income_event, class: "hover:text-accent hover:underline") : "Not assigned" %>
-        </dd>
-      </div>
-      <div class="rounded-xl border border-border bg-card p-4">
-        <dt class="text-sm text-muted-foreground">Planned expense</dt>
-        <dd class="mt-1 font-medium text-foreground">
-          <% if @financial_entry.planned_expense %>
-            <%= link_to @financial_entry.planned_expense.description, income_event_planned_expense_path(@financial_entry.planned_expense.income_event, @financial_entry.planned_expense), class: "hover:text-accent hover:underline" %>
-          <% else %>
-            Not assigned
-          <% end %>
-        </dd>
-      </div>
-      <% if @financial_entry.expense %>
-        <div class="rounded-xl border border-border bg-card p-4">
-          <dt class="text-sm text-muted-foreground">Legacy expense</dt>
-          <dd class="mt-1 font-medium text-foreground">#<%= @financial_entry.expense.id %> · <%= @financial_entry.expense.description.presence || number_to_currency(@financial_entry.expense.amount) %></dd>
-        </div>
-      <% end %>
-    </dl>
-  </section>
-
-  <section aria-labelledby="details-heading" class="rounded-xl border border-border bg-card p-5">
-    <h2 id="details-heading" class="text-lg font-semibold text-foreground">Additional details</h2>
-    <dl class="mt-4 grid gap-4 sm:grid-cols-2">
-      <div class="sm:col-span-2">
-        <dt class="text-sm text-muted-foreground">Notes</dt>
-        <dd class="mt-1 whitespace-pre-wrap text-foreground"><%= @financial_entry.notes.presence || "No notes" %></dd>
-      </div>
-      <div>
-        <dt class="text-sm text-muted-foreground">Created</dt>
-        <dd class="mt-1 text-foreground"><%= l(@financial_entry.created_at, format: :long) %></dd>
-      </div>
-      <div>
-        <dt class="text-sm text-muted-foreground">Last updated</dt>
-        <dd class="mt-1 text-foreground"><%= l(@financial_entry.updated_at, format: :long) %></dd>
-      </div>
-    </dl>
-  </section>
+  <section class="rounded-xl border border-border bg-card p-5"><h2 class="mb-3 text-lg font-semibold">Money movement</h2><%= render Financial::TransactionRouteComponent.new(transaction: @financial_entry, detailed: true) %></section>
+  <dl class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="rounded-xl border border-border bg-card p-4"><dt class="text-sm text-muted-foreground">Category</dt><dd class="mt-1 font-medium"><%= @financial_entry.category&.name || "Not assigned" %></dd></div>
+    <div class="rounded-xl border border-border bg-card p-4"><dt class="text-sm text-muted-foreground">Budget period</dt><dd class="mt-1 font-medium"><%= @financial_entry.budget_period&.name || "Not assigned" %></dd></div>
+    <div class="rounded-xl border border-border bg-card p-4"><dt class="text-sm text-muted-foreground">Plan</dt><dd class="mt-1 font-medium"><%= @financial_entry.plan ? link_to(@financial_entry.plan.name, finance_plan_path(@financial_entry.plan), class: "hover:underline") : "Not assigned" %></dd></div>
+    <div class="rounded-xl border border-border bg-card p-4"><dt class="text-sm text-muted-foreground">Execution</dt><dd class="mt-1 font-medium"><%= @financial_entry.planned_transaction&.description || "Not workflow-created" %></dd></div>
+    <div class="rounded-xl border border-border bg-card p-4"><dt class="text-sm text-muted-foreground">Reconciled at</dt><dd class="mt-1 font-medium"><%= @financial_entry.reconciled_at ? l(@financial_entry.reconciled_at, format: :long) : "Not verified" %></dd></div>
+    <div class="rounded-xl border border-border bg-card p-4"><dt class="text-sm text-muted-foreground">Last updated</dt><dd class="mt-1 font-medium"><%= l(@financial_entry.updated_at, format: :long) %></dd></div>
+  </dl>
+  <% if @financial_entry.notes.present? %><section class="rounded-xl border border-border bg-card p-5"><h2 class="font-semibold">Notes</h2><p class="mt-2 whitespace-pre-wrap"><%= @financial_entry.notes %></p></section><% end %>
 
   <div class="flex flex-wrap gap-2">
-    <%= render Ui::ButtonComponent.new(href: edit_finance_entry_path(@financial_entry), label: "Edit", variant: "outline") %>
-    <%= render Ui::ButtonComponent.new(
-      href: finance_entry_path(@financial_entry),
-      label: "Delete",
-      variant: "destructive",
-      method: :delete,
-      data: { turbo_confirm: "Are you sure?" }
-    ) %>
+    <%= render Ui::ButtonComponent.new(href: edit_finance_transaction_path(@financial_entry), label: "Correct", variant: :outline) %>
+    <% if @financial_entry.reconciled_at? %>
+      <%= render Ui::ButtonComponent.new(href: finance_transaction_reconciliation_path(@financial_entry), label: "Mark unverified", variant: :outline, method: :delete) %>
+    <% else %>
+      <%= render Ui::ButtonComponent.new(href: finance_transaction_reconciliation_path(@financial_entry), label: "Verify against bank", variant: :outline, method: :post) %>
+    <% end %>
+    <%= render Ui::ButtonComponent.new(href: finance_transaction_path(@financial_entry), label: "Delete", variant: :destructive, method: :delete, data: { turbo_confirm: @financial_entry.reconciled_at? ? "This transaction was verified against the bank. Delete it?" : "Delete this transaction?" }) %>
   </div>
 </section>

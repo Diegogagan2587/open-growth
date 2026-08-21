@@ -11,9 +11,9 @@ class Reporting::AnalysisSnapshot
   def as_json(*)
     {
       period: { from: date_range.begin, to: date_range.end },
-      totals_by_month: grouped_totals("DATE_TRUNC('month', entry_date)"),
+      totals_by_month: grouped_totals("DATE_TRUNC('month', transaction_date)"),
       totals_by_category: entries.left_joins(:category).group("categories.name").sum(:amount),
-      totals_by_entry_type: entries.group(:entry_type).sum(:amount),
+      totals_by_entry_type: entries.group(:transaction_type).sum(:amount),
       totals_by_financial_account: totals_by_financial_account,
       audit_findings: FinancialPlanningAudit.call(account:, date_range:),
       entries: selected_entries.map { |entry| serialize_entry(entry) },
@@ -28,7 +28,7 @@ class Reporting::AnalysisSnapshot
   attr_reader :account, :date_range
 
   def entries
-    @entries ||= account.financial_entries.where(entry_date: date_range)
+    @entries ||= account.financial_transactions.where(transaction_date: date_range)
   end
 
   def grouped_totals(sql)
@@ -38,7 +38,7 @@ class Reporting::AnalysisSnapshot
   def selected_entries
     @selected_entries ||= begin
       relation = entries.includes(:category, :financial_account, :counterparty_financial_account, :financial_liability)
-      recent = relation.order(entry_date: :desc, entry_time: :desc, id: :desc).limit(MAX_ENTRIES / 2).to_a
+      recent = relation.order(transaction_date: :desc, entry_time: :desc, id: :desc).limit(MAX_ENTRIES / 2).to_a
       largest = relation.order(amount: :desc, id: :desc).limit(MAX_ENTRIES / 2).to_a
       (recent + largest).uniq(&:id).first(MAX_ENTRIES)
     end

@@ -54,17 +54,13 @@ class Financial::Loans::RepaymentWorkflowsTest < ActiveSupport::TestCase
     installment = generated.installments.first
     Financial::Loans::PlanInstallmentService.call(installment: installment, plan: @plan, source_account: @asset)
 
-    first = Financial::Loans::ApplyInstallmentPayment.call(
-      installment: installment,
-      total: 1_165,
-      interest: 165,
-      entry_date: Date.new(2026, 9, 1)
+    first = Financial::PlannedTransactions::Execution.create(
+      planned_transaction: installment.planned_transaction,
+      attributes: { amount: 1_165, interest_amount: 165, transaction_date: Date.new(2026, 9, 1) }
     )
-    second = Financial::Loans::ApplyInstallmentPayment.call(
-      installment: installment.reload,
-      total: 1_165,
-      interest: 165,
-      entry_date: Date.new(2026, 9, 1)
+    second = Financial::PlannedTransactions::Execution.create(
+      planned_transaction: installment.planned_transaction.reload,
+      attributes: { amount: 1_165, interest_amount: 165, transaction_date: Date.new(2026, 9, 1) }
     )
 
     assert first.success?

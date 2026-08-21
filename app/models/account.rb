@@ -5,17 +5,18 @@ class Account < ApplicationRecord
   has_many :budget_periods, dependent: :destroy
   has_many :categories, dependent: :destroy
   has_many :expenses, dependent: :destroy
-  has_many :expense_templates, dependent: :destroy
+  has_many :financial_savings_goals, class_name: "Financial::SavingsGoal", dependent: :destroy
+  has_many :financial_recurring_transactions, class_name: "Financial::RecurringTransaction", dependent: :destroy
   has_many :income_events, dependent: :destroy
-  has_many :financial_plans, class_name: "Financial::Plan"
+  has_many :financial_plans, class_name: "Financial::Plan", dependent: :destroy
   has_many :financial_funding_sources, class_name: "Financial::FundingSource", dependent: :destroy
   has_many :financial_loans, class_name: "Financial::Loan", dependent: :destroy
-  has_many :financial_accounts, class_name: "Financial::Asset", dependent: :destroy
-  has_many :financial_liabilities, class_name: "Financial::Liability", dependent: :destroy
-  has_many :financial_entries, class_name: "Financial::Entry", dependent: :destroy
+  has_many :financial_accounts, class_name: "Financial::Account", dependent: :destroy
+  has_many :financial_transactions, class_name: "Financial::Transaction", dependent: :destroy
+  has_many :financial_liabilities, -> { liabilities }, class_name: "Financial::Account"
   has_many :planned_expenses, dependent: :destroy
-  has_many :financial_planned_transactions, class_name: "Financial::PlannedTransaction"
-  has_many :budget_line_items, dependent: :destroy
+  has_many :financial_planned_transactions, class_name: "Financial::PlannedTransaction", dependent: :destroy
+  has_many :financial_budget_allocations, class_name: "Financial::BudgetAllocation", dependent: :destroy
   has_many :shopping_items, dependent: :destroy
   has_many :inventory_items, dependent: :destroy
   has_many :task_areas, dependent: :destroy

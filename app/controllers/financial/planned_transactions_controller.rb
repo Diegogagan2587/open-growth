@@ -1,86 +1,64 @@
 class Financial::PlannedTransactionsController < ApplicationController
-  before_action :set_plan, only: [ :index, :create ]
-  before_action :set_planned_transaction, only: [ :update, :destroy, :apply, :move ]
+  before_action :set_planned_transaction, only: %i[update destroy]
 
   def index
-    @planned_transactions = @plan ? @plan.planned_transactions.by_position : Financial::PlannedTransaction.for_account(Current.account).unassigned.order(:planned_for, :created_at)
-    @plans = Financial::Plan.for_account(Current.account).where(lifecycle_status: %w[draft active]).chronological unless @plan
+    @planned_transactions = Financial::PlannedTransaction.for_account(Current.account)
+    @planned_transactions = @planned_transactions.where(plan_id: params[:plan_id]) if params[:plan_id].present?
+    @planned_transactions = @planned_transactions.unassigned if params[:unassigned] == "true" || params[:plan_id].blank?
+    @planned_transactions = @planned_transactions.order(:planned_execution_date, :created_at)
+    @plans = Financial::Plan.for_account(Current.account).where(lifecycle_status: %w[draft active]).chronological
   end
 
   def create
-    transaction = @plan.planned_transactions.new(planned_transaction_params.merge(account: Current.account, status: "pending_to_pay"))
+    requested_plan_id = planned_transaction_params[:plan_id].presence
+    plan = Financial::Plan.for_account(Current.account).find_by(id: requested_plan_id)
+    raise ActiveRecord::RecordNotFound, "Plan not found" if requested_plan_id && plan.nil?
+    transaction = build_planned_transaction(plan)
     if transaction.save
-      redirect_to finance_plan_path(@plan), notice: "Planned transaction added"
+      redirect_to plan ? finance_plan_path(plan) : finance_planned_transactions_path, notice: "Planned transaction added"
     else
-      redirect_to finance_plan_path(@plan), alert: transaction.errors.full_messages.to_sentence
+      redirect_back fallback_location: finance_planned_transactions_path, alert: transaction.errors.full_messages.to_sentence
     end
   end
 
   def update
     attributes = editable_planned_transaction_params
+    move_result = move_if_requested(attributes) if attributes
+    if move_result&.success? == false
+      redirect_back fallback_location: finance_planned_transactions_path, alert: move_result.error_message
+      return
+    end
+
     if attributes && @planned_transaction.update(attributes)
-      redirect_to finance_plan_path(@planned_transaction.plan), notice: "Planned transaction updated"
+      redirect_back fallback_location: finance_planned_transactions_path, notice: "Planned transaction updated"
     else
-      redirect_to finance_plan_path(@planned_transaction.plan), alert: @planned_transaction.errors.full_messages.to_sentence.presence || "Only pending transactions or applied plan commitments can be edited"
+      redirect_back fallback_location: finance_planned_transactions_path, alert: @planned_transaction.errors.full_messages.to_sentence.presence || "Only pending transactions or applied plan commitments can be edited"
     end
   end
 
   def destroy
-    plan = @planned_transaction.plan
     if @planned_transaction.execution_status == "pending" && @planned_transaction.destroy
-      redirect_to finance_plan_path(plan), status: :see_other, notice: "Planned transaction removed"
+      redirect_back fallback_location: finance_planned_transactions_path, status: :see_other, notice: "Planned transaction removed"
     else
-      redirect_to finance_plan_path(plan), alert: "Only pending transactions can be removed"
+      redirect_back fallback_location: finance_planned_transactions_path, alert: "Only pending transactions can be removed"
     end
   end
 
-  def apply
-    result = Financial::PlannedTransactions::ApplyService.call(
-      planned_transaction: @planned_transaction,
-      amount: apply_params[:amount],
-      interest_amount: apply_params[:interest_amount],
-      entry_date: apply_params[:entry_date],
-      description: apply_params[:description],
-      category: scoped_category(apply_params[:category_id]),
-      financial_account: scoped_asset(apply_params[:financial_account_id]),
-      counterparty_financial_account: scoped_asset(apply_params[:counterparty_financial_account_id]),
-      financial_liability: scoped_liability(apply_params[:financial_liability_id])
-    )
-    redirect_back fallback_location: finance_planned_transactions_path,
-      notice: ("Transaction applied" if result.success?),
-      alert: (result.error_message unless result.success?)
-  end
-
-  def move
-    target = Financial::Plan.for_account(Current.account).find_by(id: params[:target_plan_id]) if params[:target_plan_id].present?
-    result = Financial::PlannedTransactions::MoveService.call(planned_transaction: @planned_transaction, target_plan: target)
-    redirect_back fallback_location: finance_planned_transactions_path,
-      notice: ("Transaction moved" if result.success?),
-      alert: (result.error_message unless result.success?)
-  end
-
   private
-
-  def set_plan
-    @plan = Financial::Plan.for_account(Current.account).find(params[:plan_id]) if params[:plan_id]
-  end
 
   def set_planned_transaction
     @planned_transaction = Financial::PlannedTransaction.for_account(Current.account).find(params[:id])
   end
 
   def planned_transaction_params
-    permitted = params.expect(planned_transaction: [
-      :description, :amount, :kind, :planned_for, :due_date, :importance, :category_id,
-      :financial_account_id, :counterparty_financial_account_id, :financial_liability_id,
-      :transaction_type, :source_selection, :destination_selection, :commits_plan_funds
-    ])
-    transaction_type = permitted.delete(:transaction_type)
-    return permitted if transaction_type.blank?
-
-    permitted[:kind] = nil
-    permitted[:destination_selection] = nil unless transaction_type == "transfer"
-    permitted
+    params.expect(planned_transaction: [
+      :plan_id, :description, :planned_amount, :amount, :kind, :planned_execution_date, :planned_for,
+      :due_date, :importance, :category_id, :source_account_id, :destination_account_id,
+      :budget_consuming, :recurring_transaction_id, :commits_plan_funds
+    ]).tap do |permitted|
+      permitted[:planned_amount] ||= permitted.delete(:amount)
+      permitted[:planned_execution_date] ||= permitted.delete(:planned_for)
+    end
   end
 
   def editable_planned_transaction_params
@@ -90,19 +68,26 @@ class Financial::PlannedTransactionsController < ApplicationController
     commitment_params if @planned_transaction.execution_status == "applied" && commitment_params.key?(:commits_plan_funds)
   end
 
-  def apply_params
-    params.fetch(:planned_transaction, {}).permit(:amount, :interest_amount, :entry_date, :description, :category_id, :financial_account_id, :counterparty_financial_account_id, :financial_liability_id)
+  def build_planned_transaction(plan)
+    recurring_id = planned_transaction_params[:recurring_transaction_id].presence
+    return Financial::PlannedTransaction.new(planned_transaction_params.merge(account: Current.account, plan: plan)) unless recurring_id
+
+    recurring = Financial::RecurringTransaction.for_account(Current.account).active.find(recurring_id)
+    recurring.build_occurrence(
+      plan: plan,
+      planned_execution_date: planned_transaction_params[:planned_execution_date]
+    )
   end
 
-  def scoped_category(id)
-    Category.for_account(Current.account).find_by(id: id) if id.present?
-  end
+  def move_if_requested(attributes)
+    return unless attributes.key?(:plan_id)
 
-  def scoped_asset(id)
-    Financial::Asset.for_account(Current.account).find_by(id: id) if id.present?
-  end
+    target_id = attributes.delete(:plan_id)
+    return if target_id.to_s == @planned_transaction.plan_id.to_s
 
-  def scoped_liability(id)
-    Financial::Liability.for_account(Current.account).find_by(id: id) if id.present?
+    target = Financial::Plan.for_account(Current.account).find_by(id: target_id.presence)
+    return Financial::PlannedTransactions::MoveService::Result.new(success?: false, error_message: "Plan not found", planned_transaction: @planned_transaction) if target_id.present? && target.nil?
+
+    Financial::PlannedTransactions::MoveService.call(planned_transaction: @planned_transaction, target_plan: target)
   end
 end

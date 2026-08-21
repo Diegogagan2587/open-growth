@@ -1,20 +1,18 @@
 class Financial::PlanActuals
-  FUNDING_ENTRY_TYPES = %w[inflow loan_disbursement].freeze
-
   def self.for(plan)
     new(plan)
   end
 
   def initialize(plan)
-    @plan = plan
+    @plan = plan.is_a?(Financial::Plan) ? plan : Financial::Plan.find(plan.id)
   end
 
   def actual_funding
-    entries.where(entry_type: FUNDING_ENTRY_TYPES).sum(:amount)
+    transactions.funding.sum(:amount)
   end
 
   def actual_consumption
-    entries.where(entry_type: Financial::Entry::EXPENSE_ENTRY_TYPES).sum(:amount)
+    transactions.expenses.sum(:amount)
   end
 
   def opening_balance
@@ -23,9 +21,9 @@ class Financial::PlanActuals
         next preceding_plan.actual_ending_balance_at_close.to_d
       end
 
-      preceding_entries = preceding_plan.financial_entries
-      balance + preceding_entries.where(entry_type: FUNDING_ENTRY_TYPES).sum(:amount).to_d -
-        preceding_entries.where(entry_type: Financial::Entry::EXPENSE_ENTRY_TYPES).sum(:amount).to_d
+      preceding_transactions = preceding_plan.transactions
+      balance + preceding_transactions.funding.sum(:amount).to_d -
+        preceding_transactions.expenses.sum(:amount).to_d
     end
   end
 
@@ -37,13 +35,13 @@ class Financial::PlanActuals
 
   attr_reader :plan
 
-  def entries
-    plan.financial_entries
+  def transactions
+    plan.transactions
   end
 
   def preceding_plans
-    plan.account.income_events
-      .where("expected_date < :date OR (expected_date = :date AND id < :id)", date: plan.expected_date, id: plan.id)
-      .order(:expected_date, :id)
+    plan.account.financial_plans
+      .where("planned_for < :date OR (planned_for = :date AND id < :id)", date: plan.planned_for, id: plan.id)
+      .order(:planned_for, :id)
   end
 end

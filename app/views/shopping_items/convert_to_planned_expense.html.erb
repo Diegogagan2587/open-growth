@@ -1,6 +1,6 @@
-<h1 class="text-2xl font-bold mb-4">Convert to Planned Expense</h1>
+<h1 class="text-2xl font-bold mb-4">Convert to Planned Transaction</h1>
 
-<p class="mb-4">Convert "<%= @shopping_item.name %>" to a planned expense.</p>
+<p class="mb-4">Convert "<%= @shopping_item.name %>" to a planned transaction.</p>
 
 <% if @shopping_item.estimated_amount.blank? || @shopping_item.estimated_amount <= 0 %>
   <div class="bg-yellow-50 border border-warning-soft text-yellow-700 px-4 py-3 rounded mb-4">
@@ -11,8 +11,8 @@
 
 <%= form_with url: convert_to_planned_expense_shopping_item_path(@shopping_item), method: :post, local: true do |form| %>
   <div class="mb-4">
-    <%= form.label :income_event_id, "Income Event", class: "block text-sm font-medium text-foreground mb-1" %>
-    <%= form.collection_select :income_event_id, @income_events, :id, :description, { prompt: "Select an income event" }, { class: "border rounded px-3 py-2 w-full", required: true } %>
+    <%= form.label :income_event_id, "Plan", class: "block text-sm font-medium text-foreground mb-1" %>
+    <%= form.collection_select :income_event_id, @income_events, :id, :name, { prompt: "Select a plan" }, { class: "border rounded px-3 py-2 w-full", required: true } %>
   </div>
 
   <div class="mb-4">

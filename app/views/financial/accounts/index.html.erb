@@ -1,38 +1,44 @@
-<p style="color: green"><%= notice %></p>
+<section class="container mx-auto space-y-5 px-4 py-6">
+  <header class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-3xl font-bold">Financial Accounts</h1>
 
-<h1 class="text-2xl font-bold mb-4">Asset Accounts</h1>
+      <p class="mt-1 text-sm text-muted-foreground">
+        Places where money is held or owed.
+      </p>
+    </div><%= render Ui::ButtonComponent.new(href: new_finance_account_path, label: "New Account") %>
+  </header>
 
-<div class="mb-4 flex justify-between items-center">
-  <%= render Ui::ButtonComponent.new(
-    href: new_finance_financial_account_path,
-    label: "New Asset Account",
-    variant: "default"
-  ) %>
-</div>
+  <nav class="flex gap-2">
+    <%= link_to "All", finance_accounts_path, class: "rounded-md border border-border px-3 py-2 text-sm" %><%= link_to "Assets", finance_accounts_path(account_group: "asset"), class: "rounded-md border border-border px-3 py-2 text-sm" %><%= link_to "Liabilities", finance_accounts_path(account_group: "liability"), class: "rounded-md border border-border px-3 py-2 text-sm" %>
+  </nav>
 
-<table class="ui-table">
-  <thead>
-    <tr class="bg-muted">
-      <th class="px-4 py-2 text-left">Name</th>
-      <th class="px-4 py-2 text-left">Type</th>
-      <th class="px-4 py-2 text-left">Status</th>
-      <th class="px-4 py-2 text-left">Current Balance</th>
-      <th class="px-4 py-2 text-left">Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @financial_accounts.each do |financial_account| %>
-      <tr class="border-t">
-        <td class="px-4 py-2"><%= financial_account.name %></td>
-        <td class="px-4 py-2"><%= financial_account.account_type.humanize %></td>
-        <td class="px-4 py-2"><%= financial_account.status.humanize %></td>
-        <td class="px-4 py-2"><%= number_to_currency(financial_account.current_balance) %></td>
-        <td class="px-4 py-2">
-          <%= link_to "View", finance_financial_account_path(financial_account), class: "text-accent hover:underline" %>
-          <%= link_to "Edit", edit_finance_financial_account_path(financial_account), class: "text-accent hover:underline ml-2" %>
-          <%= link_to "Delete", finance_financial_account_path(financial_account), method: :delete, data: { turbo_confirm: "Are you sure?" }, class: "text-danger hover:underline ml-2" %>
-        </td>
-      </tr>
+  <div class="overflow-hidden rounded-xl border border-border bg-card">
+    <% @financial_accounts.each do |account| %>
+      <article
+        class="
+          grid gap-3 border-b border-border p-4 last:border-0
+          sm:grid-cols-[1fr_auto_auto] sm:items-center
+        "
+      >
+        <div>
+          <%= link_to account.name, finance_account_path(account), class: "font-semibold hover:text-accent hover:underline" %>
+
+          <p class="text-sm text-muted-foreground">
+            <%= account.account_group.humanize %> ·
+            <%= account.account_type.humanize %> ·
+            <%= account.status.humanize %>
+          </p>
+        </div>
+
+        <strong><%= number_to_currency(account.current_balance) %></strong><%= link_to "Edit", edit_finance_account_path(account), class: "text-sm text-primary hover:underline" %>
+      </article>
     <% end %>
-  </tbody>
-</table>
+
+    <% if @financial_accounts.empty? %>
+      <p class="p-6 text-sm text-muted-foreground">
+        No financial accounts yet.
+      </p>
+    <% end %>
+  </div>
+</section>

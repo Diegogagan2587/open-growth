@@ -46,13 +46,9 @@
         Kind
         <%= render Ui::SelectComponent.new(name: "financial_funding_source[kind]", options: Financial::FundingSource::KINDS.reject { |kind| kind == "borrowed" }.map { |kind| [ kind.humanize, kind ] }, selected: funding_source.kind, required: true) %>
       </label>
-      <label class="space-y-1 text-sm font-medium">
-        Expected asset destination
-        <%= render Ui::SelectComponent.new(name: "financial_funding_source[expected_destination_asset_id]", options: assets.map { |asset| [ asset.name, asset.id ] }, selected: funding_source.expected_destination_asset_id, include_blank: "None") %>
-      </label>
-      <label class="space-y-1 text-sm font-medium">
-        Or liability destination
-        <%= render Ui::SelectComponent.new(name: "financial_funding_source[expected_destination_liability_id]", options: liabilities.map { |liability| [ liability.name, liability.id ] }, selected: funding_source.expected_destination_liability_id, include_blank: "None") %>
+      <label class="space-y-1 text-sm font-medium sm:col-span-2">
+        Expected destination
+        <%= render Ui::SelectComponent.new(name: "financial_funding_source[expected_destination_account_id]", options: (assets + liabilities).map { |account| [ "#{account.account_group.humanize}: #{account.name}", account.id ] }, selected: funding_source.expected_destination_account_id, include_blank: "Select destination", required: true) %>
       </label>
     </fieldset>
   <% end %>

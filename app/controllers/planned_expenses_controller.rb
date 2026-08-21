@@ -8,11 +8,12 @@ class PlannedExpensesController < ApplicationController
       :financial_account,
       :counterparty_financial_account,
       :financial_liability,
-      :expense_template,
       :financial_entry,
       :expense
     )
     @planned_expenses, @planned_movements = @planned_transactions.partition(&:budget_consuming?)
+    with_recurrence = @planned_transactions.select(&:expense_template_id?)
+    ActiveRecord::Associations::Preloader.new(records: with_recurrence, associations: :expense_template).call if with_recurrence.any?
     ActiveRecord::Associations::Preloader.new(records: @planned_expenses, associations: :category).call if @planned_expenses.any?
     @running_balance = @income_event.received_amount || @income_event.expected_amount
     @income_events = IncomeEvent.for_account(Current.account).order(:expected_date)
@@ -179,8 +180,8 @@ class PlannedExpensesController < ApplicationController
     end
 
     result = Financial::PlannedTransactions::MoveService.call(
-      planned_transaction: @planned_expense.becomes(Financial::PlannedTransaction),
-      target_plan: target_income_event.becomes(Financial::Plan)
+      planned_transaction: Financial::PlannedTransaction.for_account(Current.account).find(@planned_expense.id),
+      target_plan: Financial::Plan.for_account(Current.account).find(target_income_event.id)
     )
     if result.success?
       redirect_to income_event_planned_expenses_path(target_income_event), notice: t("planned_expenses.flash.moved_to", description: target_income_event.description)

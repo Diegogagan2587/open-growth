@@ -1,14 +1,14 @@
 class Financial::LoansController < ApplicationController
-  before_action :set_loan, only: [ :show, :edit, :update, :destroy, :activate, :plan_installment ]
+  before_action :set_loan, only: %i[show edit update destroy plan_installment]
   before_action :load_collections, only: [ :new, :create, :edit, :update, :show ]
 
   def index
-    @loans = Financial::Loan.for_account(Current.account).includes(:liability).order(created_at: :desc)
+    @loans = Financial::Loan.for_account(Current.account).includes(:liability_account).order(created_at: :desc)
   end
 
   def show
-    @installments = @loan.installments.includes(:planned_transaction, :payment_entry).order(:installment_number)
-    @entries = @loan.entries.by_date
+    @installments = @loan.installments.includes(:planned_transaction, :payment_transaction).order(:installment_number)
+    @entries = @loan.transactions.by_date
     @schedule_start_date = schedule_start_date
   end
 
@@ -48,16 +48,10 @@ class Financial::LoansController < ApplicationController
     end
   end
 
-  def activate
-    plan = Financial::Plan.for_account(Current.account).find(params[:plan_id])
-    result = Financial::Loans::ActivateService.call(loan: @loan, plan: plan)
-    redirect_to finance_loan_path(@loan), notice: ("Loan activated and disbursed" if result.success?), alert: (result.error_message unless result.success?)
-  end
-
   def plan_installment
     installment = @loan.installments.find(params[:installment_id])
     plan = Financial::Plan.for_account(Current.account).find(params[:plan_id])
-    source_account = Financial::Asset.for_account(Current.account).active.find(params[:financial_account_id])
+    source_account = Financial::Account.for_account(Current.account).assets.active.find(params[:financial_account_id])
     result = Financial::Loans::PlanInstallmentService.call(installment: installment, plan: plan, source_account: source_account)
     redirect_to finance_loan_path(@loan), notice: ("Installment added to plan" if result.success?), alert: (result.error_message unless result.success?)
   end
@@ -72,8 +66,7 @@ class Financial::LoansController < ApplicationController
     params.expect(financial_loan: [
       :name, :lender_name, :principal_amount, :interest_rate, :number_of_payments,
       :payment_frequency, :payment_amount, :final_payment_amount, :repayment_basis,
-      :interest_category_id, :liability_id, :destination_asset_id,
-      :destination_liability_id, :notes
+      :interest_category_id, :liability_account_id, :destination_account_id, :notes
     ])
   end
 
@@ -119,8 +112,9 @@ class Financial::LoansController < ApplicationController
   end
 
   def load_collections
-    @liabilities = Financial::Liability.for_account(Current.account).active.order(:name)
-    @assets = Financial::Asset.for_account(Current.account).active.order(:name)
+    accounts = Financial::Account.for_account(Current.account).active.order(:name)
+    @liabilities = accounts.select(&:liability?)
+    @assets = accounts.select(&:asset?)
     @categories = Category.for_account(Current.account).order(:name)
     @plans = Financial::Plan.for_account(Current.account).where(lifecycle_status: %w[draft active]).chronological
   end

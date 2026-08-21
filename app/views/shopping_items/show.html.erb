@@ -76,10 +76,10 @@
   </div>
 </div>
 
-<% if @shopping_item.planned_expense %>
+<% if @shopping_item.planned_transaction %>
   <div class="bg-muted/35 p-4 rounded mb-4">
-    <h2 class="text-xl font-semibold mb-2">Linked Planned Expense</h2>
-    <p><%= link_to @shopping_item.planned_expense.description, income_event_planned_expense_path(@shopping_item.planned_expense.income_event, @shopping_item.planned_expense), class: "text-accent hover:underline" %></p>
+    <h2 class="text-xl font-semibold mb-2">Linked Planned Transaction</h2>
+    <p><%= link_to @shopping_item.planned_transaction.description, @shopping_item.planned_transaction.plan ? finance_plan_path(@shopping_item.planned_transaction.plan) : finance_planned_transactions_path, class: "text-accent hover:underline" %></p>
   </div>
 <% end %>
 
@@ -87,6 +87,13 @@
   <div class="bg-muted/35 p-4 rounded mb-4">
     <h2 class="text-xl font-semibold mb-2">Linked Expense</h2>
     <p><%= link_to @shopping_item.expense.description, @shopping_item.expense, class: "text-accent hover:underline" %></p>
+  </div>
+<% end %>
+
+<% if @shopping_item.financial_transaction %>
+  <div class="bg-muted/35 p-4 rounded mb-4">
+    <h2 class="text-xl font-semibold mb-2">Linked Transaction</h2>
+    <p><%= link_to @shopping_item.financial_transaction.description, finance_transaction_path(@shopping_item.financial_transaction), class: "text-accent hover:underline" %></p>
   </div>
 <% end %>
 

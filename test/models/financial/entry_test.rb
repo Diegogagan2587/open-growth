@@ -13,6 +13,7 @@ class Financial::EntryTest < ActiveSupport::TestCase
   def setup
     @account = Account.create!(name: "Tenant Account")
     Current.account = @account
+    @category = Category.create!(account: @account, name: "Entry test")
     @financial_account = Financial::Asset.create!(
       account: @account,
       name: "Main Debit",
@@ -115,7 +116,7 @@ class Financial::EntryTest < ActiveSupport::TestCase
     planned_expense = PlannedExpense.create!(
       account: @account,
       income_event: income_event,
-      category: Category.first,
+      category: @category,
       description: "Groceries",
       amount: 20,
       status: "pending"

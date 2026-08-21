@@ -95,12 +95,12 @@ class IncomeEventsControllerTest < ActionDispatch::IntegrationTest
       expected_amount: 2000,
       status: "pending"
     )
-    entry = Financial::Entry.new(
+    entry = Financial::Transaction.new(
       account: @account,
-      income_event: income_event,
-      financial_account: @destination_asset,
-      entry_type: "outflow",
-      entry_date: Date.current,
+      plan: Financial::Plan.find(income_event.id),
+      source_account: @destination_asset,
+      transaction_type: "expense",
+      transaction_date: Date.current,
       amount: 25,
       description: "Legacy uncategorized direct expense"
     )
@@ -110,7 +110,7 @@ class IncomeEventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Legacy uncategorized direct expense"
-    assert_includes response.body, I18n.t("expenses.index.unassigned")
+    assert_includes response.body, "Uncategorized"
   end
 
   test "show uses planned transaction labels and actions" do
@@ -165,10 +165,11 @@ class IncomeEventsControllerTest < ActionDispatch::IntegrationTest
     get finance_plan_path(income_event)
 
     assert_response :success
-    assert_select "table tbody tr", count: 2
-    assert_select "table", text: /Food expense/
-    assert_select "table", text: /Savings transfer/
-    running_balances = css_select("table tbody tr td:nth-child(4)").map { |cell| cell.text.strip }
+    assert_select "section[aria-labelledby='planned-transactions-title'] article", count: 2
+    assert_select "section[aria-labelledby='planned-transactions-title']", text: /Food expense/
+    assert_select "section[aria-labelledby='planned-transactions-title']", text: /Savings transfer/
+    running_balances = css_select("section[aria-labelledby='planned-transactions-title'] article p.text-xs").map { |node| node.text.strip }
+    assert_equal 2, running_balances.size
     assert_equal 1, running_balances.uniq.size, "budget-neutral transfer should not change the running balance"
     assert_equal 100.to_d, income_event.reload.total_planned
     assert_equal 900.to_d, income_event.remaining_budget
@@ -230,9 +231,10 @@ class IncomeEventsControllerTest < ActionDispatch::IntegrationTest
     }
 
     income_event.reload
-    entry = Financial::Entry.find_by(income_event: income_event, entry_type: "inflow")
+    source = Financial::FundingSource.find_by!(legacy_income_event_id: income_event.id)
+    entry = source.receipt_transaction
     assert_not_nil entry
     assert_equal 2100.to_d, entry.amount
-    assert_equal destination_asset.id, entry.financial_account_id
+    assert_equal destination_asset.id, entry.destination_account_id
   end
 end

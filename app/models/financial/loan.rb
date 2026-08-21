@@ -4,13 +4,16 @@ class Financial::Loan < ApplicationRecord
   LIFECYCLE_STATUSES = %w[simulated active paid cancelled].freeze
 
   belongs_to :account, class_name: "::Account"
-  belongs_to :liability, class_name: "Financial::Liability", optional: true
-  belongs_to :destination_asset, class_name: "Financial::Asset", optional: true
-  belongs_to :destination_liability, class_name: "Financial::Liability", optional: true
+  belongs_to :liability_account, class_name: "Financial::Account", optional: true
+  belongs_to :destination_account, class_name: "Financial::Account", optional: true
   belongs_to :interest_category, class_name: "Category", optional: true
   has_many :funding_sources, class_name: "Financial::FundingSource", foreign_key: :financial_loan_id, dependent: :restrict_with_error
-  has_many :entries, class_name: "Financial::Entry", foreign_key: :financial_loan_id, dependent: :restrict_with_error
-  has_many :installments, class_name: "Financial::LoanInstallment", foreign_key: :financial_loan_id, inverse_of: :financial_loan, dependent: :restrict_with_error
+  has_many :transactions, class_name: "Financial::Transaction", foreign_key: :financial_loan_id, inverse_of: :financial_loan, dependent: :restrict_with_error
+  has_many :installments, class_name: "Financial::LoanInstallment", inverse_of: :financial_loan, dependent: :restrict_with_error
+
+  before_validation :set_owner_account, on: :create
+
+  scope :for_account, ->(account) { where(account: account) }
 
   validates :name, presence: true
   validates :principal_amount, numericality: { greater_than: 0 }
@@ -22,12 +25,36 @@ class Financial::Loan < ApplicationRecord
   validate :active_routing_is_complete
   validate :associations_belong_to_same_account
 
-  scope :for_account, ->(account) { where(account: account) }
+  alias_method :entries, :transactions
+
+  def liability
+    liability_account
+  end
+
+  def liability=(value)
+    self.liability_account = value
+  end
+
+  def destination_asset
+    destination_account if destination_account&.asset?
+  end
+
+  def destination_asset=(value)
+    self.destination_account = value
+  end
+
+  def destination_liability
+    destination_account if destination_account&.liability?
+  end
+
+  def destination_liability=(value)
+    self.destination_account = value
+  end
 
   def actual_balance
-    return 0.to_d unless liability
+    return 0.to_d unless liability_account
 
-    entries.sum(0.to_d) { |entry| entry.liability_delta_for(liability_id) }
+    transactions.sum(0.to_d) { |transaction| transaction.account_delta_for(liability_account_id) }
   end
 
   def configure_repayment(terms)
@@ -71,6 +98,10 @@ class Financial::Loan < ApplicationRecord
 
   private
 
+  def set_owner_account
+    self.account ||= Current.account if Current.account
+  end
+
   def repayment_terms_are_valid
     return if repayment_basis.blank?
 
@@ -82,13 +113,12 @@ class Financial::Loan < ApplicationRecord
   def active_routing_is_complete
     return unless lifecycle_status == "active"
 
-    errors.add(:liability, "must be selected") if liability.blank?
-    destinations = [ destination_asset, destination_liability ].compact
-    errors.add(:base, "active loan requires exactly one destination") unless destinations.one?
+    errors.add(:liability_account, "must be selected") unless liability_account&.liability?
+    errors.add(:destination_account, "must be an asset account") unless destination_account&.asset?
   end
 
   def associations_belong_to_same_account
-    [ :liability, :destination_asset, :destination_liability, :interest_category ].each do |association|
+    %i[liability_account destination_account interest_category].each do |association|
       record = public_send(association)
       errors.add(association, "must belong to the current account") if record && record.account_id != account_id
     end

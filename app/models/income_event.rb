@@ -22,6 +22,8 @@ class IncomeEvent < ApplicationRecord
   before_validation :apply_loan_defaults
   before_validation :assign_destination_selection
   before_validation :infer_loan_interest_rate
+  after_commit :sync_compatibility_plan, on: %i[create update]
+  after_commit :sync_regular_income_transaction, on: %i[create update], unless: :loan?
   after_commit :sync_loan_side_effects, if: :loan?
 
   scope :for_account, ->(account) { where(account: account) }
@@ -50,6 +52,50 @@ class IncomeEvent < ApplicationRecord
   scope :received, -> { where(status: "received") }
   scope :applied, -> { where(status: "applied") }
   scope :by_date, -> { order(expected_date: :desc) }
+
+  private def sync_compatibility_plan
+    attributes = {
+      id: id,
+      account_id: account_id,
+      budget_period_id: budget_period_id,
+      name: description,
+      planned_for: expected_date,
+      lifecycle_status: lifecycle_status.presence || "active",
+      closed_at: closed_at,
+      actual_ending_balance_at_close: actual_ending_balance_at_close,
+      legacy_income_event_id: id,
+      created_at: created_at,
+      updated_at: updated_at
+    }
+    Financial::Plan.upsert(attributes, unique_by: :id)
+    Financial::FundingSource.upsert({
+      account_id: account_id,
+      financial_plan_id: id,
+      description: description,
+      expected_amount: expected_amount,
+      expected_date: expected_date,
+      kind: loan? ? "borrowed" : "income",
+      resolution: status.in?(%w[received applied]) ? "received" : "pending",
+      expected_destination_account_id: legacy_destination_account&.id,
+      legacy_income_event_id: id,
+      created_at: created_at,
+      updated_at: updated_at
+    }, unique_by: :index_financial_funding_sources_on_legacy_income_event_id)
+    source = Financial::FundingSource.find_by(legacy_income_event_id: id)
+    source&.resolve_from!(source.receipt_transaction) if source&.receipt_transaction
+  end
+
+  private def legacy_destination_account
+    if loan?
+      loan_disbursement_destination_asset || loan_disbursement_destination_liability
+    else
+      regular_income_destination_asset || regular_income_destination_liability
+    end
+  end
+
+  private def sync_regular_income_transaction
+    IncomeEvents::TransactionSyncService.call(self)
+  end
 
   def total_planned
     return loan_total_planned if loan?
@@ -94,8 +140,7 @@ class IncomeEvent < ApplicationRecord
       expected_amount: expected_amount,
       expected_date: expected_date,
       kind: loan? ? "borrowed" : "income",
-      expected_destination_asset: loan? ? loan_disbursement_destination_asset : regular_income_destination_asset,
-      expected_destination_liability: loan? ? loan_disbursement_destination_liability : regular_income_destination_liability
+      expected_destination_account: legacy_destination_account
     )
     source.save!
 

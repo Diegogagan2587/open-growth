@@ -23,7 +23,7 @@ class Financial::Reports::Base
   end
 
   def expenses
-    transactions.where(transaction_type: "expense")
+    transactions.expenses
   end
 
   def parse_date(value, fallback)

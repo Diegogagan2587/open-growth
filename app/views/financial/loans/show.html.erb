@@ -31,11 +31,11 @@
 
   <% if @loan.lifecycle_status == "simulated" %>
     <section class="rounded-xl border border-border bg-card p-5">
-      <h2 class="font-semibold">Activate and disburse</h2>
-      <p class="mt-1 text-sm text-muted-foreground">Activation creates one actual disbursement entry. Configure one liability and one destination before activating.</p>
-      <%= form_with url: activate_finance_loan_path(@loan), method: :post, class: "mt-4 flex flex-wrap items-end gap-2" do %>
+      <h2 class="font-semibold">Disburse loan</h2>
+      <p class="mt-1 text-sm text-muted-foreground">The loan becomes active when its funds arrive at the destination account.</p>
+      <%= form_with url: finance_loan_disbursement_path(@loan), method: :post, class: "mt-4 flex flex-wrap items-end gap-2" do %>
         <label class="min-w-56 space-y-1 text-sm">Financial plan<%= render Ui::SelectComponent.new(name: "plan_id", options: @plans.map { |plan| [ plan.name, plan.id ] }, include_blank: "Select plan", required: true) %></label>
-        <%= render Ui::ButtonComponent.new(label: "Activate loan", type: "submit") %>
+        <%= render Ui::ButtonComponent.new(label: "Record disbursement", type: "submit") %>
       <% end %>
     </section>
   <% end %>
@@ -46,7 +46,7 @@
         <h2 class="text-xl font-semibold">Expected installments</h2>
         <p class="text-sm text-muted-foreground">Regeneration updates this schedule and synchronizes linked pending plans. Paid installments remain unchanged.</p>
       </div>
-      <%= form_with url: finance_loan_schedule_path(@loan), method: :post, class: "flex items-end gap-2" do %>
+      <%= form_with url: finance_loan_amortization_schedule_path(@loan), method: :post, class: "flex items-end gap-2" do %>
         <label class="space-y-1 text-sm">Loan start date<%= render Ui::InputComponent.new(name: "start_date", value: @schedule_start_date, type: "date", required: true) %></label>
         <%= render Ui::ButtonComponent.new(label: @installments.any? ? "Regenerate schedule" : "Generate schedule", type: "submit", variant: :outline, size: :sm, disabled: @loan.repayment_basis.blank?, data: (@installments.any? ? { turbo_confirm: "Regenerate installments and synchronize linked pending plans?" } : {})) %>
       <% end %>
@@ -74,7 +74,7 @@
                 <% if installment.planned_transaction %>
                   <%= link_to installment.planned_transaction.plan&.name || "Unassigned", installment.planned_transaction.plan ? finance_plan_path(installment.planned_transaction.plan) : finance_planned_transactions_path, class: "text-primary hover:underline" %>
                 <% elsif @loan.lifecycle_status == "active" %>
-                  <%= form_with url: plan_installment_finance_loan_path(@loan, installment_id: installment.id), method: :post, class: "flex min-w-80 items-end gap-2" do %>
+                  <%= form_with url: finance_loan_plan_installment_path(@loan, installment_id: installment.id), method: :post, class: "flex min-w-80 items-end gap-2" do %>
                     <%= render Ui::SelectComponent.new(name: "plan_id", options: @plans.map { |plan| [ plan.name, plan.id ] }, include_blank: "Plan", required: true) %>
                     <%= render Ui::SelectComponent.new(name: "financial_account_id", options: @assets.map { |asset| [ asset.name, asset.id ] }, include_blank: "Pay from", required: true) %>
                     <%= render Ui::ButtonComponent.new(label: "Plan", type: "submit", size: :sm) %>
@@ -90,10 +90,10 @@
   </section>
 
   <section>
-    <h2 class="text-xl font-semibold">Actual loan entries</h2>
+    <h2 class="text-xl font-semibold">Actual loan transactions</h2>
     <div class="mt-3 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
-      <% @entries.each do |entry| %><%= link_to finance_entry_path(entry), class: "flex justify-between p-4 hover:bg-muted/30" do %><span><%= entry.description %> · <%= entry.entry_type.humanize %></span><strong><%= number_to_currency(entry.amount) %></strong><% end %><% end %>
-      <% if @entries.empty? %><p class="p-4 text-sm text-muted-foreground">Simulation only—no actual debt entries.</p><% end %>
+      <% @entries.each do |transaction| %><%= link_to finance_transaction_path(transaction), class: "flex justify-between p-4 hover:bg-muted/30" do %><span><%= transaction.description %> · <%= transaction.transaction_type.humanize %></span><strong><%= number_to_currency(transaction.amount) %></strong><% end %><% end %>
+      <% if @entries.empty? %><p class="p-4 text-sm text-muted-foreground">Simulation only—no actual debt transactions.</p><% end %>
     </div>
   </section>
 </section>

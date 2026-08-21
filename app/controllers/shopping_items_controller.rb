@@ -15,9 +15,9 @@ class ShoppingItemsController < ApplicationController
   end
 
   def show
-    @income_events = IncomeEvent.for_account(Current.account).order(:expected_date)
+    @income_events = Financial::Plan.for_account(Current.account).chronological
     @budget_periods = BudgetPeriod.for_account(Current.account).order(start_date: :desc)
-    @planned_expenses = PlannedExpense.for_account(Current.account).where(shopping_item_id: nil).includes(:income_event, :category).order(created_at: :desc)
+    @planned_expenses = Financial::PlannedTransaction.for_account(Current.account).where(shopping_item_id: nil).includes(:plan, :category).order(created_at: :desc)
   end
 
   def new
@@ -76,22 +76,22 @@ class ShoppingItemsController < ApplicationController
     if request.post?
       income_event_id = params[:income_event_id]
       unless income_event_id.present?
-        @income_events = IncomeEvent.for_account(Current.account).order(:expected_date)
+        @income_events = Financial::Plan.for_account(Current.account).chronological
         flash.now[:alert] = t("shopping_items.alert_select_income_event")
         render :convert_to_planned_expense, status: :unprocessable_entity
         return
       end
 
-      income_event = IncomeEvent.for_account(Current.account).find(income_event_id)
-      planned_expense = @shopping_item.convert_to_planned_expense(income_event)
+      plan = Financial::Plan.for_account(Current.account).find(income_event_id)
+      planned_expense = @shopping_item.convert_to_planned_expense(plan)
 
       if planned_expense
-        redirect_to income_event_planned_expenses_path(income_event), notice: t("shopping_items.flash.converted_to_planned_expense")
+        redirect_to finance_plan_path(plan), notice: t("shopping_items.flash.converted_to_planned_expense")
       else
         redirect_to @shopping_item, alert: t("shopping_items.alert_estimated_required")
       end
     else
-      @income_events = IncomeEvent.for_account(Current.account).order(:expected_date)
+      @income_events = Financial::Plan.for_account(Current.account).chronological
     end
   end
 
@@ -111,7 +111,7 @@ class ShoppingItemsController < ApplicationController
       expense = @shopping_item.convert_to_expense(budget_period, financial_account: financial_account)
 
       if expense
-        redirect_to finance_entries_path(entry_type: "expenses"), notice: "Shopping item converted to expense."
+        redirect_to finance_transactions_path(transaction_type: "expense"), notice: "Shopping item converted to expense."
       else
         redirect_to @shopping_item, alert: t("shopping_items.alert_estimated_required")
       end
@@ -124,17 +124,17 @@ class ShoppingItemsController < ApplicationController
     if request.patch?
       planned_expense_id = params[:planned_expense_id]
       unless planned_expense_id.present?
-        @planned_expenses = PlannedExpense.for_account(Current.account).where(shopping_item_id: nil).includes(:income_event, :category).order(created_at: :desc)
+        @planned_expenses = Financial::PlannedTransaction.for_account(Current.account).where(shopping_item_id: nil).includes(:plan, :category).order(created_at: :desc)
         flash.now[:alert] = t("shopping_items.alert_select_planned_expense")
         render :link_to_planned_expense, status: :unprocessable_entity
         return
       end
 
-      planned_expense = PlannedExpense.for_account(Current.account).find(planned_expense_id)
+      planned_expense = Financial::PlannedTransaction.for_account(Current.account).find(planned_expense_id)
       @shopping_item.link_to_planned_expense(planned_expense)
       redirect_to @shopping_item, notice: t("shopping_items.flash.linked")
     else
-      @planned_expenses = PlannedExpense.for_account(Current.account).where(shopping_item_id: nil).includes(:income_event, :category).order(created_at: :desc)
+      @planned_expenses = Financial::PlannedTransaction.for_account(Current.account).where(shopping_item_id: nil).includes(:plan, :category).order(created_at: :desc)
     end
   end
 

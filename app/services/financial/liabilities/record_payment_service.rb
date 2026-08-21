@@ -24,13 +24,12 @@ module Financial::Liabilities
       return failure("Source account must belong to the same household") unless source_account.account_id == liability.account_id
       return failure("Payment amount cannot exceed outstanding liability") if amount.to_d > liability.current_balance.to_d
 
-      created_entry = Financial::Entry.create!(
-        account: Current.account,
-        financial_account: source_account,
-        financial_liability: liability,
-        income_event: income_event,
-        entry_type: "liability_payment",
-        entry_date: entry_date,
+      created_entry = Financial::Transaction.create!(
+        account: liability.account,
+        source_account: source_account,
+        destination_account: liability,
+        plan: income_event,
+        transaction_date: entry_date,
         amount: amount,
         description: description
       )

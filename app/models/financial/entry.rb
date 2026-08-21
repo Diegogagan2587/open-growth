@@ -1,229 +1,98 @@
-class Financial::Entry < ApplicationRecord
-  self.table_name = "financial_entries"
+# Temporary compatibility adapter. New code uses Financial::Transaction.
+class Financial::Entry < Financial::Transaction
+  module LegacyRelation
+    def where(*arguments)
+      if arguments.first.is_a?(Hash) && arguments.first.key?(:entry_type)
+        attributes = arguments.first.dup
+        original = attributes.delete(:entry_type)
+        mapped = Array(original).map { |value| Financial::Entry::LEGACY_TYPES.fetch(value.to_s, value) }
+        attributes[:transaction_type] = original.is_a?(Array) ? mapped : mapped.first
+        arguments[0] = attributes
+      end
+      super
+    end
+  end
 
-  ENTRY_TYPES         = %w[inflow outflow transfer liability_charge liability_payment loan_disbursement adjustment].freeze
+  LEGACY_TYPES = {
+    "inflow" => "income",
+    "outflow" => "expense",
+    "liability_charge" => "expense",
+    "liability_payment" => "debt_payment"
+  }.freeze
+  ENTRY_TYPES = %w[inflow outflow transfer liability_charge liability_payment loan_disbursement adjustment].freeze
   EXPENSE_ENTRY_TYPES = %w[outflow liability_charge].freeze
 
-  belongs_to :account, class_name: "::Account"
-  belongs_to :category, optional: true
-  belongs_to :budget_period, optional: true
-  belongs_to :financial_account, class_name: "Financial::Asset", optional: true
-  belongs_to :counterparty_financial_account, class_name: "Financial::Asset", optional: true
-  belongs_to :financial_liability, class_name: "Financial::Liability", optional: true
-  belongs_to :counterparty_financial_liability, class_name: "Financial::Liability", optional: true
-  belongs_to :planned_expense, optional: true
-  belongs_to :expense, optional: true
-  belongs_to :income_event, optional: true
-  belongs_to :funding_source, class_name: "Financial::FundingSource", optional: true, inverse_of: :receipt_entry
-  belongs_to :financial_loan, class_name: "Financial::Loan", optional: true, inverse_of: :entries
+  alias_attribute :entry_type, :transaction_type
+  alias_attribute :entry_date, :transaction_date
 
-  before_validation :set_account, on: :create
+  validate :legacy_route_error_names
 
-  scope :for_account, ->(account) { where(account: account) }
-  scope :by_date, -> { order(entry_date: :desc, entry_time: :desc, created_at: :desc) }
+  def entry_type
+    return "liability_charge" if transaction_type == "expense" && source_account&.liability?
 
-  validates :entry_type, presence: true, inclusion: { in: ENTRY_TYPES }
-  validates :entry_date, presence: true
-  validates :amount, presence: true, numericality: { greater_than: 0 }
-  validates :description, presence: true
-  validates :category, presence: true, if: :classification_required?
-  validates :planned_expense_id, uniqueness: true, allow_nil: true
+    LEGACY_TYPES.key(transaction_type) || transaction_type
+  end
 
-  validate :required_links_by_type
-  validate :associations_belong_to_same_account
-  validate :plan_is_open_for_new_actuals, on: :create
+  def entry_type=(value)
+    self.transaction_type = LEGACY_TYPES.fetch(value.to_s, value)
+  end
 
-  def account_delta
-    case entry_type
-    when "inflow", "loan_disbursement"
-      amount.to_d
-    when "outflow", "liability_payment", "transfer"
-      -amount.to_d
-    when "adjustment"
-      amount.to_d
-    else
-      0.to_d
-    end
+  def entry_date
+    transaction_date
+  end
+
+  def entry_date=(value)
+    self.transaction_date = value
+  end
+
+  alias_method :date, :entry_date
+  alias_method :date=, :entry_date=
+
+  def liability_delta_for(account_id)
+    account_delta_for(account_id)
   end
 
   def net_asset_effect
-    return 0.to_d if entry_type.in?(%w[transfer liability_charge])
-    return 0.to_d if entry_type.in?(%w[inflow loan_disbursement]) && financial_account_id.blank?
-    return 0.to_d if entry_type == "liability_payment" && financial_account_id.blank?
+    return 0.to_d if entry_type == "transfer"
+    return amount.to_d if entry_type.in?(%w[inflow adjustment]) && financial_account
+    return -amount.to_d if entry_type == "outflow" && financial_account
 
-    account_delta
+    super
   end
 
   def net_liability_effect
-    [ financial_liability_id, counterparty_financial_liability_id ].compact.uniq.sum(0.to_d) do |liability_id|
-      liability_delta_for(liability_id)
+    return amount.to_d if entry_type == "liability_charge" && financial_liability
+    return -amount.to_d if entry_type == "liability_payment" && financial_liability
+
+    super
+  end
+
+  def self.where(*arguments)
+    if arguments.first.is_a?(Hash) && arguments.first.key?(:entry_type)
+      attributes = arguments.first.dup
+      attributes[:transaction_type] = Array(attributes.delete(:entry_type)).map { |value| LEGACY_TYPES.fetch(value.to_s, value) }
+      attributes[:transaction_type] = attributes[:transaction_type].first unless arguments.first[:entry_type].is_a?(Array)
+      arguments[0] = attributes
     end
+    super
   end
 
-  def inflow?
-    entry_type == "inflow"
-  end
-
-  def expense?
-    entry_type.in?(EXPENSE_ENTRY_TYPES)
-  end
-
-  def classification_required?
-    entry_type.in?(%w[outflow liability_charge])
-  end
-
-  def date
-    entry_date
-  end
-
-  def date=(value)
-    self.entry_date = value
-  end
-
-  def source_selection
-    return "asset:#{financial_account_id}" if financial_account_id.present?
-    return "liability:#{financial_liability_id}" if financial_liability_id.present?
-
-    nil
-  end
-
-  def destination_selection
-    return "asset:#{counterparty_financial_account_id}" if counterparty_financial_account_id.present?
-    return "liability:#{financial_liability_id}" if entry_type == "liability_payment" && financial_liability_id.present?
-
-    nil
-  end
-
-  def account_delta_for(financial_account_id)
-    if entry_type == "transfer"
-      return -amount.to_d if self.financial_account_id == financial_account_id
-      return amount.to_d if counterparty_financial_account_id == financial_account_id
-
-      return 0.to_d
-    end
-
-    if entry_type == "loan_disbursement"
-      return amount.to_d if self.financial_account_id == financial_account_id
-      return 0.to_d
-    end
-
-    return 0.to_d unless self.financial_account_id == financial_account_id
-
-    account_delta
-  end
-
-  def liability_delta
-    case entry_type
-    when "liability_charge", "loan_disbursement"
-      amount.to_d
-    when "liability_payment"
-      -amount.to_d
-    else
-      0.to_d
-    end
-  end
-
-  def liability_delta_for(liability_id)
-    if entry_type == "inflow"
-      return -amount.to_d if counterparty_financial_liability_id == liability_id
-      return 0.to_d
-    end
-
-    if entry_type == "loan_disbursement"
-      return amount.to_d if financial_liability_id == liability_id
-      return -amount.to_d if counterparty_financial_liability_id == liability_id
-      return 0.to_d
-    end
-
-    return 0.to_d unless financial_liability_id == liability_id
-
-    liability_delta
+  def self.for_account(account)
+    super.extending(LegacyRelation)
   end
 
   private
 
-  def set_account
-    self.account ||= Current.account if Current.account
-  end
-
-  def required_links_by_type
+  def legacy_route_error_names
     case entry_type
-    when "inflow"
-      if financial_account.blank? && counterparty_financial_liability.blank?
-        errors.add(:base, "inflow requires an asset or liability destination")
-      end
-      if financial_account.present? && counterparty_financial_liability.present?
-        errors.add(:base, "inflow can have only one destination")
-      end
-    when "outflow", "adjustment"
-      errors.add(:financial_account, "must be selected") if financial_account.blank?
     when "transfer"
-      errors.add(:financial_account, "must be selected") if financial_account.blank?
-      errors.add(:counterparty_financial_account, "must be selected") if counterparty_financial_account.blank?
-      if financial_account_id.present? && counterparty_financial_account_id.present? && financial_account_id == counterparty_financial_account_id
-        errors.add(:counterparty_financial_account, "must be different from source account")
-      end
-    when "liability_charge"
-      errors.add(:financial_liability, "must be selected") if financial_liability.blank?
+      errors.add(:counterparty_financial_account, "must be selected") if destination_account.blank?
     when "liability_payment"
-      errors.add(:financial_liability, "must be selected") if financial_liability.blank?
-      if financial_account.blank? && income_event.blank?
-        errors.add(:financial_account, "must be selected")
-      end
+      errors.add(:financial_account, "must be selected") if source_account.blank?
+      errors.add(:financial_liability, "must be selected") if destination_account.blank?
     when "loan_disbursement"
-      errors.add(:financial_liability, "must be selected") if financial_liability.blank?
-      if financial_account.blank? && counterparty_financial_liability.blank?
-        errors.add(:base, "loan disbursement requires an asset or liability destination")
-      end
-      if financial_account.present? && counterparty_financial_liability.present?
-        errors.add(:base, "loan disbursement can have only one destination")
-      end
+      errors.add(:financial_liability, "must be selected") if source_account.blank?
+      errors.add(:base, "loan disbursement requires an asset or liability destination") if destination_account.blank?
     end
-  end
-
-  def associations_belong_to_same_account
-    return if account.blank?
-
-    if financial_account.present? && financial_account.account_id != account_id
-      errors.add(:financial_account, "must belong to the current account")
-    end
-
-    if counterparty_financial_account.present? && counterparty_financial_account.account_id != account_id
-      errors.add(:counterparty_financial_account, "must belong to the current account")
-    end
-
-    if financial_liability.present? && financial_liability.account_id != account_id
-      errors.add(:financial_liability, "must belong to the current account")
-    end
-
-    if counterparty_financial_liability.present? && counterparty_financial_liability.account_id != account_id
-      errors.add(:counterparty_financial_liability, "must belong to the current account")
-    end
-
-    if planned_expense.present? && planned_expense.account_id != account_id
-      errors.add(:planned_expense, "must belong to the current account")
-    end
-
-    if expense.present? && expense.account_id != account_id
-      errors.add(:expense, "must belong to the current account")
-    end
-
-    if income_event.present? && income_event.account_id != account_id
-      errors.add(:income_event, "must belong to the current account")
-    end
-
-    if funding_source.present? && funding_source.account_id != account_id
-      errors.add(:funding_source, "must belong to the current account")
-    end
-
-    if financial_loan.present? && financial_loan.account_id != account_id
-      errors.add(:financial_loan, "must belong to the current account")
-    end
-  end
-
-  def plan_is_open_for_new_actuals
-    return unless income_event&.lifecycle_status.in?(%w[closed cancelled])
-
-    errors.add(:income_event, "must be active before adding an actual entry")
   end
 end

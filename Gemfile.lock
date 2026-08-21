@@ -120,6 +120,7 @@ GEM
       raabro (~> 1.4)
     globalid (1.4.0)
       activesupport (>= 6.1)
+    htmlbeautifier (1.4.3)
     i18n (1.15.2)
       concurrent-ruby (~> 1.0)
     importmap-rails (2.2.3)
@@ -417,6 +418,7 @@ DEPENDENCIES
   bullet
   capybara
   debug
+  htmlbeautifier (~> 1.4)
   importmap-rails
   jbuilder
   kamal

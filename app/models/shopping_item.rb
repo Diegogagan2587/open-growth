@@ -1,9 +1,9 @@
 class ShoppingItem < ApplicationRecord
   belongs_to :account
   belongs_to :category, optional: true
-  belongs_to :planned_expense, optional: true
+  belongs_to :planned_transaction, class_name: "Financial::PlannedTransaction", optional: true
   belongs_to :expense, optional: true
-  belongs_to :financial_entry, class_name: "Financial::Entry", optional: true
+  belongs_to :financial_transaction, class_name: "Financial::Transaction", optional: true
 
   before_validation :set_account, on: :create
 
@@ -25,20 +25,19 @@ class ShoppingItem < ApplicationRecord
     )
   end
 
-  def convert_to_planned_expense(income_event)
+  def convert_to_planned_expense(plan)
     return nil unless estimated_amount.present? && estimated_amount > 0
 
     planned_expense = Financial::PlannedTransaction.create!(
-      plan: income_event.becomes(Financial::Plan),
+      plan: Financial::Plan.for_account(account).find(plan.id),
       category: category || Category.for_account(account).first,
       description: name,
-      amount: estimated_amount,
-      status: "pending_to_pay",
+      planned_amount: estimated_amount,
       account_id: account_id,
       shopping_item_id: id
     )
 
-    update!(planned_expense_id: planned_expense.id)
+    update!(planned_transaction_id: planned_expense.id)
     planned_expense
   end
 
@@ -46,25 +45,24 @@ class ShoppingItem < ApplicationRecord
     return nil unless estimated_amount.present? && estimated_amount > 0
     return nil unless financial_account&.account_id == account_id
 
-    entry = Financial::Entry.create!(
+    entry = Financial::Transaction.create!(
       account: account,
       budget_period: budget_period,
       category: category || Category.for_account(account).first,
       description: name,
       amount: estimated_amount,
-      entry_date: Date.current,
-      entry_type: "outflow",
-      financial_account: financial_account
+      transaction_date: Date.current,
+      source_account: financial_account
     )
 
-    update!(financial_entry: entry)
+    update!(financial_transaction: entry)
     entry
   end
 
-  def link_to_planned_expense(planned_expense)
-    update!(planned_expense_id: planned_expense.id)
-    planned_expense.update!(shopping_item_id: id) if planned_expense.respond_to?(:shopping_item_id=)
-    planned_expense
+  def link_to_planned_expense(planned_transaction)
+    update!(planned_transaction: planned_transaction)
+    planned_transaction.update!(shopping_item: self)
+    planned_transaction
   end
 
   private

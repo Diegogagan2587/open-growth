@@ -10,13 +10,15 @@ module Financial
         new(...).call
       end
 
-      def initialize(account:, amount:, entry_date:, description:, category_id:, budget_period_id:, source_selection:, destination_selection: nil, income_event_id: nil, planned_expense_id: nil, entry_time: nil)
+      def initialize(account:, amount:, entry_date:, description:, category_id:, budget_period_id:, source_account_id: nil, destination_account_id: nil, source_selection: nil, destination_selection: nil, income_event_id: nil, planned_expense_id: nil, entry_time: nil)
         @account = account
         @amount = amount
         @entry_date = entry_date
         @description = description
         @category_id = category_id
         @budget_period_id = budget_period_id
+        @source_account_id = source_account_id
+        @destination_account_id = destination_account_id
         @source_selection = source_selection
         @destination_selection = destination_selection
         @income_event_id = income_event_id
@@ -26,9 +28,14 @@ module Financial
 
       def call
         return failure("Account is required") if account.blank?
+        return failure("Source account must be selected") if source_reference.blank?
+        return failure("Source account is invalid") if source_reference.present? && source_account.blank?
+        return failure("Destination account is invalid") if destination_reference.present? && destination_account.blank?
 
-        entry = Financial::Entry.new(base_attributes)
-        apply_routing(entry)
+        entry = Financial::Transaction.new(base_attributes.merge(
+          source_account: source_account,
+          destination_account: destination_account
+        ))
         entry.save!
 
         Result.new(success?: true, entry: entry)
@@ -38,64 +45,56 @@ module Financial
 
       private
 
-      attr_reader :account, :amount, :entry_date, :entry_time, :description, :category_id, :budget_period_id, :source_selection, :destination_selection, :income_event_id, :planned_expense_id
+      attr_reader :account, :amount, :entry_date, :entry_time, :description, :category_id, :budget_period_id, :source_account_id, :destination_account_id, :source_selection, :destination_selection, :income_event_id, :planned_expense_id
 
       def base_attributes
         {
           account: account,
           amount: amount,
-          entry_date: entry_date,
+          transaction_date: entry_date,
           entry_time: entry_time,
           description: description,
           category: Category.for_account(account).find_by(id: category_id),
           budget_period: BudgetPeriod.for_account(account).find_by(id: budget_period_id),
-          income_event: income_event,
-          planned_expense: planned_expense
+          plan: plan,
+          planned_transaction: planned_transaction
         }
       end
 
-      def income_event
+      def plan
         return nil if income_event_id.blank?
 
-        @income_event ||= IncomeEvent.for_account(account).find_by(id: income_event_id)
+        @plan ||= Financial::Plan.for_account(account).find_by(id: income_event_id)
       end
 
-      def planned_expense
+      def planned_transaction
         return nil if planned_expense_id.blank?
 
-        @planned_expense ||= PlannedExpense.for_account(account).find_by(id: planned_expense_id)
+        @planned_transaction ||= Financial::PlannedTransaction.for_account(account).find_by(id: planned_expense_id)
       end
 
-      def apply_routing(entry)
-        source_kind, source_id = split_selection(source_selection)
-        destination_kind, destination_id = split_selection(destination_selection)
-
-        if source_kind == "liability"
-          entry.entry_type = "liability_charge"
-          entry.financial_liability = Financial::Liability.for_account(account).find_by(id: source_id)
-          return
-        end
-
-        source_asset = Financial::Asset.for_account(account).find_by(id: source_id)
-
-        if destination_kind == "asset"
-          entry.entry_type = "transfer"
-          entry.financial_account = source_asset
-          entry.counterparty_financial_account = Financial::Asset.for_account(account).find_by(id: destination_id)
-        elsif destination_kind == "liability"
-          entry.entry_type = "liability_payment"
-          entry.financial_account = source_asset
-          entry.financial_liability = Financial::Liability.for_account(account).find_by(id: destination_id)
-        else
-          entry.entry_type = "outflow"
-          entry.financial_account = source_asset
-        end
+      def source_account
+        @source_account ||= account_from_reference(source_account_id, source_selection)
       end
 
-      def split_selection(selection)
-        return [ nil, nil ] if selection.blank?
+      def destination_account
+        @destination_account ||= account_from_reference(destination_account_id, destination_selection)
+      end
 
-        selection.to_s.split(":", 2)
+      def source_reference
+        source_account_id.presence || source_selection.presence
+      end
+
+      def destination_reference
+        destination_account_id.presence || destination_selection.presence
+      end
+
+      def account_from_reference(id, selection)
+        return Financial::Account.for_account(account).find_by(id: id) if id.present?
+        return if selection.blank?
+
+        group, selected_id = selection.to_s.split(":", 2)
+        Financial::Account.for_account(account).where(account_group: group).find_by(id: selected_id)
       end
 
       def failure(message)

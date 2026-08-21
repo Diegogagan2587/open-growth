@@ -2,7 +2,7 @@ Rails.application.routes.draw do
   resource :session
   resource :registration, only: [ :new, :create ]
   resource :settings, only: [ :edit, :update ]
-  get "finance", to: "finance#index", as: :finance
+  get "finance", to: "financial/dashboard#show", as: :finance
   namespace :settings do
     get "finance", to: redirect("/finance")
     get "finance/categories", to: redirect("/finance/categories"), as: :finance_categories
@@ -10,8 +10,8 @@ Rails.application.routes.draw do
     get "finance/categories/:id", to: redirect { |params, _request| "/finance/categories/#{params[:id]}" }, as: :finance_category
     get "finance/categories/:id/edit", to: redirect { |params, _request| "/finance/categories/#{params[:id]}/edit" }, as: :edit_finance_category
     get "finance/accounts", to: redirect("/finance/accounts")
-    get "finance/liabilities", to: redirect("/finance/liabilities")
-    get "finance/entries", to: redirect("/finance/entries")
+    get "finance/liabilities", to: redirect("/finance/accounts?account_group=liability")
+    get "finance/entries", to: redirect("/finance/transactions")
   end
   # Explicit helpers for legacy expectations used in tests
   get "settings/finance/categories/new", to: redirect("/finance/categories/new"), as: :new_settings_finance_category
@@ -35,39 +35,69 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
   #
-  resources :expense_templates
+  get "expense_templates", to: redirect("/finance/recurring_transactions"), as: :expense_templates
+  get "expense_templates/new", to: redirect("/finance/recurring_transactions/new"), as: :new_expense_template
+  get "expense_templates/:id", to: redirect { |params, _| "/finance/recurring_transactions/#{params[:id]}" }, as: :expense_template
+  get "expense_templates/:id/edit", to: redirect { |params, _| "/finance/recurring_transactions/#{params[:id]}/edit" }, as: :edit_expense_template
 
-  namespace :finance do
-    root to: "finance#index"
-    resources :pending_expectations, only: :index
-    resources :plans, controller: "/financial/plans" do
-      member do
-        post :close
-        post :cancel
+  scope path: :finance, module: :financial, as: :finance do
+    resources :plans do
+      scope module: :plans do
+        resource :closure, only: :create
+        resource :cancellation, only: :create
       end
-      resources :planned_transactions, controller: "/financial/planned_transactions", only: [ :index, :create, :update, :destroy ]
-      resources :funding_sources, controller: "/financial/funding_sources", only: [ :create, :update, :destroy ] do
-        member { post :receive }
-      end
-    end
-    resources :planned_transactions, controller: "/financial/planned_transactions", only: :index do
-      member do
-        patch :apply
-        patch :move
+
+      resources :funding_sources, only: %i[create update destroy], shallow: true do
+        scope module: :funding_sources do
+          resource :receipt, only: %i[create destroy]
+        end
       end
     end
-    resources :loans, controller: "/financial/loans" do
+
+    resources :planned_transactions, only: %i[index create update destroy] do
+      scope module: :planned_transactions do
+        resource :execution, only: %i[create destroy]
+      end
+    end
+    resources :transactions do
+      scope module: :transactions do
+        resource :reconciliation, only: %i[create destroy]
+      end
+    end
+
+    resources :accounts do
+      scope module: :accounts do
+        resource :archive, only: :create
+      end
+    end
+
+    resources :loans do
       resource :schedule, only: :create, controller: "/financial/loans/schedules"
       resources :installments, only: [] do
         resource :payment, only: :create, controller: "/financial/loans/installment_payments"
       end
-      member do
-        post :activate
-        post "installments/:installment_id/plan", action: :plan_installment, as: :plan_installment
+      scope module: :loans do
+        resource :disbursement, only: %i[create destroy]
+        resource :amortization_schedule, only: %i[show create]
       end
+      post "installments/:installment_id/plan", action: :plan_installment, as: :plan_installment
     end
-    resources :categories, controller: "/financial/categories"
-    resources :financial_accounts, controller: "/financial/accounts"
+
+    resources :savings_goals
+    resources :recurring_transactions
+    resources :budget_periods, only: [] do
+      resources :budget_allocations, only: %i[create update destroy]
+    end
+
+    resources :categories
+
+    get "entries", to: redirect("/finance/transactions")
+    get "entries/new", to: redirect("/finance/transactions/new")
+    get "entries/:id", to: redirect { |params, _| "/finance/transactions/#{params[:id]}" }
+    get "entries/:id/edit", to: redirect { |params, _| "/finance/transactions/#{params[:id]}/edit" }
+    get "financial_entries", to: redirect("/finance/transactions")
+    get "financial_entries/:id", to: redirect { |params, _| "/finance/transactions/#{params[:id]}" }
+    get "financial_accounts", to: redirect("/finance/accounts")
     resources :financial_liabilities, controller: "/financial/liabilities" do
       member do
         get :charge
@@ -76,9 +106,11 @@ Rails.application.routes.draw do
         post :record_payment
       end
     end
-    resources :financial_entries, only: [ :index, :show, :new, :create, :edit, :update, :destroy ], controller: "/financial/entries"
-    resources :entries, controller: "/financial/entries"
   end
+
+  get "finance/pending_expectations", to: "finance/pending_expectations#index", as: :finance_pending_expectations
+  post "finance/plans/:plan_id/funding_sources/:id/receive", to: "financial/funding_sources#receive", as: :receive_finance_plan_funding_source
+  patch "finance/planned_transactions/:planned_transaction_id/apply", to: "financial/planned_transactions/executions#create", as: :apply_finance_planned_transaction
   scope module: "financial" do
     resources :budget_periods do
       resources :budget_line_items
@@ -137,10 +169,10 @@ Rails.application.routes.draw do
   end
   post "account_switches", to: "account_switches#create", as: :account_switch
 
-  get "reports", to: "reports#index", as: :reports
-  get "reports/by_date", to: "reports#by_date", as: :reports_by_date
-  get "reports/spending_by_category", to: "reports#spending_by_category", as: :reports_spending_by_category
-  get "reports/category_trends", to: "reports#category_trends", as: :reports_category_trends
+  get "reports", to: "financial/reports/overview#show", as: :reports
+  get "reports/by_date", to: "financial/reports/by_dates#show", as: :reports_by_date
+  get "reports/spending_by_category", to: "financial/reports/spending_by_categories#show", as: :reports_spending_by_category
+  get "reports/category_trends", to: "financial/reports/category_trends#show", as: :reports_category_trends
 
   namespace :reports do
     namespace :ai do

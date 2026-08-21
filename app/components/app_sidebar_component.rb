@@ -16,7 +16,7 @@ class AppSidebarComponent < ViewComponent::Base
   end
 
   def finance_active?
-    current_controller.start_with?("finance")
+    current_controller.start_with?("finance", "financial/") && !current_controller.start_with?("financial/reports/")
   end
 
   def settings_active?

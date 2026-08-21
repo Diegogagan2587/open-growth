@@ -44,7 +44,7 @@
             <p class="text-sm text-muted-foreground mt-1">Available Accounts -</p>
           </div>
           <%= render Ui::ButtonComponent.new(
-              href: finance_financial_accounts_path,
+              href: finance_accounts_path(account_group: "asset"),
               label: "Manage Accounts",
               variant: "outline"
             ) %>
@@ -59,7 +59,7 @@
             <p class="text-sm text-muted-foreground mt-1">Available Accounts -</p>
           </div>
           <%= render Ui::ButtonComponent.new(
-              href: finance_financial_liabilities_path,
+              href: finance_accounts_path(account_group: "liability"),
               label: "Manage Accounts",
               variant: "outline"
             ) %>

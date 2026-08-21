@@ -4,7 +4,7 @@
       <p class="text-sm uppercase tracking-[0.16em] text-muted-foreground">Finance hub</p>
       <h1 class="text-3xl font-bold">How money moves in Open Budget</h1>
       <p class="text-muted-foreground text-lg leading-7">
-        Financial plans hold expectations. Financial entries remain the only source of actual balances and reports.
+        Financial plans hold expectations. Transactions remain the source of actual balances and reports.
       </p>
     </div>
   </section>
@@ -33,7 +33,7 @@
       <p class="text-sm text-muted-foreground">Assets accounts</p>
       <p class="mt-2 text-3xl font-bold text-foreground"><%= @financial_account_count %></p>
       <p class="mt-2 text-sm text-muted-foreground">Debit, checking, or savings accounts that hold cash.</p>
-      <%= link_to "Manage assets", finance_financial_accounts_path, class: "mt-4 inline-block text-accent hover:underline hover:text-accent-dark" %>
+      <%= link_to "Manage assets", finance_accounts_path(account_group: "asset"), class: "mt-4 inline-block text-accent hover:underline hover:text-accent-dark" %>
     </div>
 
     <div class="rounded-2xl border border-border bg-card p-5 shadow-sm border-t-4 border-t-secondary-accent">
@@ -41,14 +41,14 @@
       <p class="mt-2 text-3xl font-bold text-foreground"><%= @financial_liability_count %></p>
       <p class="mt-2 text-sm text-muted-foreground">Credit cards and personal credits you want to pay down.
       </p>
-      <%= link_to "Manage liabilities", finance_financial_liabilities_path, class: "mt-4 inline-block text-accent hover:underline hover:text-accent-dark" %>
+      <%= link_to "Manage liabilities", finance_accounts_path(account_group: "liability"), class: "mt-4 inline-block text-accent hover:underline hover:text-accent-dark" %>
     </div>
 
     <div class="rounded-2xl border border-border bg-card p-5 shadow-sm border-t-4 border-t-success">
-      <p class="text-sm text-muted-foreground">Entries</p>
+      <p class="text-sm text-muted-foreground">Transactions</p>
       <p class="mt-2 text-3xl font-bold text-foreground"><%= @financial_entry_count %></p>
-      <p class="mt-2 text-sm text-muted-foreground">The audit trail for actual money movements.</p>
-      <%= link_to "View entries", finance_entries_path, class: "mt-4 inline-block text-accent hover:underline hover:text-accent-dark" %>
+      <p class="mt-2 text-sm text-muted-foreground">Editable actual money movements and bank verification.</p>
+      <%= link_to "View transactions", finance_transactions_path, class: "mt-4 inline-block text-accent hover:underline hover:text-accent-dark" %>
     </div>
 
     <div class="rounded-2xl border border-border bg-card p-5 shadow-sm border-t-4 border-t-destructive">
@@ -57,6 +57,12 @@
       <p class="mt-2 text-sm text-muted-foreground">Simulations, disbursements, and expected installments.</p>
       <%= link_to "Open loans", finance_loans_path, class: "mt-4 inline-block text-accent hover:underline" %>
     </div>
+    <div class="rounded-2xl border border-border bg-card p-5 shadow-sm border-t-4 border-t-primary">
+      <p class="text-sm text-muted-foreground">Recurring transactions</p>
+      <p class="mt-2 text-3xl font-bold text-foreground"><%= @recurring_transaction_count %></p>
+      <p class="mt-2 text-sm text-muted-foreground">Reusable defaults for expenses, payments, transfers, and goal contributions.</p>
+      <%= link_to "Manage recurring transactions", finance_recurring_transactions_path, class: "mt-4 inline-block text-accent hover:underline" %>
+    </div>
   </section>
 
   <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -64,11 +70,11 @@
       <h2 class="text-xl font-semibold text-foreground">Flow model</h2>
       <div class="space-y-3 text-sm leading-6 text-foreground">
         <p><strong>1. Plan</strong> groups expected funding and ordered planned transactions.</p>
-        <p><strong>2. Funding source</strong> describes expected money and links to a separate receipt entry.</p>
-        <p><strong>3. Planned transaction</strong> records intent and links to at most one actual entry.</p>
+        <p><strong>2. Funding source</strong> describes one expected deposit and links to its receipt transaction.</p>
+        <p><strong>3. Planned transaction</strong> records intent and is fulfilled by one execution.</p>
         <p><strong>4. Loan and installment</strong> hold simulation and expected obligation data.</p>
-        <p><strong>5. Asset and liability</strong> identify where actual money and debt live.</p>
-        <p><strong>6. Financial entry</strong> is the immutable accounting event used for balances and reports.</p>
+        <p><strong>5. Financial account</strong> identifies where money is held or owed.</p>
+        <p><strong>6. Transaction</strong> records what happened and can be corrected or verified against the bank.</p>
       </div>
     </div>
 

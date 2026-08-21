@@ -1,36 +1,175 @@
-class Financial::PlannedTransaction < PlannedExpense
-  KINDS = %w[outflow liability_charge transfer liability_payment].freeze
+class Financial::PlannedTransaction < ApplicationRecord
+  self.table_name = "financial_planned_transactions"
+
   EXECUTION_STATUSES = %w[pending applied cancelled skipped].freeze
   IMPORTANCES = %w[low normal high essential].freeze
 
-  belongs_to :income_event, optional: true
-  belongs_to :plan, class_name: "Financial::Plan", foreign_key: :income_event_id, optional: true
+  def self.kinds
+    Financial::Transactions::AccountRoute.planning_kinds
+  end
 
-  alias_attribute :planned_amount, :amount
-  alias_attribute :planned_execution_date, :planned_for
+  belongs_to :account, class_name: "::Account"
+  belongs_to :plan, class_name: "Financial::Plan", optional: true, inverse_of: :planned_transactions
+  belongs_to :origin_plan, class_name: "Financial::Plan", optional: true
+  belongs_to :category, optional: true
+  belongs_to :savings_goal, class_name: "Financial::SavingsGoal", optional: true
+  belongs_to :recurring_transaction, class_name: "Financial::RecurringTransaction", optional: true, inverse_of: :planned_transactions
+  belongs_to :shopping_item, optional: true
+  belongs_to :source_account, class_name: "Financial::Account", optional: true
+  belongs_to :destination_account, class_name: "Financial::Account", optional: true
+  has_one :actual_transaction,
+    class_name: "Financial::Transaction",
+    inverse_of: :planned_transaction,
+    dependent: :restrict_with_error
 
+  before_validation :set_owner_account, on: :create
+  before_validation :infer_kind
+  before_validation :set_budget_consuming_default, on: :create
   before_validation :append_to_plan, on: :create
 
-  validates :kind, inclusion: { in: KINDS }
+  scope :for_account, ->(account) { where(account: account) }
+  scope :unassigned, -> { where(plan_id: nil) }
+  scope :by_position, -> { order(:position, :created_at) }
+  scope :budget_consuming, -> { where(budget_consuming: true) }
+  scope :committed_to_plan, -> { where(kind: "liability_payment", commits_plan_funds: true) }
+
+  validates :description, presence: true
+  validates :planned_amount, numericality: { greater_than: 0 }
+  validates :kind, inclusion: { in: ->(_) { Financial::PlannedTransaction.kinds } }
   validates :execution_status, inclusion: { in: EXECUTION_STATUSES }
   validates :importance, inclusion: { in: IMPORTANCES }
-  validates :position, numericality: { only_integer: true, greater_than: 0 }, uniqueness: { scope: :income_event_id }, if: :income_event_id?
+  validates :position, numericality: { only_integer: true, greater_than: 0 }, uniqueness: { scope: :plan_id }, if: :plan_id?
+  validates :category, presence: true, if: :budget_consuming?
+  validate :route_is_valid
+  validate :associations_belong_to_same_account
   validate :plan_accepts_expectation_changes
+  validate :commitment_requires_debt_payment
 
-  scope :unassigned, -> { where(income_event_id: nil) }
+  alias_attribute :amount, :planned_amount
+  alias_attribute :planned_for, :planned_execution_date
+  alias_method :financial_entry, :actual_transaction
+
+  def status
+    {
+      "pending" => "pending_to_pay",
+      "applied" => kind == "transfer" ? "transferred" : "paid"
+    }.fetch(execution_status, execution_status)
+  end
+
+  def status=(value)
+    self.execution_status = case value.to_s
+    when "pending_to_pay" then "pending"
+    when "paid", "spent", "transferred" then "applied"
+    else value
+    end
+  end
+
+  def income_event_id
+    plan_id
+  end
+
+  def income_event_id=(value)
+    self.plan_id = value
+  end
+
+  def income_event
+    plan
+  end
+
+  def financial_account
+    source_account if source_account&.asset?
+  end
+
+  def financial_account=(value)
+    self.source_account = value
+  end
+
+  def counterparty_financial_account
+    destination_account if destination_account&.asset?
+  end
+
+  def counterparty_financial_account=(value)
+    self.destination_account = value
+  end
+
+  def financial_liability
+    source_account&.liability? ? source_account : destination_account&.liability? ? destination_account : nil
+  end
+
+  def financial_liability=(value)
+    kind == "liability_payment" ? self.destination_account = value : self.source_account = value
+  end
+
+  def budget_consuming?
+    self[:budget_consuming]
+  end
+
+  def transfer?
+    kind == "transfer"
+  end
+
+  def debt_payment?
+    kind == "liability_payment"
+  end
+
+  def routing_summary
+    account_route.routing_summary
+  end
+
+  def classification_label
+    category&.name || (debt_payment? ? "Card payment" : transfer? ? "Transfer" : "Uncategorized")
+  end
 
   private
 
-  def append_to_plan
-    return if income_event_id.blank? || position.present?
+  def set_owner_account
+    self.account ||= plan&.account || Current.account
+  end
 
-    self.position = self.class.where(income_event_id: income_event_id).maximum(:position).to_i + 1
+  def infer_kind
+    return if kind.present? && !new_record? && !will_save_change_to_source_account_id? && !will_save_change_to_destination_account_id?
+    return if kind.present? && source_account.blank? && destination_account.blank?
+
+    self.kind = account_route.kind
+  end
+
+  def set_budget_consuming_default
+    self.budget_consuming = account_route.budget_consuming? if budget_consuming.nil?
+  end
+
+  def append_to_plan
+    return if plan_id.blank? || position.present?
+
+    self.position = self.class.where(plan_id: plan_id).maximum(:position).to_i + 1
+  end
+
+  def route_is_valid
+    account_route.validation_errors.each do |attribute, messages|
+      messages.each { |message| errors.add(attribute, message) }
+    end
+  end
+
+  def account_route
+    Financial::Transactions::AccountRoute.for_planning(source: source_account, destination: destination_account, kind: kind)
+  end
+
+  def associations_belong_to_same_account
+    return if account.blank?
+
+    %i[plan category savings_goal recurring_transaction shopping_item source_account destination_account].each do |association|
+      record = public_send(association)
+      errors.add(association, "must belong to the current account") if record.respond_to?(:account_id) && record.account_id != account_id
+    end
   end
 
   def plan_accepts_expectation_changes
-    changed_expectation = new_record? || (changes.keys & %w[description amount kind planned_for due_date importance category_id financial_account_id counterparty_financial_account_id financial_liability_id income_event_id position commits_plan_funds]).any?
-    return unless changed_expectation && plan&.lifecycle_status.in?(%w[closed cancelled])
+    fields = %w[description planned_amount kind budget_consuming planned_execution_date due_date importance category_id source_account_id destination_account_id plan_id position commits_plan_funds]
+    return if (changes.keys & fields).empty? || !plan&.lifecycle_status.in?(%w[closed cancelled])
 
     errors.add(:plan, "must be active before changing planned transactions")
+  end
+
+  def commitment_requires_debt_payment
+    errors.add(:commits_plan_funds, "is only available for liability payments") if commits_plan_funds? && !debt_payment?
   end
 end

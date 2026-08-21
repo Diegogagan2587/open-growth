@@ -4,6 +4,7 @@ class Financial::LiabilityTest < ActiveSupport::TestCase
   def setup
     @account = Account.create!(name: "Tenant Account")
     Current.account = @account
+    @category = Category.create!(account: @account, name: "Liability test")
   end
 
   def teardown
@@ -26,7 +27,7 @@ class Financial::LiabilityTest < ActiveSupport::TestCase
       entry_date: Date.current,
       amount: 80,
       description: "Groceries",
-      category: Category.first
+      category: @category
     )
 
     Financial::Entry.create!(
