@@ -51,7 +51,7 @@ class Financial::Entries::ExpenseBackfillServiceTest < ActiveSupport::TestCase
 
     entry = expense.reload.financial_entry
     assert_equal "outflow", entry.entry_type
-    assert_equal @asset, entry.financial_account
+    assert_equal @asset.id, entry.source_account_id
   end
 
   test "links existing planned expense entry instead of creating duplicate" do
@@ -125,7 +125,7 @@ class Financial::Entries::ExpenseBackfillServiceTest < ActiveSupport::TestCase
     end
 
     fallback = Financial::Asset.find_by!(account: @account, name: "Legacy Expense Migration")
-    assert_equal fallback, first_expense.reload.financial_entry.financial_account
-    assert_equal fallback, second_expense.reload.financial_entry.financial_account
+    assert_equal fallback.id, first_expense.reload.financial_entry.source_account_id
+    assert_equal fallback.id, second_expense.reload.financial_entry.source_account_id
   end
 end

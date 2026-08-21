@@ -6,11 +6,9 @@
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-foreground mb-1\">From Account</label>
+      <label class="block text-sm font-medium text-foreground mb-1">From Account</label>
       <% 
-        assets = Current.account&.financial_accounts&.pluck(:name, :id)&.map { |n, id| ["💰 #{n}", "asset_#{id}"] } || []
-        liabilities = Current.account&.financial_liabilities&.pluck(:name, :id)&.map { |n, id| ["💳 #{n}", "liability_#{id}"] } || []
-        from_options = assets + liabilities
+        from_options = Current.account&.financial_accounts&.active&.map { |account| ["#{account.account_group.humanize}: #{account.name}", account.id] } || []
       %>
       <%= render Ui::SelectComponent.new(
         name: "transfer[from_type]",
@@ -25,7 +23,7 @@
     <div>
       <label class="block text-sm font-medium text-foreground mb-1">To Account</label>
       <% 
-        to_options = assets + liabilities
+        to_options = from_options
       %>
       <%= render Ui::SelectComponent.new(
         name: "transfer[to_type]",

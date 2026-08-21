@@ -1,0 +1,39 @@
+<section class="container mx-auto space-y-6 px-4 py-6">
+  <header class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="text-3xl font-bold">Recurring transactions</h1>
+      <p class="mt-1 text-muted-foreground">Reusable transaction definitions for planning recurring expenses, payments, transfers, and contributions.</p>
+    </div>
+    <%= render Ui::ButtonComponent.new(href: new_finance_recurring_transaction_path, label: "New recurring transaction") %>
+  </header>
+
+  <nav class="flex gap-2" aria-label="Recurring transaction status">
+    <%= link_to "Active", finance_recurring_transactions_path(status: "active"), class: "rounded-md border border-border px-3 py-2 text-sm hover:bg-muted" %>
+    <%= link_to "Archived", finance_recurring_transactions_path(status: "archived"), class: "rounded-md border border-border px-3 py-2 text-sm hover:bg-muted" %>
+    <%= link_to "All", finance_recurring_transactions_path, class: "rounded-md border border-border px-3 py-2 text-sm hover:bg-muted" %>
+  </nav>
+
+  <div class="grid gap-4 md:grid-cols-2">
+    <% @recurring_transactions.each do |recurring| %>
+      <article class="rounded-xl border border-border bg-card p-5 shadow-sm">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <%= link_to recurring.name, finance_recurring_transaction_path(recurring), class: "text-lg font-semibold hover:underline" %>
+            <p class="mt-1 text-sm text-muted-foreground"><%= recurring.routing_summary %></p>
+          </div>
+          <%= render Ui::BadgeComponent.new(label: recurring.frequency.humanize, variant: :outline) %>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center gap-2 text-sm">
+          <strong><%= number_to_currency(recurring.amount) %></strong>
+          <span>·</span><span><%= recurring.transaction_kind.humanize %></span>
+          <span>·</span><span><%= recurring.budget_consuming? ? "Consumes Plan budget" : "Budget neutral" %></span>
+          <% if recurring.category %><span>·</span><span><%= recurring.category.name %></span><% end %>
+        </div>
+      </article>
+    <% end %>
+  </div>
+
+  <% if @recurring_transactions.empty? %>
+    <p class="rounded-xl border border-dashed border-border p-6 text-muted-foreground">No recurring transactions match this filter.</p>
+  <% end %>
+</section>

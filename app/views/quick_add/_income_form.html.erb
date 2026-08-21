@@ -24,10 +24,7 @@
       <label class="block text-sm font-medium text-foreground mb-1">Destination account</label>
       <%= render Ui::SelectComponent.new(
         name: "income[destination]",
-        options: (
-          (Current.account&.financial_accounts || []).map { |a| ["Asset: #{a.name}", "asset_#{a.id}"] } +
-          (Current.account&.financial_liabilities || []).map { |l| ["Liability: #{l.name}", "liability_#{l.id}"] }
-        ),
+        options: (Current.account&.financial_accounts&.active || []).map { |account| ["#{account.account_group.humanize}: #{account.name}", account.id] },
         selected: nil,
         include_blank: "Select destination",
         required: true,

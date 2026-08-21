@@ -47,8 +47,8 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
 
   test "filters plans by month and lifecycle status" do
     @plan.update!(lifecycle_status: "active")
-    closed_july = Financial::Plan.create!(account: @account, name: "Closed July plan", planned_for: Date.new(2026, 7, 20), expected_amount: 1, lifecycle_status: "closed")
-    active_august = Financial::Plan.create!(account: @account, name: "Active August plan", planned_for: Date.new(2026, 8, 1), expected_amount: 1, lifecycle_status: "active")
+    closed_july = Financial::Plan.create!(account: @account, name: "Closed July plan", planned_for: Date.new(2026, 7, 20), lifecycle_status: "closed")
+    active_august = Financial::Plan.create!(account: @account, name: "Active August plan", planned_for: Date.new(2026, 8, 1), lifecycle_status: "active")
 
     get finance_plans_path, params: { month: "2026-07", status: "active" }
 
@@ -86,12 +86,12 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
           expected_amount: "2500.00",
           expected_date: "2026-08-01",
           kind: "income",
-          expected_destination_asset_id: asset.id
+          expected_destination_account_id: asset.id
         }
       }
     end
 
-    created_plan = Financial::Plan.order(:id).last
+    created_plan = Financial::Plan.find_by!(name: "August household plan")
     assert_redirected_to finance_plan_path(created_plan)
     assert_equal "August household plan", created_plan.name
     assert_equal 1, created_plan.funding_sources.count
@@ -108,7 +108,7 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
           expected_amount: "600.00",
           expected_date: "2026-07-15",
           kind: "income",
-          expected_destination_asset_id: asset.id
+          expected_destination_account_id: asset.id
         }
       }
     end
@@ -116,8 +116,8 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     source = Financial::FundingSource.order(:id).last
     assert_redirected_to finance_plan_path(@plan)
 
-    assert_difference("Financial::Entry.count", 1) do
-      post receive_finance_plan_funding_source_path(@plan, source), params: {
+    assert_difference("Financial::Transaction.count", 1) do
+      post finance_funding_source_receipt_path(source), params: {
         funding_source: { amount: "575.00", entry_date: "2026-07-16" }
       }
     end
@@ -133,15 +133,16 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     asset = Financial::Asset.create!(account: @account, name: "Spending checking", account_type: "checking", status: "active", opening_balance: 0)
 
     assert_difference("Financial::PlannedTransaction.count", 1) do
-      post finance_plan_planned_transactions_path(@plan), params: {
+      post finance_planned_transactions_path, params: {
         planned_transaction: {
+          plan_id: @plan.id,
           description: "Groceries",
-          amount: "100.00",
-          planned_for: "2026-07-15",
+          planned_amount: "100.00",
+          planned_execution_date: "2026-07-15",
           kind: "outflow",
           importance: "essential",
           category_id: category.id,
-          financial_account_id: asset.id
+          source_account_id: asset.id
         }
       }
     end
@@ -149,16 +150,16 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     transaction = Financial::PlannedTransaction.order(:id).last
     assert_redirected_to finance_plan_path(@plan)
 
-    assert_difference("Financial::Entry.count", 1) do
-      patch apply_finance_planned_transaction_path(transaction), params: {
-        planned_transaction: { amount: "92.00", entry_date: "2026-07-16" }
+    assert_difference("Financial::Transaction.count", 1) do
+      post finance_planned_transaction_execution_path(transaction), params: {
+        planned_transaction: { amount: "92.00", transaction_date: "2026-07-16" }
       }, headers: { "HTTP_REFERER" => finance_plan_url(@plan) }
     end
 
     assert_redirected_to finance_plan_path(@plan)
-    assert_equal 100.to_d, transaction.reload.amount
+    assert_equal 100.to_d, transaction.reload.planned_amount
     assert_equal "applied", transaction.execution_status
-    assert_equal 92.to_d, transaction.financial_entry.amount
+    assert_equal 92.to_d, transaction.actual_transaction.amount
   end
 
   test "corrects an applied liability payment commitment without changing its actual entry" do
@@ -179,12 +180,12 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     get finance_plan_path(@plan)
 
     assert_response :success
-    assert_select "form[action='#{finance_plan_planned_transaction_path(@plan, transaction)}']" do
+    assert_select "form[action='#{finance_planned_transaction_path(transaction)}']" do
       assert_select "input[name='planned_transaction[commits_plan_funds]'][type='checkbox']:not([checked])"
       assert_select "button", text: "Save commitment"
     end
 
-    patch finance_plan_planned_transaction_path(@plan, transaction), params: {
+    patch finance_planned_transaction_path(transaction), params: {
       planned_transaction: { commits_plan_funds: "1", description: "Changed history" }
     }
 
@@ -195,7 +196,7 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Pay commitment card", entry.reload.description
     assert_equal 125.to_d, entry.amount
 
-    patch finance_plan_planned_transaction_path(@plan, transaction), params: {
+    patch finance_planned_transaction_path(transaction), params: {
       planned_transaction: { commits_plan_funds: "0" }
     }
 
@@ -218,7 +219,7 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
         financial_liability: liability
       )
 
-      patch finance_plan_planned_transaction_path(@plan, transaction), params: {
+      patch finance_planned_transaction_path(transaction), params: {
         planned_transaction: { commits_plan_funds: "1" }
       }
 
@@ -238,7 +239,7 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     Financial::PlannedTransactions::ApplyService.call(planned_transaction: applied)
     @plan.update!(lifecycle_status: "closed")
 
-    patch finance_plan_planned_transaction_path(@plan, applied), params: {
+    patch finance_planned_transaction_path(applied), params: {
       planned_transaction: { commits_plan_funds: "1" }
     }
 
@@ -246,7 +247,7 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Plan must be active before changing planned transactions", flash[:alert]
 
     get finance_plan_path(@plan)
-    assert_select "form[action='#{finance_plan_planned_transaction_path(@plan, applied)}']", count: 0
+    assert_select "form[action='#{finance_planned_transaction_path(applied)}']", count: 0
   end
 
   test "does not commit an applied non-liability transaction to the plan" do
@@ -263,7 +264,7 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     )
     Financial::PlannedTransactions::ApplyService.call(planned_transaction: transaction)
 
-    patch finance_plan_planned_transaction_path(@plan, transaction), params: {
+    patch finance_planned_transaction_path(transaction), params: {
       planned_transaction: { commits_plan_funds: "1" }
     }
 
@@ -278,21 +279,15 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     get finance_plan_path(@plan)
 
     assert_response :success
-    assert_select "select[name='planned_transaction[transaction_type]']" do
-      assert_select "option[value='expense']", text: "Expense"
-      assert_select "option[value='transfer']", text: "Transfer / payment"
-    end
-    assert_select "select[name='planned_transaction[source_selection]']" do
-      assert_select "option[value='asset:#{asset.id}']"
-      assert_select "option[value='liability:#{liability.id}']"
-    end
-    assert_select "[data-planned-transaction-form-target='destinationFields'] select[name='planned_transaction[destination_selection]']" do
-      assert_select "option[value='asset:#{asset.id}']"
-      assert_select "option[value='liability:#{liability.id}']"
-    end
-    assert_select "[data-planned-transaction-form-target='commitmentFields'].hidden input[name='planned_transaction[commits_plan_funds]'][type='checkbox']"
-    assert_select "[data-planned-transaction-form-target='commitmentFields']", text: /Reduces this plan’s available balance without recording the payment as an expense/
     assert_select "select[name='planned_transaction[kind]']", count: 0
+    assert_select "select[name='planned_transaction[source_account_id]']" do
+      assert_select "option[value='#{asset.id}']"
+      assert_select "option[value='#{liability.id}']"
+    end
+    assert_select "select[name='planned_transaction[destination_account_id]']" do
+      assert_select "option[value='#{asset.id}']"
+      assert_select "option[value='#{liability.id}']"
+    end
     assert_select "select[name='planned_transaction[financial_account_id]']", count: 0
     assert_select "select[name='planned_transaction[financial_liability_id]']", count: 0
   end
@@ -301,7 +296,7 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     category = Category.create!(account: @account, name: "Move selector category")
     transaction = Financial::PlannedTransaction.create!(
       account: @account,
-      plan: @plan.becomes(Financial::Plan),
+      plan: Financial::Plan.find(@plan.id),
       description: "Assigned expense",
       amount: 20,
       category: category,
@@ -312,7 +307,7 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     get finance_plan_path(@plan)
 
     assert_response :success
-    assert_select "form[action='#{move_finance_planned_transaction_path(transaction)}'] select[name='target_plan_id']" do
+    assert_select "form[action='#{finance_planned_transaction_path(transaction)}'] select[name='planned_transaction[plan_id]']" do
       assert_select "option[selected][value='#{@plan.id}']", text: @plan.description
       assert_select "option[value='']", text: "Unassigned"
     end
@@ -323,14 +318,14 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     liability = Financial::Liability.create!(account: @account, name: "Household card", liability_type: "credit_card", status: "active", opening_balance: 0)
 
     assert_difference("Financial::PlannedTransaction.count", 1) do
-      post finance_plan_planned_transactions_path(@plan), params: {
+      post finance_planned_transactions_path, params: {
         planned_transaction: {
-          transaction_type: "expense",
+          plan_id: @plan.id,
+          kind: "liability_charge",
           description: "Electric bill",
-          amount: "80.00",
-          planned_for: "2026-07-15",
-          source_selection: "liability:#{liability.id}",
-          destination_selection: "asset:999999",
+          planned_amount: "80.00",
+          planned_execution_date: "2026-07-15",
+          source_account_id: liability.id,
           category_id: category.id
         }
       }
@@ -339,7 +334,7 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     transaction = Financial::PlannedTransaction.order(:id).last
     assert_redirected_to finance_plan_path(@plan)
     assert_equal "liability_charge", transaction.kind
-    assert_equal liability, transaction.financial_liability
+    assert_equal liability.id, transaction.source_account_id
     assert_nil transaction.financial_account
     assert_nil transaction.counterparty_financial_account
   end
@@ -349,14 +344,15 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     liability = Financial::Liability.create!(account: @account, name: "Payment card", liability_type: "credit_card", status: "active", opening_balance: 0)
 
     assert_difference("Financial::PlannedTransaction.count", 1) do
-      post finance_plan_planned_transactions_path(@plan), params: {
+      post finance_planned_transactions_path, params: {
         planned_transaction: {
-          transaction_type: "transfer",
+          plan_id: @plan.id,
+          kind: "liability_payment",
           description: "Pay credit card",
-          amount: "125.00",
-          planned_for: "2026-07-15",
-          source_selection: "asset:#{asset.id}",
-          destination_selection: "liability:#{liability.id}",
+          planned_amount: "125.00",
+          planned_execution_date: "2026-07-15",
+          source_account_id: asset.id,
+          destination_account_id: liability.id,
           commits_plan_funds: "1"
         }
       }
@@ -365,8 +361,8 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     transaction = Financial::PlannedTransaction.order(:id).last
     assert_redirected_to finance_plan_path(@plan)
     assert_equal "liability_payment", transaction.kind
-    assert_equal asset, transaction.financial_account
-    assert_equal liability, transaction.financial_liability
+    assert_equal asset.id, transaction.source_account_id
+    assert_equal liability.id, transaction.destination_account_id
     assert_nil transaction.category
     assert transaction.commits_plan_funds?
 
@@ -380,13 +376,14 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     category = Category.create!(account: @account, name: "Planned household")
     asset = Financial::Asset.create!(account: @account, name: "Expense checking", account_type: "checking", status: "active", opening_balance: 0)
 
-    post finance_plan_planned_transactions_path(@plan), params: {
+    post finance_planned_transactions_path, params: {
       planned_transaction: {
-        transaction_type: "expense",
+        plan_id: @plan.id,
+        kind: "outflow",
         description: "Groceries",
-        amount: "95.00",
-        planned_for: "2026-07-15",
-        source_selection: "asset:#{asset.id}",
+        planned_amount: "95.00",
+        planned_execution_date: "2026-07-15",
+        source_account_id: asset.id,
         category_id: category.id
       }
     }
@@ -394,7 +391,7 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     transaction = Financial::PlannedTransaction.order(:id).last
     assert_redirected_to finance_plan_path(@plan)
     assert_equal "outflow", transaction.kind
-    assert_equal asset, transaction.financial_account
+    assert_equal asset.id, transaction.source_account_id
     assert_equal category, transaction.category
   end
 
@@ -402,22 +399,23 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     source = Financial::Asset.create!(account: @account, name: "Transfer source", account_type: "checking", status: "active", opening_balance: 0)
     destination = Financial::Asset.create!(account: @account, name: "Transfer destination", account_type: "savings", status: "active", opening_balance: 0)
 
-    post finance_plan_planned_transactions_path(@plan), params: {
+    post finance_planned_transactions_path, params: {
       planned_transaction: {
-        transaction_type: "transfer",
+        plan_id: @plan.id,
+        kind: "transfer",
         description: "Move to savings",
-        amount: "200.00",
-        planned_for: "2026-07-15",
-        source_selection: "asset:#{source.id}",
-        destination_selection: "asset:#{destination.id}"
+        planned_amount: "200.00",
+        planned_execution_date: "2026-07-15",
+        source_account_id: source.id,
+        destination_account_id: destination.id
       }
     }
 
     transaction = Financial::PlannedTransaction.order(:id).last
     assert_redirected_to finance_plan_path(@plan)
     assert_equal "transfer", transaction.kind
-    assert_equal source, transaction.financial_account
-    assert_equal destination, transaction.counterparty_financial_account
+    assert_equal source.id, transaction.source_account_id
+    assert_equal destination.id, transaction.destination_account_id
     assert_nil transaction.category
   end
 

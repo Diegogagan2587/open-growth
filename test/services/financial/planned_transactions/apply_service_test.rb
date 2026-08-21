@@ -2,20 +2,20 @@ require "test_helper"
 
 class Financial::PlannedTransactions::ApplyServiceTest < ActiveSupport::TestCase
   test "applies with actual changes once without rewriting the plan" do
-    account = Account.create!(name: "Apply Tenant")
+    account = Account.create!(name: "Apply household")
     Current.account = account
     category = Category.create!(account: account, name: "Food")
-    asset = Financial::Asset.create!(account: account, name: "Checking", account_type: "checking", status: "active", opening_balance: 0)
-    plan = Financial::Plan.create!(account: account, name: "July", planned_for: Date.current, expected_amount: 1)
+    asset = Financial::Account.create!(account: account, name: "Checking", account_group: "asset", account_type: "checking", status: "active", opening_balance: 0)
+    plan = Financial::Plan.create!(account: account, name: "July", planned_for: Date.current)
     transaction = Financial::PlannedTransaction.create!(
       account: account,
       plan: plan,
       category: category,
-      financial_account: asset,
+      source_account: asset,
       description: "Planned groceries",
-      amount: 100,
-      planned_for: Date.current,
-      status: "pending_to_pay",
+      planned_amount: 100,
+      planned_execution_date: Date.current,
+      execution_status: "pending",
       kind: "outflow"
     )
 
@@ -30,10 +30,10 @@ class Financial::PlannedTransactions::ApplyServiceTest < ActiveSupport::TestCase
     assert first.success?
     assert second.success?
     assert_equal first.entry, second.entry
-    assert_equal 1, Financial::Entry.where(planned_expense: transaction).count
+    assert_equal 1, Financial::Transaction.where(planned_transaction: transaction).count
     assert_equal 92.to_d, first.entry.amount
-    assert_equal Date.current + 1, first.entry.entry_date
-    assert_equal 100.to_d, transaction.reload.amount
+    assert_equal Date.current + 1, first.transaction.transaction_date
+    assert_equal 100.to_d, transaction.reload.planned_amount
     assert_equal "applied", transaction.execution_status
   ensure
     Current.account = nil

@@ -14,10 +14,7 @@
       <label class="block text-sm font-medium text-foreground mb-1">From account</label>
       <%= render Ui::SelectComponent.new(
         name: "expense[origin]",
-        options: (
-          (Current.account&.financial_accounts || []).map { |a| ["💰 #{a.name}", "asset_#{a.id}"] } +
-          (Current.account&.financial_liabilities || []).map { |l| ["💳 #{l.name}", "liability_#{l.id}"] }
-        ),
+        options: (Current.account&.financial_accounts&.active || []).map { |account| ["#{account.account_group.humanize}: #{account.name}", account.id] },
         selected: nil,
         include_blank: "Select account",
         required: true,
@@ -38,10 +35,10 @@
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-foreground mb-1">Income Event (optional)</label>
+      <label class="block text-sm font-medium text-foreground mb-1">Plan (optional)</label>
       <%= render Ui::SelectComponent.new(
         name: "expense[income_event_id]",
-        options: (Current.account&.income_events&.by_date || []).map { |ie| ["#{ie.description} (#{ie.expected_date.strftime('%Y-%m-%d')})", ie.id] },
+        options: (Current.account&.financial_plans&.chronological || []).map { |plan| ["#{plan.name} (#{plan.planned_for.strftime('%Y-%m-%d')})", plan.id] },
         selected: @expense&.income_event_id,
         include_blank: "None",
         searchable: true

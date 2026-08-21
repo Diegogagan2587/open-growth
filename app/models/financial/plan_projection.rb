@@ -18,7 +18,7 @@ class Financial::PlanProjection
   end
 
   def planned_commitments
-    plan.planned_expenses.committed_to_plan.sum(:amount)
+    plan.planned_transactions.committed_to_plan.sum(:planned_amount)
   end
 
   def opening_balance

@@ -31,6 +31,7 @@ class Financial::PlannedTransaction < ApplicationRecord
   scope :unassigned, -> { where(plan_id: nil) }
   scope :by_position, -> { order(:position, :created_at) }
   scope :budget_consuming, -> { where(budget_consuming: true) }
+  scope :committed_to_plan, -> { where(kind: "liability_payment", commits_plan_funds: true) }
 
   validates :description, presence: true
   validates :planned_amount, numericality: { greater_than: 0 }
@@ -42,6 +43,7 @@ class Financial::PlannedTransaction < ApplicationRecord
   validate :route_is_valid
   validate :associations_belong_to_same_account
   validate :plan_accepts_expectation_changes
+  validate :commitment_requires_debt_payment
 
   alias_attribute :amount, :planned_amount
   alias_attribute :planned_for, :planned_execution_date
@@ -165,5 +167,9 @@ class Financial::PlannedTransaction < ApplicationRecord
     return if (changes.keys & fields).empty? || !plan&.lifecycle_status.in?(%w[closed cancelled])
 
     errors.add(:plan, "must be active before changing planned transactions")
+  end
+
+  def commitment_requires_debt_payment
+    errors.add(:commits_plan_funds, "is only available for liability payments") if commits_plan_funds? && !debt_payment?
   end
 end

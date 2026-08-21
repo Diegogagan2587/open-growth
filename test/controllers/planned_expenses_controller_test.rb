@@ -557,12 +557,14 @@ class PlannedExpensesControllerTest < ActionDispatch::IntegrationTest
       financial_account: @source_account
     )
 
-    patch move_income_event_planned_expense_path(@income_event, planned_expense), params: {
-      target_income_event_id: target_income_event.id
-    }
+    canonical_transaction = Financial::PlannedTransaction.find(planned_expense.id)
+    patch finance_planned_transaction_path(canonical_transaction), params: {
+      planned_transaction: { plan_id: target_income_event.id }
+    }, headers: { "HTTP_REFERER" => finance_plan_url(target_income_event) }
 
-    assert_redirected_to income_event_planned_expenses_path(target_income_event)
-    assert_equal target_income_event.id, planned_expense.reload.income_event_id
+    assert_redirected_to finance_plan_path(target_income_event)
+    assert_equal target_income_event.id, canonical_transaction.reload.plan_id
+    assert_equal @income_event.id, planned_expense.reload.income_event_id
     assert_equal @income_event.id, expense.reload.income_event_id
     assert_equal budget_period.id, expense.budget_period_id
   end

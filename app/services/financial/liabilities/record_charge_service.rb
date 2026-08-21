@@ -52,10 +52,10 @@ module Financial::Liabilities
       @budget_period ||= BudgetPeriod.for_account(liability.account).find_by(id: budget_period_id)
     end
 
-      def plan
+    def plan
       return nil if income_event_id.blank?
 
-        @plan ||= Financial::Plan.for_account(liability.account).find_by(id: income_event_id)
+      @plan ||= Financial::Plan.for_account(liability.account).find_by(id: income_event_id)
     end
 
     def failure(message)

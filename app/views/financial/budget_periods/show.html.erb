@@ -65,6 +65,50 @@
   </div>
 </div>
 
+<section class="mb-8 rounded-lg border border-border bg-card p-4">
+  <div class="mb-4">
+    <h2 class="text-xl font-bold">Budget allocations</h2>
+    <p class="text-sm text-muted-foreground">Set the planned amount for each spending category in this period.</p>
+  </div>
+
+  <% if @budget_allocations.any? %>
+    <div class="mb-5 divide-y divide-border rounded-md border border-border">
+      <% @budget_allocations.each do |allocation| %>
+        <div class="flex flex-wrap items-center justify-between gap-3 p-3">
+          <div>
+            <p class="font-medium"><%= allocation.category.name %></p>
+            <p class="text-sm text-muted-foreground"><%= number_to_currency(allocation.planned_amount) %> planned</p>
+          </div>
+          <%= button_to "Remove",
+            finance_budget_period_budget_allocation_path(@budget_period, allocation),
+            method: :delete,
+            class: "min-h-[44px] rounded-md border border-border px-3 py-2 text-sm hover:bg-muted/35",
+            form: { data: { turbo_confirm: "Remove this budget allocation?" } } %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @allocation_categories.any? %>
+    <%= form_with url: finance_budget_period_budget_allocations_path(@budget_period), scope: :financial_budget_allocation, class: "grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(10rem,14rem)_auto] sm:items-end" do |form| %>
+      <label class="space-y-1 text-sm">
+        <span>Category</span>
+        <%= form.select :category_id,
+          options_from_collection_for_select(@allocation_categories, :id, :name),
+          { prompt: "Select a category" },
+          { required: true, class: "min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2" } %>
+      </label>
+      <label class="space-y-1 text-sm">
+        <span>Planned amount</span>
+        <%= form.number_field :planned_amount, min: 0.01, step: 0.01, required: true, class: "min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2" %>
+      </label>
+      <%= form.submit "Add allocation", class: "min-h-[44px] rounded-md bg-primary px-4 py-2 text-primary-foreground hover:opacity-90" %>
+    <% end %>
+  <% else %>
+    <p class="text-sm text-muted-foreground">Every category already has an allocation for this period.</p>
+  <% end %>
+</section>
+
 <h2 class="text-xl font-bold mb-4"><%= t("budget_periods.show.income_events") %></h2>
 
 <% if @income_events.any? %>
@@ -106,7 +150,7 @@
               </span>
             </td>
             <td class="px-4 py-2">
-              <%= link_to t("shared.view"), income_event, class: "text-accent hover:underline" %>
+              <%= link_to t("shared.view"), finance_plan_path(income_event), class: "text-accent hover:underline" %>
             </td>
           </tr>
         <% end %>
@@ -147,7 +191,7 @@
         <div class="min-w-0">
           <p class="text-sm text-muted-foreground"><%= t("budget_periods.show.income_event") %></p>
           <p class="font-semibold">
-            <%= link_to income_event.description, income_event, class: "text-accent hover:underline" %>
+            <%= link_to income_event.description, finance_plan_path(income_event), class: "text-accent hover:underline" %>
           </p>
         </div>
         <div class="min-w-0">
@@ -197,7 +241,7 @@
             <% planned_expenses.each do |planned_expense| %>
               <tr class="border-t hover:bg-muted/35 transition-colors">
                 <td class="px-4 py-2">
-                  <%= link_to income_event.description, income_event, class: "text-accent hover:underline" %>
+                  <%= link_to income_event.description, finance_plan_path(income_event), class: "text-accent hover:underline" %>
                 </td>
                 <td class="px-4 py-2 whitespace-nowrap"><%= income_event.expected_date.strftime("%b %d, %Y") %></td>
                 <td class="px-4 py-2 text-right whitespace-nowrap"><%= number_to_currency(planned_expense.amount) %></td>

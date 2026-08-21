@@ -19,11 +19,11 @@ class Finance::PendingExpectationsController < ApplicationController
   def funding_sources
     scope = Financial::FundingSource.where(account: Current.account)
       .joins(:financial_plan)
-      .left_joins(:receipt_entry)
-      .where(resolution: "pending", financial_entries: { id: nil })
+      .left_joins(:receipt_transaction)
+      .where(resolution: "pending", financial_transactions: { id: nil })
       .where.not(kind: "borrowed")
-      .where(income_events: { lifecycle_status: %w[draft active] })
-      .includes(:financial_plan, :expected_destination_asset, :expected_destination_liability)
+      .where(financial_plans: { lifecycle_status: %w[draft active] })
+      .includes(:financial_plan, :expected_destination_account)
     scope = scope.where(expected_date: @date_from..) if @date_from
     scope = scope.where(expected_date: ..@date_to) if @date_to
     scope = scope.none if @movement_type.present? && @movement_type != "inflow"
@@ -32,10 +32,10 @@ class Finance::PendingExpectationsController < ApplicationController
 
   def planned_transactions
     scope = Financial::PlannedTransaction.for_account(Current.account)
-      .left_joins(:financial_entry, :income_event)
-      .where(execution_status: "pending", financial_entries: { id: nil })
-      .where("income_events.id IS NULL OR income_events.lifecycle_status IN (?)", %w[draft active])
-      .includes(:plan, :financial_account, :counterparty_financial_account, :financial_liability)
+      .left_joins(:actual_transaction, :plan)
+      .where(execution_status: "pending", financial_transactions: { id: nil })
+      .where("financial_plans.id IS NULL OR financial_plans.lifecycle_status IN (?)", %w[draft active])
+      .includes(:plan, :source_account, :destination_account)
     scope = scope.where(kind: @movement_type) if @movement_type.present?
     scope = scope.where(planned_for: @date_from..) if @date_from
     scope = scope.where(planned_for: ..@date_to) if @date_to
@@ -44,16 +44,14 @@ class Finance::PendingExpectationsController < ApplicationController
 
   def filter_funding_sources_by_account(scope)
     kind, id = @account_ref.to_s.split(":", 2)
-    return scope.where(expected_destination_asset_id: id) if kind == "asset"
-    return scope.where(expected_destination_liability_id: id) if kind == "liability"
+    return scope.where(expected_destination_account_id: id) if kind.in?(%w[asset liability])
 
     scope
   end
 
   def filter_planned_transactions_by_account(scope)
     kind, id = @account_ref.to_s.split(":", 2)
-    return scope.where("financial_account_id = :id OR counterparty_financial_account_id = :id", id: id) if kind == "asset"
-    return scope.where(financial_liability_id: id) if kind == "liability"
+    return scope.where("source_account_id = :id OR destination_account_id = :id", id: id) if kind.in?(%w[asset liability])
 
     scope
   end

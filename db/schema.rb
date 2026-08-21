@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_08_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,20 +45,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
     t.boolean "reports_enabled", default: false, null: false
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_ai_configurations_on_key", unique: true
-  end
-
-  create_table "budget_line_items", force: :cascade do |t|
-    t.bigint "account_id", null: false
-    t.bigint "budget_period_id", null: false
-    t.bigint "category_id", null: false
-    t.datetime "created_at", null: false
-    t.string "description"
-    t.float "percentage_of_total"
-    t.decimal "planned_amount", precision: 10, scale: 2
-    t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_budget_line_items_on_account_id"
-    t.index ["budget_period_id"], name: "index_budget_line_items_on_budget_period_id"
-    t.index ["category_id"], name: "index_budget_line_items_on_category_id"
   end
 
   create_table "budget_periods", force: :cascade do |t|
@@ -201,20 +187,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
     t.index ["documentable_type", "documentable_id"], name: "index_docs_on_documentable"
   end
 
-  create_table "expense_templates", force: :cascade do |t|
-    t.bigint "account_id", null: false
-    t.bigint "category_id", null: false
-    t.datetime "created_at", null: false
-    t.string "description"
-    t.string "frequency", null: false
-    t.string "name", null: false
-    t.text "notes"
-    t.decimal "total_amount", precision: 10, scale: 2, null: false
-    t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_expense_templates_on_account_id"
-    t.index ["category_id"], name: "index_expense_templates_on_category_id"
-  end
-
   create_table "expenses", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.decimal "amount", precision: 10, scale: 2
@@ -244,56 +216,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
   end
 
   create_table "financial_accounts", force: :cascade do |t|
+    t.string "account_group", default: "asset", null: false
     t.bigint "account_id", null: false
     t.string "account_type", null: false
+    t.datetime "archived_at"
     t.datetime "created_at", null: false
+    t.decimal "credit_limit", precision: 12, scale: 2
+    t.bigint "legacy_liability_id"
     t.string "name", null: false
     t.text "notes"
     t.decimal "opening_balance", precision: 12, scale: 2, default: "0.0", null: false
     t.string "status", default: "active", null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id", "name"], name: "index_financial_accounts_on_account_id_and_name", unique: true
+    t.index ["account_id", "account_group", "name"], name: "index_financial_accounts_on_group_and_name", unique: true
+    t.index ["account_id", "account_group"], name: "index_financial_accounts_on_account_and_group"
     t.index ["account_id"], name: "index_financial_accounts_on_account_id"
+    t.index ["legacy_liability_id"], name: "index_financial_accounts_on_legacy_liability_id", unique: true, where: "(legacy_liability_id IS NOT NULL)"
     t.index ["status"], name: "index_financial_accounts_on_status"
+    t.check_constraint "account_group::text = 'asset'::text AND (account_type::text = ANY (ARRAY['debit'::character varying, 'checking'::character varying, 'savings'::character varying]::text[])) OR account_group::text = 'liability'::text AND (account_type::text = ANY (ARRAY['credit_card'::character varying, 'personal_credit'::character varying]::text[]))", name: "financial_accounts_type_matches_group"
+    t.check_constraint "account_group::text = ANY (ARRAY['asset'::character varying, 'liability'::character varying]::text[])", name: "financial_accounts_valid_group"
   end
 
-  create_table "financial_entries", force: :cascade do |t|
+  create_table "financial_budget_allocations", force: :cascade do |t|
     t.bigint "account_id", null: false
-    t.decimal "amount", precision: 12, scale: 2, null: false
-    t.bigint "budget_period_id"
-    t.bigint "category_id"
-    t.bigint "counterparty_financial_account_id"
-    t.bigint "counterparty_financial_liability_id"
+    t.bigint "budget_period_id", null: false
+    t.bigint "category_id", null: false
     t.datetime "created_at", null: false
-    t.string "description", null: false
-    t.date "entry_date", null: false
-    t.time "entry_time"
-    t.string "entry_type", null: false
-    t.bigint "expense_id"
-    t.bigint "financial_account_id"
-    t.bigint "financial_liability_id"
-    t.bigint "financial_loan_id"
-    t.bigint "funding_source_id"
-    t.bigint "income_event_id"
-    t.text "notes"
-    t.bigint "planned_expense_id"
+    t.string "description"
+    t.float "percentage_of_total"
+    t.decimal "planned_amount", precision: 10, scale: 2
     t.datetime "updated_at", null: false
-    t.index ["account_id", "entry_date"], name: "index_financial_entries_on_account_id_and_entry_date"
-    t.index ["account_id"], name: "index_financial_entries_on_account_id"
-    t.index ["budget_period_id"], name: "index_financial_entries_on_budget_period_id"
-    t.index ["category_id"], name: "index_financial_entries_on_category_id"
-    t.index ["counterparty_financial_account_id"], name: "index_financial_entries_on_counterparty_financial_account_id"
-    t.index ["counterparty_financial_liability_id"], name: "index_financial_entries_on_counterparty_financial_liability_id"
-    t.index ["entry_type"], name: "index_financial_entries_on_entry_type"
-    t.index ["expense_id"], name: "index_financial_entries_on_expense_id"
-    t.index ["financial_account_id"], name: "index_financial_entries_on_financial_account_id"
-    t.index ["financial_liability_id"], name: "index_financial_entries_on_financial_liability_id"
-    t.index ["financial_loan_id"], name: "index_financial_entries_on_financial_loan_id"
-    t.index ["funding_source_id"], name: "index_financial_entries_on_funding_source_id"
-    t.index ["funding_source_id"], name: "index_financial_entries_on_unique_funding_source", unique: true, where: "(funding_source_id IS NOT NULL)"
-    t.index ["income_event_id"], name: "index_financial_entries_on_income_event_id"
-    t.index ["planned_expense_id"], name: "index_financial_entries_on_planned_expense_id"
-    t.index ["planned_expense_id"], name: "index_financial_entries_on_unique_planned_expense", unique: true, where: "(planned_expense_id IS NOT NULL)"
+    t.index ["account_id"], name: "index_financial_budget_allocations_on_account_id"
+    t.index ["budget_period_id"], name: "index_financial_budget_allocations_on_budget_period_id"
+    t.index ["category_id"], name: "index_financial_budget_allocations_on_category_id"
+    t.check_constraint "planned_amount > 0::numeric", name: "financial_budget_allocations_positive_amount"
   end
 
   create_table "financial_funding_sources", force: :cascade do |t|
@@ -302,6 +258,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
     t.string "description", null: false
     t.decimal "expected_amount", precision: 12, scale: 2, null: false
     t.date "expected_date", null: false
+    t.bigint "expected_destination_account_id"
     t.bigint "expected_destination_asset_id"
     t.bigint "expected_destination_liability_id"
     t.bigint "financial_loan_id"
@@ -311,11 +268,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
     t.string "resolution", default: "pending", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_financial_funding_sources_on_account_id"
+    t.index ["expected_destination_account_id"], name: "idx_on_expected_destination_account_id_bda17e9c97"
     t.index ["expected_destination_asset_id"], name: "idx_on_expected_destination_asset_id_e22fd2d6af"
     t.index ["expected_destination_liability_id"], name: "idx_on_expected_destination_liability_id_6d8c44a66a"
     t.index ["financial_loan_id"], name: "index_financial_funding_sources_on_financial_loan_id"
     t.index ["financial_plan_id"], name: "index_financial_funding_sources_on_financial_plan_id"
     t.index ["legacy_income_event_id"], name: "index_financial_funding_sources_on_legacy_income_event_id", unique: true
+    t.check_constraint "resolution::text = ANY (ARRAY['pending'::character varying, 'received'::character varying, 'not_received'::character varying, 'cancelled'::character varying, 'closed_with_variance'::character varying]::text[])", name: "financial_funding_sources_valid_resolution"
   end
 
   create_table "financial_liabilities", force: :cascade do |t|
@@ -345,7 +304,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
     t.integer "installment_number", null: false
     t.bigint "interest_entry_id"
     t.bigint "legacy_loan_payment_schedule_id"
-    t.bigint "payment_entry_id"
+    t.bigint "payment_transaction_id"
     t.bigint "planned_transaction_id"
     t.string "resolution", default: "scheduled", null: false
     t.datetime "updated_at", null: false
@@ -354,13 +313,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
     t.index ["financial_loan_id"], name: "index_financial_loan_installments_on_financial_loan_id"
     t.index ["interest_entry_id"], name: "index_financial_loan_installments_on_interest_entry_id"
     t.index ["legacy_loan_payment_schedule_id"], name: "index_loan_installments_on_legacy_schedule", unique: true
-    t.index ["payment_entry_id"], name: "index_financial_loan_installments_on_payment_entry_id"
+    t.index ["payment_transaction_id"], name: "index_financial_loan_installments_on_payment_transaction_id"
     t.index ["planned_transaction_id"], name: "index_financial_loan_installments_on_planned_transaction_id"
   end
 
   create_table "financial_loans", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
+    t.bigint "destination_account_id"
     t.bigint "destination_asset_id"
     t.bigint "destination_liability_id"
     t.decimal "final_payment_amount", precision: 12, scale: 2
@@ -368,6 +328,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
     t.decimal "interest_rate"
     t.bigint "legacy_income_event_id"
     t.string "lender_name"
+    t.bigint "liability_account_id"
     t.bigint "liability_id"
     t.string "lifecycle_status", default: "simulated", null: false
     t.string "name", null: false
@@ -379,11 +340,175 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
     t.string "repayment_basis"
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_financial_loans_on_account_id"
+    t.index ["destination_account_id"], name: "index_financial_loans_on_destination_account_id"
     t.index ["destination_asset_id"], name: "index_financial_loans_on_destination_asset_id"
     t.index ["destination_liability_id"], name: "index_financial_loans_on_destination_liability_id"
     t.index ["interest_category_id"], name: "index_financial_loans_on_interest_category_id"
     t.index ["legacy_income_event_id"], name: "index_financial_loans_on_legacy_income_event_id", unique: true
+    t.index ["liability_account_id"], name: "index_financial_loans_on_liability_account_id"
     t.index ["liability_id"], name: "index_financial_loans_on_liability_id"
+    t.check_constraint "lifecycle_status::text = ANY (ARRAY['simulated'::character varying, 'active'::character varying, 'paid'::character varying, 'cancelled'::character varying]::text[])", name: "financial_loans_valid_lifecycle"
+  end
+
+  create_table "financial_planned_transactions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.boolean "budget_consuming", null: false
+    t.bigint "category_id"
+    t.boolean "commits_plan_funds", default: false, null: false
+    t.datetime "created_at", null: false
+    t.string "description", null: false
+    t.bigint "destination_account_id"
+    t.bigint "destination_asset_id"
+    t.date "due_date"
+    t.string "execution_status", default: "pending", null: false
+    t.string "importance", default: "normal", null: false
+    t.string "kind", null: false
+    t.bigint "legacy_planned_expense_id"
+    t.bigint "liability_id"
+    t.text "notes"
+    t.bigint "origin_plan_id"
+    t.bigint "plan_id"
+    t.decimal "planned_amount", precision: 12, scale: 2, null: false
+    t.date "planned_execution_date"
+    t.integer "position"
+    t.bigint "recurring_transaction_id"
+    t.bigint "savings_goal_id"
+    t.bigint "shopping_item_id"
+    t.bigint "source_account_id"
+    t.bigint "source_asset_id"
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "execution_status"], name: "index_financial_planned_transactions_on_execution"
+    t.index ["account_id"], name: "index_financial_planned_transactions_on_account_id"
+    t.index ["category_id"], name: "index_financial_planned_transactions_on_category_id"
+    t.index ["destination_account_id"], name: "index_financial_planned_transactions_on_destination_account_id"
+    t.index ["destination_asset_id"], name: "index_financial_planned_transactions_on_destination_asset_id"
+    t.index ["legacy_planned_expense_id"], name: "index_planned_transactions_on_legacy_expense", unique: true
+    t.index ["liability_id"], name: "index_financial_planned_transactions_on_liability_id"
+    t.index ["origin_plan_id"], name: "index_financial_planned_transactions_on_origin_plan_id"
+    t.index ["plan_id", "position"], name: "index_financial_planned_transactions_on_position", unique: true, where: "(plan_id IS NOT NULL)"
+    t.index ["plan_id"], name: "index_financial_planned_transactions_on_plan_id"
+    t.index ["recurring_transaction_id"], name: "idx_on_recurring_transaction_id_2fdf0b3916"
+    t.index ["savings_goal_id"], name: "index_financial_planned_transactions_on_savings_goal_id"
+    t.index ["shopping_item_id"], name: "index_financial_planned_transactions_on_shopping_item_id"
+    t.index ["source_account_id"], name: "index_financial_planned_transactions_on_source_account_id"
+    t.index ["source_asset_id"], name: "index_financial_planned_transactions_on_source_asset_id"
+    t.check_constraint "execution_status::text = ANY (ARRAY['pending'::character varying, 'applied'::character varying, 'cancelled'::character varying, 'skipped'::character varying]::text[])", name: "financial_planned_transactions_valid_execution"
+  end
+
+  create_table "financial_plans", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.decimal "actual_ending_balance_at_close", precision: 12, scale: 2
+    t.bigint "budget_period_id"
+    t.datetime "closed_at"
+    t.datetime "created_at", null: false
+    t.bigint "legacy_income_event_id"
+    t.string "lifecycle_status", default: "active", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.date "planned_for", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "planned_for", "id"], name: "index_financial_plans_on_chronology"
+    t.index ["account_id"], name: "index_financial_plans_on_account_id"
+    t.index ["budget_period_id"], name: "index_financial_plans_on_budget_period_id"
+    t.index ["legacy_income_event_id"], name: "index_financial_plans_on_legacy_income_event_id", unique: true
+    t.check_constraint "lifecycle_status::text = ANY (ARRAY['draft'::character varying, 'active'::character varying, 'closed'::character varying, 'cancelled'::character varying]::text[])", name: "financial_plans_valid_lifecycle"
+  end
+
+  create_table "financial_recurring_transactions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.decimal "amount", precision: 12, scale: 2, null: false
+    t.boolean "budget_consuming", null: false
+    t.bigint "category_id"
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.bigint "destination_account_id"
+    t.string "frequency", null: false
+    t.string "importance", default: "normal", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.bigint "source_account_id"
+    t.string "status", default: "active", null: false
+    t.string "transaction_kind", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "status", "name"], name: "index_financial_recurring_transactions_for_picker"
+    t.index ["account_id"], name: "index_financial_recurring_transactions_on_account_id"
+    t.index ["category_id"], name: "index_financial_recurring_transactions_on_category_id"
+    t.index ["destination_account_id"], name: "idx_on_destination_account_id_e6e08c5369"
+    t.index ["source_account_id"], name: "index_financial_recurring_transactions_on_source_account_id"
+    t.check_constraint "amount > 0::numeric", name: "financial_recurring_transactions_positive_amount"
+    t.check_constraint "frequency::text = ANY (ARRAY['weekly'::character varying, 'biweekly'::character varying, 'quincenal'::character varying, 'monthly'::character varying, 'bimonthly'::character varying, 'quarterly'::character varying, 'custom'::character varying]::text[])", name: "financial_recurring_transactions_valid_frequency"
+    t.check_constraint "importance::text = ANY (ARRAY['low'::character varying, 'normal'::character varying, 'high'::character varying, 'essential'::character varying]::text[])", name: "financial_recurring_transactions_valid_importance"
+    t.check_constraint "source_account_id IS NULL OR destination_account_id IS NULL OR source_account_id <> destination_account_id", name: "financial_recurring_transactions_distinct_accounts"
+    t.check_constraint "status::text = ANY (ARRAY['active'::character varying, 'archived'::character varying]::text[])", name: "financial_recurring_transactions_valid_status"
+    t.check_constraint "transaction_kind::text = ANY (ARRAY['outflow'::character varying, 'liability_charge'::character varying, 'transfer'::character varying, 'liability_payment'::character varying]::text[])", name: "financial_recurring_transactions_valid_kind"
+  end
+
+  create_table "financial_savings_goals", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "category_id", null: false
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.string "frequency", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.decimal "total_amount", precision: 10, scale: 2, null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_financial_savings_goals_on_account_id"
+    t.index ["category_id"], name: "index_financial_savings_goals_on_category_id"
+    t.check_constraint "total_amount > 0::numeric", name: "financial_savings_goals_positive_amount"
+  end
+
+  create_table "financial_transactions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.decimal "amount", precision: 12, scale: 2, null: false
+    t.bigint "budget_period_id"
+    t.bigint "category_id"
+    t.bigint "counterparty_financial_account_id"
+    t.bigint "counterparty_financial_liability_id"
+    t.datetime "created_at", null: false
+    t.string "description", null: false
+    t.bigint "destination_account_id"
+    t.bigint "expense_id"
+    t.bigint "financial_account_id"
+    t.bigint "financial_liability_id"
+    t.bigint "financial_loan_id"
+    t.bigint "funding_source_id"
+    t.bigint "income_event_id"
+    t.time "entry_time"
+    t.text "notes"
+    t.bigint "plan_id"
+    t.bigint "planned_expense_id"
+    t.bigint "planned_transaction_id"
+    t.datetime "reconciled_at"
+    t.bigint "source_account_id"
+    t.date "transaction_date", null: false
+    t.string "transaction_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "reconciled_at"], name: "index_financial_transactions_on_reconciliation"
+    t.index ["account_id", "transaction_date"], name: "idx_on_account_id_transaction_date_ec4024adbf"
+    t.index ["account_id"], name: "index_financial_transactions_on_account_id"
+    t.index ["budget_period_id"], name: "index_financial_transactions_on_budget_period_id"
+    t.index ["category_id"], name: "index_financial_transactions_on_category_id"
+    t.index ["counterparty_financial_account_id"], name: "idx_on_counterparty_financial_account_id_0c27cdac8f"
+    t.index ["counterparty_financial_liability_id"], name: "idx_on_counterparty_financial_liability_id_e34a63eb26"
+    t.index ["destination_account_id"], name: "index_financial_transactions_on_destination_account_id"
+    t.index ["expense_id"], name: "index_financial_transactions_on_expense_id"
+    t.index ["financial_account_id"], name: "index_financial_transactions_on_financial_account_id"
+    t.index ["financial_liability_id"], name: "index_financial_transactions_on_financial_liability_id"
+    t.index ["financial_loan_id"], name: "index_financial_transactions_on_financial_loan_id"
+    t.index ["financial_loan_id"], name: "index_financial_transactions_on_unique_loan_disbursement", unique: true, where: "((financial_loan_id IS NOT NULL) AND ((transaction_type)::text = 'loan_disbursement'::text))"
+    t.index ["funding_source_id"], name: "index_financial_entries_on_unique_funding_source", unique: true, where: "(funding_source_id IS NOT NULL)"
+    t.index ["funding_source_id"], name: "index_financial_transactions_on_funding_source_id"
+    t.index ["income_event_id"], name: "index_financial_transactions_on_income_event_id"
+    t.index ["plan_id"], name: "index_financial_transactions_on_plan_id"
+    t.index ["planned_expense_id"], name: "index_financial_entries_on_unique_planned_expense", unique: true, where: "(planned_expense_id IS NOT NULL)"
+    t.index ["planned_expense_id"], name: "index_financial_transactions_on_planned_expense_id"
+    t.index ["planned_transaction_id"], name: "index_financial_entries_on_unique_planned_transaction", unique: true, where: "(planned_transaction_id IS NOT NULL)"
+    t.index ["planned_transaction_id"], name: "index_financial_transactions_on_planned_transaction_id"
+    t.index ["source_account_id"], name: "index_financial_transactions_on_source_account_id"
+    t.index ["transaction_type"], name: "index_financial_transactions_on_transaction_type"
+    t.check_constraint "source_account_id IS NULL OR destination_account_id IS NULL OR source_account_id <> destination_account_id", name: "financial_transactions_distinct_accounts"
+    t.check_constraint "transaction_type::text = ANY (ARRAY['income'::character varying, 'expense'::character varying, 'transfer'::character varying, 'debt_payment'::character varying, 'loan_disbursement'::character varying, 'adjustment'::character varying, 'refund'::character varying]::text[])", name: "financial_transactions_valid_type"
   end
 
   create_table "income_events", force: :cascade do |t|
@@ -659,22 +784,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
     t.datetime "created_at", null: false
     t.decimal "estimated_amount", precision: 10, scale: 2
     t.bigint "expense_id"
-    t.bigint "financial_entry_id"
+    t.bigint "financial_transaction_id"
     t.string "frequency"
     t.string "item_type", default: "one_time", null: false
     t.date "last_purchased_at"
     t.string "name", null: false
     t.text "notes"
     t.bigint "planned_expense_id"
+    t.bigint "planned_transaction_id"
     t.string "quantity"
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_shopping_items_on_account_id"
     t.index ["category_id"], name: "index_shopping_items_on_category_id"
     t.index ["expense_id"], name: "index_shopping_items_on_expense_id"
-    t.index ["financial_entry_id"], name: "index_shopping_items_on_financial_entry_id"
+    t.index ["financial_transaction_id"], name: "index_shopping_items_on_financial_transaction_id"
     t.index ["item_type"], name: "index_shopping_items_on_item_type"
     t.index ["planned_expense_id"], name: "index_shopping_items_on_planned_expense_id"
+    t.index ["planned_transaction_id"], name: "index_shopping_items_on_planned_transaction_id"
     t.index ["status"], name: "index_shopping_items_on_status"
   end
 
@@ -727,9 +854,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
 
   add_foreign_key "account_memberships", "accounts"
   add_foreign_key "account_memberships", "users"
-  add_foreign_key "budget_line_items", "accounts"
-  add_foreign_key "budget_line_items", "budget_periods"
-  add_foreign_key "budget_line_items", "categories"
   add_foreign_key "budget_periods", "accounts"
   add_foreign_key "career_carl_stories", "career_profiles"
   add_foreign_key "career_companies", "accounts"
@@ -743,54 +867,82 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
   add_foreign_key "doc_links", "docs"
   add_foreign_key "doc_links", "links"
   add_foreign_key "docs", "accounts"
-  add_foreign_key "expense_templates", "accounts"
-  add_foreign_key "expense_templates", "categories"
   add_foreign_key "expenses", "accounts"
   add_foreign_key "expenses", "budget_periods"
   add_foreign_key "expenses", "categories"
   add_foreign_key "expenses", "financial_accounts"
   add_foreign_key "expenses", "financial_accounts", column: "counterparty_financial_account_id"
-  add_foreign_key "expenses", "financial_liabilities"
-  add_foreign_key "expenses", "financial_liabilities", column: "counterparty_financial_liability_id"
+  add_foreign_key "expenses", "financial_accounts", column: "counterparty_financial_liability_id"
+  add_foreign_key "expenses", "financial_accounts", column: "financial_liability_id"
   add_foreign_key "expenses", "income_events"
   add_foreign_key "expenses", "income_events", column: "loan_id"
   add_foreign_key "expenses", "planned_expenses"
   add_foreign_key "financial_accounts", "accounts"
-  add_foreign_key "financial_entries", "accounts"
-  add_foreign_key "financial_entries", "budget_periods"
-  add_foreign_key "financial_entries", "categories"
-  add_foreign_key "financial_entries", "expenses"
-  add_foreign_key "financial_entries", "financial_accounts"
-  add_foreign_key "financial_entries", "financial_accounts", column: "counterparty_financial_account_id"
-  add_foreign_key "financial_entries", "financial_funding_sources", column: "funding_source_id"
-  add_foreign_key "financial_entries", "financial_liabilities"
-  add_foreign_key "financial_entries", "financial_liabilities", column: "counterparty_financial_liability_id"
-  add_foreign_key "financial_entries", "financial_loans"
-  add_foreign_key "financial_entries", "income_events"
-  add_foreign_key "financial_entries", "planned_expenses"
+  add_foreign_key "financial_budget_allocations", "accounts"
+  add_foreign_key "financial_budget_allocations", "budget_periods"
+  add_foreign_key "financial_budget_allocations", "categories"
   add_foreign_key "financial_funding_sources", "accounts"
+  add_foreign_key "financial_funding_sources", "financial_accounts", column: "expected_destination_account_id"
   add_foreign_key "financial_funding_sources", "financial_accounts", column: "expected_destination_asset_id"
-  add_foreign_key "financial_funding_sources", "financial_liabilities", column: "expected_destination_liability_id"
+  add_foreign_key "financial_funding_sources", "financial_accounts", column: "expected_destination_liability_id"
   add_foreign_key "financial_funding_sources", "financial_loans"
-  add_foreign_key "financial_funding_sources", "income_events", column: "financial_plan_id"
+  add_foreign_key "financial_funding_sources", "financial_plans"
   add_foreign_key "financial_liabilities", "accounts"
   add_foreign_key "financial_loan_installments", "accounts"
-  add_foreign_key "financial_loan_installments", "financial_entries", column: "interest_entry_id"
-  add_foreign_key "financial_loan_installments", "financial_entries", column: "payment_entry_id"
+  add_foreign_key "financial_loan_installments", "financial_transactions", column: "interest_entry_id"
   add_foreign_key "financial_loan_installments", "financial_loans"
-  add_foreign_key "financial_loan_installments", "planned_expenses", column: "planned_transaction_id"
+  add_foreign_key "financial_loan_installments", "financial_planned_transactions", column: "planned_transaction_id"
+  add_foreign_key "financial_loan_installments", "financial_transactions", column: "payment_transaction_id"
   add_foreign_key "financial_loans", "accounts"
   add_foreign_key "financial_loans", "categories", column: "interest_category_id"
+  add_foreign_key "financial_loans", "financial_accounts", column: "destination_account_id"
   add_foreign_key "financial_loans", "financial_accounts", column: "destination_asset_id"
-  add_foreign_key "financial_loans", "financial_liabilities", column: "destination_liability_id"
-  add_foreign_key "financial_loans", "financial_liabilities", column: "liability_id"
+  add_foreign_key "financial_loans", "financial_accounts", column: "destination_liability_id"
+  add_foreign_key "financial_loans", "financial_accounts", column: "liability_account_id"
+  add_foreign_key "financial_loans", "financial_accounts", column: "liability_id"
+  add_foreign_key "financial_planned_transactions", "accounts"
+  add_foreign_key "financial_planned_transactions", "categories"
+  add_foreign_key "financial_planned_transactions", "financial_accounts", column: "destination_account_id"
+  add_foreign_key "financial_planned_transactions", "financial_accounts", column: "destination_asset_id"
+  add_foreign_key "financial_planned_transactions", "financial_accounts", column: "liability_id"
+  add_foreign_key "financial_planned_transactions", "financial_accounts", column: "source_account_id"
+  add_foreign_key "financial_planned_transactions", "financial_accounts", column: "source_asset_id"
+  add_foreign_key "financial_planned_transactions", "financial_plans", column: "origin_plan_id"
+  add_foreign_key "financial_planned_transactions", "financial_plans", column: "plan_id"
+  add_foreign_key "financial_planned_transactions", "financial_recurring_transactions", column: "recurring_transaction_id"
+  add_foreign_key "financial_planned_transactions", "financial_savings_goals", column: "savings_goal_id"
+  add_foreign_key "financial_planned_transactions", "shopping_items"
+  add_foreign_key "financial_plans", "accounts"
+  add_foreign_key "financial_plans", "budget_periods"
+  add_foreign_key "financial_recurring_transactions", "accounts"
+  add_foreign_key "financial_recurring_transactions", "categories"
+  add_foreign_key "financial_recurring_transactions", "financial_accounts", column: "destination_account_id"
+  add_foreign_key "financial_recurring_transactions", "financial_accounts", column: "source_account_id"
+  add_foreign_key "financial_savings_goals", "accounts"
+  add_foreign_key "financial_savings_goals", "categories"
+  add_foreign_key "financial_transactions", "accounts"
+  add_foreign_key "financial_transactions", "budget_periods"
+  add_foreign_key "financial_transactions", "categories"
+  add_foreign_key "financial_transactions", "expenses"
+  add_foreign_key "financial_transactions", "financial_accounts"
+  add_foreign_key "financial_transactions", "financial_accounts", column: "counterparty_financial_account_id"
+  add_foreign_key "financial_transactions", "financial_accounts", column: "counterparty_financial_liability_id"
+  add_foreign_key "financial_transactions", "financial_accounts", column: "destination_account_id"
+  add_foreign_key "financial_transactions", "financial_accounts", column: "financial_liability_id"
+  add_foreign_key "financial_transactions", "financial_accounts", column: "source_account_id"
+  add_foreign_key "financial_transactions", "financial_funding_sources", column: "funding_source_id"
+  add_foreign_key "financial_transactions", "financial_loans"
+  add_foreign_key "financial_transactions", "financial_planned_transactions", column: "planned_transaction_id"
+  add_foreign_key "financial_transactions", "financial_plans", column: "plan_id"
+  add_foreign_key "financial_transactions", "income_events"
+  add_foreign_key "financial_transactions", "planned_expenses"
   add_foreign_key "income_events", "accounts"
   add_foreign_key "income_events", "budget_periods"
   add_foreign_key "income_events", "financial_accounts", column: "loan_disbursement_destination_asset_id"
+  add_foreign_key "income_events", "financial_accounts", column: "loan_disbursement_destination_liability_id"
+  add_foreign_key "income_events", "financial_accounts", column: "loan_liability_id"
   add_foreign_key "income_events", "financial_accounts", column: "regular_income_destination_asset_id"
-  add_foreign_key "income_events", "financial_liabilities", column: "loan_disbursement_destination_liability_id"
-  add_foreign_key "income_events", "financial_liabilities", column: "loan_liability_id"
-  add_foreign_key "income_events", "financial_liabilities", column: "regular_income_destination_liability_id"
+  add_foreign_key "income_events", "financial_accounts", column: "regular_income_destination_liability_id"
   add_foreign_key "inventory_items", "accounts"
   add_foreign_key "inventory_items", "categories"
   add_foreign_key "links", "accounts"
@@ -799,10 +951,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
   add_foreign_key "meetings", "accounts"
   add_foreign_key "planned_expenses", "accounts"
   add_foreign_key "planned_expenses", "categories"
-  add_foreign_key "planned_expenses", "expense_templates"
   add_foreign_key "planned_expenses", "financial_accounts"
   add_foreign_key "planned_expenses", "financial_accounts", column: "counterparty_financial_account_id"
-  add_foreign_key "planned_expenses", "financial_liabilities"
+  add_foreign_key "planned_expenses", "financial_accounts", column: "financial_liability_id"
+  add_foreign_key "planned_expenses", "financial_recurring_transactions", column: "expense_template_id"
   add_foreign_key "planned_expenses", "income_events"
   add_foreign_key "planned_expenses", "income_events", column: "origin_income_event_id"
   add_foreign_key "planned_expenses", "shopping_items"
@@ -828,7 +980,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
   add_foreign_key "shopping_items", "accounts"
   add_foreign_key "shopping_items", "categories"
   add_foreign_key "shopping_items", "expenses"
-  add_foreign_key "shopping_items", "financial_entries"
+  add_foreign_key "shopping_items", "financial_planned_transactions", column: "planned_transaction_id"
+  add_foreign_key "shopping_items", "financial_transactions"
   add_foreign_key "shopping_items", "planned_expenses"
   add_foreign_key "task_areas", "accounts"
   add_foreign_key "tasks", "accounts"

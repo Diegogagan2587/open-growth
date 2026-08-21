@@ -74,3 +74,4 @@ gem "mission_control-jobs"
 
 # Ofitial OPen AI Gem
 gem "openai", "~> 0.74.0"
+gem "htmlbeautifier", "~> 1.4", :group => :development

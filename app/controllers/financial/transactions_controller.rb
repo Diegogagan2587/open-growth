@@ -10,7 +10,7 @@ class Financial::TransactionsController < ApplicationController
     @financial_entries = @financial_entries.where("transaction_date <= ?", params[:date_to]) if params[:date_to].present?
     @financial_entries = @financial_entries.where(category_id: params[:category_id]) if params[:category_id].present?
     @financial_entries = @financial_entries.where("financial_transactions.description ILIKE ?", "%#{params[:q]}%") if params[:q].present?
-    @financial_entries = @financial_entries.where(transaction_type: params[:transaction_type]) if params[:transaction_type].in?(Financial::Transaction::TRANSACTION_TYPES)
+    @financial_entries = @financial_entries.where(transaction_type: params[:transaction_type]) if params[:transaction_type].in?(Financial::Transaction.transaction_types)
     @financial_entries = @financial_entries.public_send(params[:reconciliation]) if params[:reconciliation].in?(%w[reconciled unreconciled])
     @financial_entries = @financial_entries.to_a
     @account_filter_options = Financial::Account.for_account(Current.account).active.order(:account_group, :name)
@@ -59,7 +59,7 @@ class Financial::TransactionsController < ApplicationController
 
   def transaction_params
     params.expect(financial_transaction: [
-      :transaction_type, :transaction_date, :amount, :description, :notes,
+      :transaction_type, :transaction_date, :entry_time, :amount, :description, :notes,
       :source_account_id, :destination_account_id, :plan_id, :category_id, :budget_period_id
     ])
   end

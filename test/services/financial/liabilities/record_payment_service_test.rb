@@ -4,6 +4,7 @@ class Financial::Liabilities::RecordPaymentServiceTest < ActiveSupport::TestCase
   def setup
     @account = Account.create!(name: "Tenant")
     Current.account = @account
+    @category = Category.create!(account: @account, name: "Payments")
 
     @source_account = Financial::Asset.create!(
       account: @account,
@@ -28,7 +29,7 @@ class Financial::Liabilities::RecordPaymentServiceTest < ActiveSupport::TestCase
       entry_date: Date.current,
       amount: 50,
       description: "Initial charge",
-      category: Category.first
+      category: @category
     )
   end
 

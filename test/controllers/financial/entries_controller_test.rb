@@ -54,7 +54,7 @@ module Financial
         entry_date: Date.current,
         amount: 10,
         description: "entry source match",
-        category: Category.first
+        category: @category
       )
       counterparty_match = Financial::Entry.create!(
         account: @account,
@@ -72,13 +72,13 @@ module Financial
         entry_date: Date.current,
         amount: 30,
         description: "entry non match",
-        category: Category.first
+        category: @category
       )
 
-      get finance_entries_path, params: { account_ref: "asset:#{@asset_a.id}" }
+      get finance_transactions_path, params: { account_id: @asset_a.id }
 
       assert_response :success
-      assert_select "select[name='account_ref'] option[value='asset:#{@asset_a.id}'][selected]"
+      assert_select "select[name='account_id'] option[value='#{@asset_a.id}'][selected]"
       assert_includes response.body, source_match.description
       assert_includes response.body, counterparty_match.description
       assert_not_includes response.body, non_match.description
@@ -94,7 +94,7 @@ module Financial
         entry_date: Date.current,
         amount: 40,
         description: "liability source match",
-        category: Category.first
+        category: @category
       )
       counterparty_match = Financial::Entry.create!(
         account: @account,
@@ -111,10 +111,10 @@ module Financial
         entry_date: Date.current,
         amount: 60,
         description: "liability non match",
-        category: Category.first
+        category: @category
       )
 
-      get finance_entries_path, params: { account_ref: "liability:#{@liability_a.id}" }
+      get finance_transactions_path, params: { account_id: @liability_a.id }
 
       assert_response :success
       assert_includes response.body, source_match.description
@@ -132,7 +132,7 @@ module Financial
         entry_date: Date.current,
         amount: 10,
         description: "first visible entry",
-        category: Category.first
+        category: @category
       )
       second = Financial::Entry.create!(
         account: @account,
@@ -141,17 +141,17 @@ module Financial
         entry_date: Date.current,
         amount: 10,
         description: "second visible entry",
-        category: Category.first
+        category: @category
       )
 
-      get finance_entries_path, params: { account_ref: "bad-value" }
+      get finance_transactions_path, params: { account_id: "bad-value" }
 
       assert_response :success
       assert_includes response.body, first.description
       assert_includes response.body, second.description
     end
 
-    test "index renders responsive desktop table and mobile cards" do
+    test "index renders responsive transaction records" do
       sign_in
 
       entry = Financial::Entry.create!(
@@ -164,16 +164,15 @@ module Financial
         category: @category
       )
 
-      get finance_entries_path
+      get finance_transactions_path
 
       assert_response :success
-      assert_select "div.hidden.md\\:block table.ui-table"
-      assert_select "div.md\\:hidden.space-y-3"
-      assert_select "a[href='#{finance_entry_path(entry)}']", text: "View"
+      assert_select "article"
+      assert_select "a[href='#{finance_transaction_path(entry)}']", text: entry.description
       assert_includes response.body, "responsive transaction"
     end
 
-    test "index shows account movement and signed net effect" do
+    test "index shows both sides of account movements" do
       sign_in
       Financial::Entry.create!(
         account: @account,
@@ -194,13 +193,13 @@ module Financial
         description: "Lunch"
       )
 
-      get finance_entries_path
+      get finance_transactions_path
 
       assert_response :success
-      assert_select "th", text: "Account movement"
       assert_includes response.body, @asset_a.name
       assert_includes response.body, @asset_b.name
-      assert_select "tfoot", text: /Net asset account effect:.*-\$20\.00/m
+      assert_includes response.body, "Move savings"
+      assert_includes response.body, "Lunch"
     end
 
     test "show renders routing planning notes and record metadata" do
@@ -235,7 +234,7 @@ module Financial
         notes: "Visible transaction notes"
       )
 
-      get finance_entry_path(entry)
+      get finance_transaction_path(entry)
 
       assert_response :success
       assert_includes response.body, "Money movement"
@@ -261,7 +260,7 @@ module Financial
         description: "Rendered transaction"
       )
 
-      get finance_entry_path(entry)
+      get finance_transaction_path(entry)
 
       assert_response :success
     end
@@ -279,22 +278,22 @@ module Financial
         description: "Timed transaction"
       )
 
-      get edit_finance_entry_path(entry)
+      get edit_finance_transaction_path(entry)
 
       assert_response :success
-      assert_select "input[name='financial_entry[entry_time]'][type='time'][value='08:15:00.000']"
+      assert_select "input[name='financial_transaction[entry_time]'][type='time'][value='08:15']"
 
-      patch finance_entry_path(entry), params: { financial_entry: {
-        entry_type: entry.entry_type,
-        entry_date: entry.entry_date,
+      patch finance_transaction_path(entry), params: { financial_transaction: {
+        transaction_type: entry.transaction_type,
+        transaction_date: entry.transaction_date,
         entry_time: "17:45",
         amount: entry.amount,
         description: entry.description,
-        financial_account_id: @asset_a.id,
+        source_account_id: @asset_a.id,
         category_id: @category.id
       } }
 
-      assert_redirected_to finance_entry_path(entry)
+      assert_redirected_to finance_transaction_path(entry)
       assert_equal "17:45", entry.reload.entry_time.strftime("%H:%M")
     end
   end

@@ -11,7 +11,7 @@ class AppSidebarComponentTest < ViewComponent::TestCase
     assert_includes rendered.text, I18n.t("nav.dashboard")
     assert_includes rendered.text, I18n.t("nav.budgets")
     assert_includes rendered.text, "Finance"
-    assert rendered.css("a[href='/finance/entries']").any?
+    assert rendered.css("a[href='/finance/transactions?transaction_type=expense']").any?
     assert_equal 2, rendered.css("a[href='/finance'][data-active='true']").count
   end
 end

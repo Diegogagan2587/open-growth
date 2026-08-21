@@ -83,12 +83,9 @@ export default class extends Controller {
         this.descriptionFieldTarget.value = template.description || ""
       }
       if (this.hasAmountFieldTarget && !this.editModeValue) {
-        this.amountFieldTarget.value = ""
-        const remaining = template.total_amount - template.saved
-        const suggested = remaining > 0 ? remaining : template.total_amount / 2
-        this.amountFieldTarget.placeholder = suggested.toFixed(2)
+        this.amountFieldTarget.value = template.amount.toFixed(2)
         if (this.hasAmountHintTarget) {
-          this.amountHintTarget.textContent = `Suggested: ${suggested.toFixed(2)} (${remaining > 0 ? 'remaining amount' : 'split amount'})`
+          this.amountHintTarget.textContent = `${template.frequency} recurring amount`
         }
       }
       if (this.hasNotesFieldTarget) {
@@ -96,28 +93,18 @@ export default class extends Controller {
       }
       
       if (this.hasInfoTarget) {
-        const remaining = template.total_amount - template.saved
-        const progress = template.total_amount > 0 ? (template.saved / template.total_amount) * 100 : 0
-        
         this.infoTarget.innerHTML = `
           <div class="space-y-2">
             <h4 class="font-medium text-gray-900">${template.description || 'Template'}</h4>
-            <div class="grid grid-cols-3 gap-4 text-sm">
+            <div class="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p class="text-gray-600">Total</p>
-                <p class="font-semibold text-gray-900">$${template.total_amount.toFixed(2)}</p>
+                <p class="text-gray-600">Amount</p>
+                <p class="font-semibold text-gray-900">$${template.amount.toFixed(2)}</p>
               </div>
               <div>
-                <p class="text-gray-600">Saved</p>
-                <p class="font-semibold text-green-600">$${template.saved.toFixed(2)}</p>
+                <p class="text-gray-600">Frequency</p>
+                <p class="font-semibold text-gray-900">${template.frequency}</p>
               </div>
-              <div>
-                <p class="text-gray-600">Remaining</p>
-                <p class="font-semibold text-indigo-600">$${remaining.toFixed(2)}</p>
-              </div>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
-              <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: ${Math.min(progress, 100)}%"></div>
             </div>
           </div>
         `
