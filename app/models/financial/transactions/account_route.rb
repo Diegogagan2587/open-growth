@@ -207,13 +207,13 @@ class Financial::Transactions::AccountRoute
 
   def invalid_endpoints?
     @same_account ||
-      @source_present && !@source_group.in?(Financial::Account::ACCOUNT_GROUPS) ||
-      @destination_present && !@destination_group.in?(Financial::Account::ACCOUNT_GROUPS)
+      @source_present && !@source_group.in?(ACCOUNT_GROUPS) ||
+      @destination_present && !@destination_group.in?(ACCOUNT_GROUPS)
   end
 
   def validate_account_groups(errors)
-    errors[:source_account] << "must be an asset or liability account" if @source_present && !@source_group.in?(Financial::Account::ACCOUNT_GROUPS)
-    errors[:destination_account] << "must be an asset or liability account" if @destination_present && !@destination_group.in?(Financial::Account::ACCOUNT_GROUPS)
+    errors[:source_account] << "must be an asset or liability account" if @source_present && !@source_group.in?(ACCOUNT_GROUPS)
+    errors[:destination_account] << "must be an asset or liability account" if @destination_present && !@destination_group.in?(ACCOUNT_GROUPS)
   end
 
   def validate_actual_route(errors)
