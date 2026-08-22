@@ -77,7 +77,7 @@ class QuickAddController < ApplicationController
   def create_transfer
     return render plain: "Not authenticated", status: :unauthorized unless Current.account
 
-    # Parse origin and destination from form
+    # Parse source and destination account selections from the form
     from_type, from_id = parse_financial_type(params.dig(:transfer, :from_type))
     to_type, to_id = parse_financial_type(params.dig(:transfer, :to_type))
 

@@ -1,23 +1,15 @@
-class Financial::Liability < ApplicationRecord
-  self.table_name = "financial_liabilities"
+# frozen_string_literal: true
 
+# Compatibility wrapper. New code should use Financial::Account directly.
+class Financial::Liability < Financial::Account
   LIABILITY_TYPES = %w[credit_card personal_credit].freeze
-  STATUSES = %w[active closed archived].freeze
+  default_scope { where(account_group: "liability") }
+  has_many :financial_entries, class_name: "Financial::Entry", foreign_key: :financial_liability_id,
+    dependent: :restrict_with_error, inverse_of: :financial_liability
+  has_many :incoming_financial_entries, class_name: "Financial::Entry", foreign_key: :counterparty_financial_liability_id,
+    dependent: :restrict_with_error, inverse_of: :counterparty_financial_liability
 
-  belongs_to :account, class_name: "::Account"
-  has_many :financial_entries, class_name: "Financial::Entry", foreign_key: :financial_liability_id, dependent: :restrict_with_error, inverse_of: :financial_liability
-  has_many :incoming_financial_entries, class_name: "Financial::Entry", foreign_key: :counterparty_financial_liability_id, dependent: :restrict_with_error, inverse_of: :counterparty_financial_liability
-
-  before_validation :set_account, on: :create
-
-  scope :for_account, ->(account) { where(account: account) }
-  scope :active, -> { where(status: "active") }
-
-  validates :name, presence: true, uniqueness: { scope: :account_id }
-  validates :liability_type, presence: true, inclusion: { in: LIABILITY_TYPES }
-  validates :status, presence: true, inclusion: { in: STATUSES }
-  validates :opening_balance, numericality: true
-  validates :credit_limit, numericality: { greater_than: 0 }, allow_nil: true
+  validates :account_type, inclusion: { in: LIABILITY_TYPES }
 
   def current_balance
     entries = Financial::Entry.for_account(account).where(
@@ -29,11 +21,5 @@ class Financial::Liability < ApplicationRecord
 
   def settle_and_archive!
     update!(status: "archived", archived_at: Time.current)
-  end
-
-  private
-
-  def set_account
-    self.account ||= Current.account if Current.account
   end
 end
