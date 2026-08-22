@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -244,16 +244,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
   end
 
   create_table "financial_accounts", force: :cascade do |t|
+    t.string "account_group", default: "asset", null: false
     t.bigint "account_id", null: false
     t.string "account_type", null: false
+    t.datetime "archived_at"
     t.datetime "created_at", null: false
+    t.decimal "credit_limit", precision: 12, scale: 2
+    t.bigint "legacy_liability_id"
     t.string "name", null: false
     t.text "notes"
     t.decimal "opening_balance", precision: 12, scale: 2, default: "0.0", null: false
     t.string "status", default: "active", null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id", "name"], name: "index_financial_accounts_on_account_id_and_name", unique: true
+    t.index ["account_id", "account_group", "name"], name: "index_financial_accounts_on_group_and_name", unique: true
     t.index ["account_id"], name: "index_financial_accounts_on_account_id"
+    t.index ["legacy_liability_id"], name: "index_financial_accounts_on_legacy_liability_id", unique: true, where: "(legacy_liability_id IS NOT NULL)"
     t.index ["status"], name: "index_financial_accounts_on_status"
   end
 
@@ -750,8 +755,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
   add_foreign_key "expenses", "categories"
   add_foreign_key "expenses", "financial_accounts"
   add_foreign_key "expenses", "financial_accounts", column: "counterparty_financial_account_id"
-  add_foreign_key "expenses", "financial_liabilities"
-  add_foreign_key "expenses", "financial_liabilities", column: "counterparty_financial_liability_id"
+  add_foreign_key "expenses", "financial_accounts", column: "counterparty_financial_liability_id"
+  add_foreign_key "expenses", "financial_accounts", column: "financial_liability_id"
   add_foreign_key "expenses", "income_events"
   add_foreign_key "expenses", "income_events", column: "loan_id"
   add_foreign_key "expenses", "planned_expenses"
@@ -762,15 +767,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
   add_foreign_key "financial_entries", "expenses"
   add_foreign_key "financial_entries", "financial_accounts"
   add_foreign_key "financial_entries", "financial_accounts", column: "counterparty_financial_account_id"
+  add_foreign_key "financial_entries", "financial_accounts", column: "counterparty_financial_liability_id"
+  add_foreign_key "financial_entries", "financial_accounts", column: "financial_liability_id"
   add_foreign_key "financial_entries", "financial_funding_sources", column: "funding_source_id"
-  add_foreign_key "financial_entries", "financial_liabilities"
-  add_foreign_key "financial_entries", "financial_liabilities", column: "counterparty_financial_liability_id"
   add_foreign_key "financial_entries", "financial_loans"
   add_foreign_key "financial_entries", "income_events"
   add_foreign_key "financial_entries", "planned_expenses"
   add_foreign_key "financial_funding_sources", "accounts"
   add_foreign_key "financial_funding_sources", "financial_accounts", column: "expected_destination_asset_id"
-  add_foreign_key "financial_funding_sources", "financial_liabilities", column: "expected_destination_liability_id"
+  add_foreign_key "financial_funding_sources", "financial_accounts", column: "expected_destination_liability_id"
   add_foreign_key "financial_funding_sources", "financial_loans"
   add_foreign_key "financial_funding_sources", "income_events", column: "financial_plan_id"
   add_foreign_key "financial_liabilities", "accounts"
@@ -782,15 +787,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
   add_foreign_key "financial_loans", "accounts"
   add_foreign_key "financial_loans", "categories", column: "interest_category_id"
   add_foreign_key "financial_loans", "financial_accounts", column: "destination_asset_id"
-  add_foreign_key "financial_loans", "financial_liabilities", column: "destination_liability_id"
-  add_foreign_key "financial_loans", "financial_liabilities", column: "liability_id"
+  add_foreign_key "financial_loans", "financial_accounts", column: "destination_liability_id"
+  add_foreign_key "financial_loans", "financial_accounts", column: "liability_id"
   add_foreign_key "income_events", "accounts"
   add_foreign_key "income_events", "budget_periods"
   add_foreign_key "income_events", "financial_accounts", column: "loan_disbursement_destination_asset_id"
+  add_foreign_key "income_events", "financial_accounts", column: "loan_disbursement_destination_liability_id"
+  add_foreign_key "income_events", "financial_accounts", column: "loan_liability_id"
   add_foreign_key "income_events", "financial_accounts", column: "regular_income_destination_asset_id"
-  add_foreign_key "income_events", "financial_liabilities", column: "loan_disbursement_destination_liability_id"
-  add_foreign_key "income_events", "financial_liabilities", column: "loan_liability_id"
-  add_foreign_key "income_events", "financial_liabilities", column: "regular_income_destination_liability_id"
+  add_foreign_key "income_events", "financial_accounts", column: "regular_income_destination_liability_id"
   add_foreign_key "inventory_items", "accounts"
   add_foreign_key "inventory_items", "categories"
   add_foreign_key "links", "accounts"
@@ -802,7 +807,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_010000) do
   add_foreign_key "planned_expenses", "expense_templates"
   add_foreign_key "planned_expenses", "financial_accounts"
   add_foreign_key "planned_expenses", "financial_accounts", column: "counterparty_financial_account_id"
-  add_foreign_key "planned_expenses", "financial_liabilities"
+  add_foreign_key "planned_expenses", "financial_accounts", column: "financial_liability_id"
   add_foreign_key "planned_expenses", "income_events"
   add_foreign_key "planned_expenses", "income_events", column: "origin_income_event_id"
   add_foreign_key "planned_expenses", "shopping_items"
