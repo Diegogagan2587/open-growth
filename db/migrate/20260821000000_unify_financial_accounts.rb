@@ -4,8 +4,6 @@ class UnifyFinancialAccounts < ActiveRecord::Migration[8.1]
     financial_entries: %i[financial_liability_id counterparty_financial_liability_id],
     financial_funding_sources: %i[expected_destination_liability_id],
     financial_loans: %i[liability_id destination_liability_id],
-    financial_loan_installments: %i[],
-    financial_planned_transactions: %i[liability_id],
     income_events: %i[loan_liability_id loan_disbursement_destination_liability_id regular_income_destination_liability_id],
     planned_expenses: %i[financial_liability_id]
   }.freeze
