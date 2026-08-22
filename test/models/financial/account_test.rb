@@ -85,4 +85,14 @@ class Financial::AssetTest < ActiveSupport::TestCase
     assert Financial::Liability.exists?(liability.id)
     assert Financial::Entry.exists?(entry.id)
   end
+
+  test "stores assets and liabilities in the canonical account model" do
+    asset = Financial::Account.create!(account: @account, name: "Checking", account_group: "asset", account_type: "checking", status: "active", opening_balance: 0)
+    liability = Financial::Account.create!(account: @account, name: "Card", account_group: "liability", account_type: "credit_card", status: "active", opening_balance: 0)
+
+    assert_predicate asset, :asset?
+    assert_predicate liability, :liability?
+    assert_equal [ asset ], @account.financial_accounts.assets.to_a
+    assert_equal [ liability ], @account.financial_accounts.liabilities.to_a
+  end
 end
