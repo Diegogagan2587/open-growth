@@ -138,62 +138,29 @@ class QuickAddControllerTest < ActionDispatch::IntegrationTest
     assert_equal 160.to_d, @liability.reload.current_balance
   end
 
-  test "quick add transfer allows same numeric id when account types differ (asset to liability)" do
-    asset_max_id = Financial::Asset.for_account(@account).maximum(:id).to_i
-    liability_max_id = Financial::Liability.for_account(@account).maximum(:id).to_i
-
-    if asset_max_id > liability_max_id
-      (asset_max_id - liability_max_id).times do |i|
-        Financial::Liability.create!(
-          account: @account,
-          name: "Liability align #{i}",
-          liability_type: "credit_card",
-          status: "active",
-          opening_balance: 100
-        )
-      end
-    elsif liability_max_id > asset_max_id
-      (liability_max_id - asset_max_id).times do |i|
-        Financial::Asset.create!(
-          account: @account,
-          name: "Asset align #{i}",
-          account_type: "checking",
-          status: "active",
-          opening_balance: 100
-        )
-      end
-    end
-
-    overlap_asset = Financial::Asset.create!(
-      account: @account,
-      name: "Asset overlap deterministic",
-      account_type: "checking",
-      status: "active",
-      opening_balance: 100
-    )
-    overlap_liability = Financial::Liability.create!(
-      account: @account,
-      name: "Liability overlap deterministic",
-      liability_type: "credit_card",
-      status: "active",
-      opening_balance: 100
-    )
-
-    assert_equal overlap_asset.id, overlap_liability.id, "Expected asset/liability id overlap for deterministic edge-case coverage"
+  test "quick add transfer distinguishes asset and liability selections" do
+    asset = @asset_a
+    liability = @liability
 
     assert_difference -> { Financial::Entry.count }, 1 do
       post quick_add_create_transfer_path, params: {
         transfer: {
           amount: 25,
-          from_type: "asset_#{overlap_asset.id}",
-          to_type: "liability_#{overlap_liability.id}"
+          from_type: "asset_#{asset.id}",
+          to_type: "liability_#{liability.id}"
         }
       }
     end
 
     assert_response :created
-    assert_equal 75.to_d, overlap_asset.reload.current_balance
-    assert_equal 75.to_d, overlap_liability.reload.current_balance
+    entry = Financial::Entry.order(:created_at).last
+    assert_equal "liability_payment", entry.entry_type
+    assert_equal asset.id, entry.financial_account_id
+    assert_equal liability.id, entry.financial_liability_id
+    assert_nil entry.counterparty_financial_account_id
+    assert_nil entry.counterparty_financial_liability_id
+    assert_equal 75.to_d, asset.reload.current_balance
+    assert_equal 175.to_d, liability.reload.current_balance
   end
 
   test "quick add income to liability reduces liability balance" do
