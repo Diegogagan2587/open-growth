@@ -3,18 +3,18 @@ module Financial
     before_action :set_financial_account, only: [ :show, :edit, :update, :destroy ]
 
     def index
-      @financial_accounts = Financial::Asset.for_account(Current.account).order(:name)
+      @financial_accounts = Financial::Account.assets.for_account(Current.account).order(:name)
     end
 
     def show
     end
 
     def new
-      @financial_account = Financial::Asset.new
+      @financial_account = Financial::Account.new(account_group: "asset")
     end
 
     def create
-      @financial_account = Financial::Asset.for_account(Current.account).new(financial_account_params)
+      @financial_account = Financial::Account.assets.for_account(Current.account).new(financial_account_params)
       @financial_account.account = Current.account
 
       if @financial_account.save
@@ -44,11 +44,11 @@ module Financial
     private
 
     def set_financial_account
-      @financial_account = Financial::Asset.for_account(Current.account).find(params[:id])
+      @financial_account = Financial::Account.assets.for_account(Current.account).find(params[:id])
     end
 
     def financial_account_params
-      params.require(:financial_asset).permit(:name, :account_type, :status, :opening_balance, :notes)
+      params.require(:financial_account).permit(:name, :account_type, :status, :opening_balance, :notes)
     end
   end
 end
