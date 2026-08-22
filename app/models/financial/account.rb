@@ -48,8 +48,13 @@ class Financial::Account < ApplicationRecord
     status == "archived"
   end
 
-  alias_method :liability_type, :account_type
-  alias_method :liability_type=, :account_type=
+  def liability_type
+    account_type
+  end
+
+  def liability_type=(value)
+    self.account_type = value
+  end
 
   private
 
