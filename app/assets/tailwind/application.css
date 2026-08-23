@@ -9,6 +9,33 @@ body {
   color: var(--color-foreground);
 }
 
+/* Native selects and their option menus need explicit colors in dark mode. */
+select {
+  background-color: hsl(var(--background));
+  border-color: hsl(var(--input));
+  color: hsl(var(--foreground));
+  color-scheme: light;
+}
+
+.dark select {
+  color-scheme: dark;
+}
+
+select option,
+select optgroup {
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+}
+
+select option:checked {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+select option[value=""]:not(:checked) {
+  color: hsl(var(--muted-foreground));
+}
+
 @keyframes slide-in-right {
   from {
     transform: translateX(100%);
