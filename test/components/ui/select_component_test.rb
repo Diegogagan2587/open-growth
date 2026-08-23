@@ -4,7 +4,8 @@ class Ui::SelectComponentTest < ViewComponent::TestCase
   test "renders a native select by default" do
     render_inline(Ui::SelectComponent.new(name: "category_id", options: [ [ "Food", 1 ] ]))
 
-    assert_selector "select[name='category_id']"
+    assert_selector "select.ui-select[name='category_id']"
+    assert_selector "select option", text: "Food"
     assert_no_selector "[data-controller='searchable-select']"
   end
 
