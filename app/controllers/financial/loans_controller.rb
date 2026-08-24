@@ -115,7 +115,7 @@ class Financial::LoansController < ApplicationController
   end
 
   def repayment_attributes_changed?
-    (@loan.changes.keys & %w[principal_amount repayment_basis interest_rate number_of_payments payment_frequency payment_amount final_payment_amount]).any?
+    (@loan.changes.keys & %w[principal_amount repayment_basis interest_rate number_of_payments payment_frequency payment_amount different_payment_amount different_payment_position]).any?
   end
 
   def load_collections
