@@ -73,7 +73,7 @@ class Financial::LoansController < ApplicationController
       :name, :lender_name, :principal_amount, :interest_rate, :number_of_payments,
       :payment_frequency, :payment_amount, :different_payment_amount, :different_payment_position, :repayment_basis,
       :interest_category_id, :liability_id, :destination_asset_id,
-      :destination_liability_id, :notes
+      :destination_liability_id, :first_payment_date, :notes
     ])
   end
 
