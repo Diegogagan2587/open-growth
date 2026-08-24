@@ -75,7 +75,7 @@
 
     <div class="overflow-x-auto rounded-xl border border-border bg-card">
       <table class="w-full text-left text-sm">
-        <thead class="border-b border-border bg-muted/30"><tr><th class="p-3">#</th><th class="p-3">Due</th><th class="p-3">Expected</th><th class="p-3">Principal</th><th class="p-3">Interest</th><th class="p-3">Status</th><th class="p-3">Planning</th></tr></thead>
+        <thead class="border-b border-border bg-muted/30"><tr><th class="p-3">#</th><th class="p-3">Due</th><th class="p-3">Expected</th><th class="p-3">Principal</th><th class="p-3">Interest</th><th class="p-3">Status</th><th class="p-3">Planning</th><th class="p-3">Due-date actions</th></tr></thead>
         <tbody class="divide-y divide-border">
           <% @installments.each do |installment| %>
             <tr>
@@ -96,9 +96,29 @@
                   <% end %>
                 <% end %>
               </td>
+              <td class="p-3">
+                <details>
+                  <summary class="cursor-pointer text-primary hover:underline">Edit due date</summary>
+                  <%= form_with model: installment, scope: :installment, url: finance_loan_installment_path(@loan, installment), method: :patch, data: { turbo_confirm: "Review the impact summary before saving. Only explicitly selected pending planned records will change; actual payment history remains unchanged." }, class: "mt-2 min-w-64 space-y-2 rounded-lg border border-border p-3" do |form| %>
+                    <%= form.label :due_date, "Contractual due date", class: "block text-xs font-medium" %>
+                    <%= form.date_field :due_date, class: "w-full rounded-md border border-input bg-background px-2 py-1 text-sm" %>
+                    <%= form.hidden_field :expected_updated_at, value: installment.updated_at.iso8601(6) %>
+                    <p class="text-xs text-muted-foreground">Impact review: this changes the installment’s contractual due date. Actual payment dates, amounts, interest, and accounting history remain protected.</p>
+                    <% if installment.planned_transaction&.execution_status == "pending" %>
+                      <label class="flex items-start gap-2 text-xs"><%= form.check_box :update_planned_transaction %><span>Also update this pending planned record's due date. Leave unchecked to keep it unchanged.</span></label>
+                    <% end %>
+                    <% if installment.payment_entry %>
+                      <p class="text-xs text-muted-foreground">Paid installment: this changes only the contractual due date. The actual payment/application date (<%= l(installment.payment_entry.entry_date) %>) and accounting history remain unchanged.</p>
+                    <% elsif installment.planned_transaction && installment.planned_transaction.execution_status != "pending" %>
+                      <p class="text-xs text-muted-foreground">This linked planned record has already been applied. Only the contractual due date changes; the applied record and actual payment date remain unchanged.</p>
+                    <% end %>
+                    <%= render Ui::ButtonComponent.new(label: "Review and save", type: :submit, size: :sm) %>
+                  <% end %>
+                </details>
+              </td>
             </tr>
           <% end %>
-          <% if @installments.empty? %><tr><td colspan="7" class="p-4 text-center text-muted-foreground">No schedule generated yet.</td></tr><% end %>
+          <% if @installments.empty? %><tr><td colspan="8" class="p-4 text-center text-muted-foreground">No schedule generated yet.</td></tr><% end %>
         </tbody>
       </table>
     </div>
