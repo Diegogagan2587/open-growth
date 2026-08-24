@@ -58,7 +58,7 @@ Rails.application.routes.draw do
     end
     resources :loans, controller: "/financial/loans" do
       resource :schedule, only: :create, controller: "/financial/loans/schedules"
-      resources :installments, only: [] do
+      resources :installments, only: [ :update ], controller: "/financial/loans/installments" do
         resource :payment, only: :create, controller: "/financial/loans/installment_payments"
       end
       member do
