@@ -8,6 +8,30 @@ class Financial::LoanTest < ActiveSupport::TestCase
     assert_includes loan.errors[:interest_rate], "must be greater than or equal to 0"
   end
 
+  test "configures and exposes a different payment position" do
+    loan = Financial::Loan.new(
+      name: "Beginning payment",
+      principal_amount: 1_000,
+      lifecycle_status: "simulated"
+    )
+    terms = Financial::Loans::RepaymentTerms.new(
+      principal: 1_000,
+      number_of_payments: 3,
+      payment_frequency: "monthly",
+      repayment_basis: "payment_amounts",
+      regular_payment: 400,
+      different_payment_amount: 350,
+      different_payment_position: "beginning"
+    )
+
+    loan.configure_repayment(terms)
+
+    assert_equal "beginning", loan.different_payment_position
+    assert_equal 350.to_d, loan.different_payment_amount
+    assert_equal "beginning", loan.repayment_terms.different_payment_position
+    assert_equal [ 350.to_d, 400.to_d, 400.to_d ], loan.repayment_terms.contractual_payments
+  end
+
   test "simulation creates no debt and activation disburses only once" do
     account = Account.create!(name: "Loan Tenant")
     Current.account = account

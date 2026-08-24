@@ -105,6 +105,26 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
     assert_equal 129.781.to_d, loan.interest_rate
   end
 
+  test "creates exact-payment terms with a beginning different payment" do
+    post finance_loans_path, params: {
+      financial_loan: {
+        name: "Beginning payment loan",
+        principal_amount: "1000",
+        repayment_basis: "payment_amounts",
+        number_of_payments: "3",
+        payment_frequency: "monthly",
+        payment_amount: "400",
+        different_payment_amount: "350",
+        different_payment_position: "beginning"
+      }
+    }
+
+    loan = Financial::Loan.order(:id).last
+    assert_redirected_to finance_loan_path(loan)
+    assert_equal "beginning", loan.different_payment_position
+    assert_equal 350.to_d, loan.different_payment_amount
+  end
+
   test "creates a schedule through the nested schedule resource" do
     loan = Financial::Loan.create!(
       account: @account,
