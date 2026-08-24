@@ -51,7 +51,7 @@ class Financial::Loans::RepaymentTerms
     return [] unless payment_amounts?
 
     Array.new(number_of_payments) do |index|
-      index == number_of_payments - 1 && final_payment ? final_payment : regular_payment
+      different_payment_index == index && different_payment_amount ? different_payment_amount : regular_payment
     end
   end
 
