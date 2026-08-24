@@ -8,15 +8,16 @@ Existing entity representing a loan simulation or active loan.
 
 | Attribute | Type | Required | Rules | Compatibility |
 |---|---|---:|---|---|
-| `different_payment_position` | string | No for annual-rate loans; defaults to `final` | Allowed values: `beginning`, `final`; meaningful when `final_payment_amount` is present | Existing rows and existing final-payment inputs resolve to `final` |
+| `payment_position` | string | No for annual-rate loans; defaults to `final` | Allowed values: `beginning`, `final`; meaningful when `different_payment_amount` is present | Existing rows and existing final-payment inputs resolve to `final` |
 
-The existing `final_payment_amount` remains the amount of the one optional different
-payment. Its label and semantics become position-neutral in the domain, while the UI
-explains the selected position.
+The existing `final_payment_amount` data becomes `different_payment_amount` in the
+domain. Its stored values remain unchanged; only the name and interpretation become
+position-neutral, while the UI explains the selected `payment_position`.
 
 ### Domain behavior
 
-- `repayment_terms` passes the position into `RepaymentTerms`.
+- `repayment_terms` passes `payment_position` and `different_payment_amount` into
+  `RepaymentTerms`.
 - Payment-amount terms produce an ordered contractual stream from regular payment plus
   the optional different payment and position.
 - Annual-rate terms continue to derive the regular payment and do not require a
@@ -30,9 +31,9 @@ Immutable value object for validated repayment inputs.
 
 ### New value
 
-`different_payment_position` is accepted as `beginning` or `final`, defaulting to
-`final` for compatibility. Invalid values raise the same domain-level argument error
-style used by existing repayment validation.
+`payment_position` is accepted as `beginning` or `final`, defaulting to `final` for
+compatibility. Invalid values raise the same domain-level argument error style used by
+existing repayment validation.
 
 ### Invariants
 
@@ -58,7 +59,9 @@ the existing atomic workflow.
 
 ## State and migration notes
 
-- Migration adds `different_payment_position` with a database default of `final`.
+- Migration adds `payment_position` with a database default of `final`.
+- Migration renames `final_payment_amount` to `different_payment_amount`, or provides
+  an explicit compatibility mapping if the project chooses to retain the old column.
 - Existing rows require no amount rewrite and retain their current schedule meaning.
 - The migration must be reversible by removing the new column; rollback is safe because
   the new column does not replace existing financial amounts.

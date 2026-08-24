@@ -31,6 +31,7 @@
 
 ## Notes
 
-- The specification assumes one optional different-payment override, positioned at the
-  beginning or final payment. Supporting both simultaneously is explicitly out of scope.
+- The specification assumes one optional different-payment amount plus one
+  `payment_position`, positioned at the beginning or final payment. Supporting both
+  positions simultaneously is explicitly out of scope.
 - The existing final-payment interpretation is preserved for backward compatibility.

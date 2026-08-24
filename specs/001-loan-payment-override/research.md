@@ -1,14 +1,17 @@
 # Research: Loan Payment Override Position
 
-## Decision 1: Persist an explicit payment position with a compatibility default
+## Decision 1: Persist `payment_position` with a compatibility default
 
-**Decision**: Add a constrained string value representing `beginning` or `final` to
-the financial loan repayment configuration. Existing rows default to `final`.
+**Decision**: Persist a constrained `payment_position` value representing `beginning`
+or `final` on the financial loan repayment configuration. Rename the ambiguous
+`final_payment_amount` concept to `different_payment_amount` in the domain, while
+migrating or compatibility-mapping the existing column values. Existing rows default
+to `final`.
 
-**Rationale**: The current persisted field is `final_payment_amount`, and the existing
-behavior treats it as the final payment. An explicit position removes the ambiguity
-without changing existing loan meaning. A database default and model validation make
-the compatibility rule visible and testable.
+**Rationale**: `payment_position` describes the repayment-term concept, while
+`different_payment_amount` describes the value. This is more reusable than naming the
+position after the current final-only behavior. A database default and model validation
+make the compatibility rule visible and testable.
 
 **Alternatives considered**:
 
@@ -19,7 +22,24 @@ the compatibility rule visible and testable.
 - Store position only in the form: rejected because regeneration and later editing
   must preserve the selected financial meaning.
 
-## Decision 2: Build the contractual payment stream before schedule projection
+## Decision 2: Keep position on repayment terms, not generated installments
+
+**Decision**: `payment_position` belongs to the loan's repayment terms and the
+`RepaymentTerms` value object. It does not belong on `Financial::LoanInstallment`, which
+represents a generated scheduled result.
+
+**Rationale**: The position determines how one configured amount is interpreted before
+installments exist. Persisting it on each installment would duplicate configuration,
+complicate regeneration, and make the generated rows a competing source of truth.
+
+**Alternatives considered**:
+
+- Add `payment_position` to installments: rejected because it models a derived result,
+  not the loan term that produced it.
+- Use a generic `position` attribute: rejected because `payment_position` is explicit
+  at call sites and avoids ambiguity with installment order or resource position.
+
+## Decision 3: Build the contractual payment stream before schedule projection
 
 **Decision**: `RepaymentTerms#contractual_payments` will place the optional different
 payment at index zero for `beginning`, at the last index for `final`, and use the regular
@@ -36,7 +56,7 @@ controller, and schedule implementations.
 - Special-case only `AmortizationSchedule`: rejected because annual-rate inference and
   simulation estimates also need the same ordered stream.
 
-## Decision 3: Preserve the existing schedule regeneration boundary
+## Decision 4: Preserve the existing schedule regeneration boundary
 
 **Decision**: Keep the existing loan lock and transaction in `RegenerateSchedule`.
 Changing the position is treated like changing other repayment terms: existing unpaid
@@ -53,7 +73,7 @@ workflow for a small repayment-term change.
 - Add a new schedule mutation service: rejected because the existing domain operation
   already owns regeneration and its consistency boundary.
 
-## Decision 4: Keep the UI choice in the existing loan form
+## Decision 5: Keep the UI choice in the existing loan form
 
 **Decision**: Add an accessible position selector next to the different-payment input,
 reuse established project select/input components, and update the Stimulus estimate to
@@ -69,7 +89,7 @@ The existing form is the canonical simulation interface.
 - Add a second form for beginning payments: rejected because it duplicates the same
   repayment concept and increases UI drift.
 
-## Decision 5: Validate positive overrides and financial reconciliation in the domain
+## Decision 6: Validate positive overrides and financial reconciliation in the domain
 
 **Decision**: Continue domain validation for positive monetary values and insufficient
 payment totals, and add coverage for position validity, one-payment schedules, and

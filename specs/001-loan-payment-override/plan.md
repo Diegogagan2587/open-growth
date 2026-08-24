@@ -6,8 +6,10 @@
 
 ## Summary
 
-Add an explicit payment-position choice for the optional different payment in the
-financial loan repayment terms. Preserve existing records as final-payment overrides,
+Add an explicit `payment_position` choice for the optional different payment in the
+financial loan repayment terms. Model the exceptional value as a neutral
+`different_payment_amount`, while migrating the existing `final_payment_amount` value
+without changing its meaning. Preserve existing records as final-payment overrides,
 generate contractual payment arrays with the override in the selected position, and
 update the loan form and estimate hint so the position is visible and accurate.
 
@@ -41,8 +43,8 @@ within the existing request interaction expectations and does not add a remote c
 persisted calculations; preserve existing final-payment records; prevent invalid or
 unreconciled schedules; keep UI behavior accessible and component-consistent.
 
-**Scale/Scope**: One optional different-payment override per financial loan, positioned
-at the beginning or final payment; no simultaneous beginning and final overrides.
+**Scale/Scope**: One optional different-payment amount per financial loan, positioned
+by `payment_position` at the beginning or final payment; no simultaneous overrides.
 
 ## Constitution Check
 
@@ -62,8 +64,9 @@ at the beginning or final payment; no simultaneous beginning and final overrides
   select/input components are reused, with a clear label and accessible position choice.
 - **Evolutionary Rails design**: PASS. The design extends current repayment terms and
   uses one small schema field; no speculative abstraction is introduced.
-- **Data safety and migrations**: PASS. The new field defaults existing rows to
-  `final`, making the migration reversible without rewriting financial amounts.
+- **Data safety and migrations**: PASS. The new position defaults existing rows to
+  `final`, and the existing amount is renamed or compatibility-mapped without
+  rewriting financial values.
 
 No constitution violations require complexity tracking.
 
@@ -93,7 +96,7 @@ app/
 ├── views/financial/loans/_form.html.erb
 └── javascript/controllers/loan_terms_controller.js
 db/migrate/
-└── <timestamp>_add_payment_position_to_financial_loans.rb
+└── <timestamp>_add_payment_position_and_rename_different_payment_amount.rb
 test/
 ├── models/financial/loans/repayment_terms_test.rb
 ├── models/financial/loans/amortization_schedule_test.rb
@@ -103,8 +106,9 @@ test/
 ```
 
 **Structure Decision**: Extend the existing Rails financial-loan domain and its current
-simulation form. The payment-position value is persisted on `financial_loans`; generated
-installments continue to be derived projections rather than a second source of terms.
+simulation form. The `payment_position` value is persisted with the loan's repayment
+terms; generated installments continue to be derived projections rather than a second
+source of terms.
 
 ## Complexity Tracking
 
