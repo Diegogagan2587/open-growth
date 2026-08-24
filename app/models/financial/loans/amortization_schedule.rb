@@ -31,7 +31,7 @@ class Financial::Loans::AmortizationSchedule
       amount = amount_for(number, calculated_payment, remaining)
       interest = (remaining * terms.periodic_rate).round(2)
       principal = number == terms.number_of_payments ? remaining : (amount - interest).round(2)
-      raise ArgumentError, "Payment amount is too low to cover accrued interest" unless principal.positive?
+      raise ArgumentError, "Installment #{number} payment of #{amount.to_f.round(2)} must be greater than accrued interest of #{interest.to_f.round(2)}; enter at least #{(interest + 0.01).to_f.round(2)}" unless principal.positive?
       raise ArgumentError, "Payment amount exceeds remaining principal" if number != terms.number_of_payments && principal > remaining
 
       interest = (amount - principal).round(2) if number == terms.number_of_payments
