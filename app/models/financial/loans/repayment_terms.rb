@@ -72,7 +72,8 @@ class Financial::Loans::RepaymentTerms
       raise ArgumentError, "Annual interest rate cannot be negative" if annual_rate.negative?
     else
       raise ArgumentError, "Regular payment must be greater than 0" unless regular_payment&.positive?
-      raise ArgumentError, "Final payment must be greater than 0" if final_payment && !final_payment.positive?
+      raise ArgumentError, "Different payment must be greater than 0" if different_payment_amount && !different_payment_amount.positive?
+      raise ArgumentError, "Different payment position is not supported" unless %w[beginning final].include?(different_payment_position)
       raise ArgumentError, "Payment amounts do not repay the principal" if contractual_payments.sum(0.to_d) < principal
     end
   end
