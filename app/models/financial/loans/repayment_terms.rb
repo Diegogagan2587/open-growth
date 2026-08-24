@@ -24,6 +24,7 @@ class Financial::Loans::RepaymentTerms
 
     validate!
     @annual_rate = inferred_annual_rate if payment_amounts?
+    validate_payment_coverage! if payment_amounts?
     freeze
   end
 
