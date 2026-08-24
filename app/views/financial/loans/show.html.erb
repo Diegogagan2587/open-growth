@@ -50,8 +50,20 @@
         <% end %>
       </div>
       <%= form_with url: finance_loan_schedule_path(@loan), method: :post, class: "flex items-end gap-2" do %>
-        <label class="space-y-1 text-sm">Loan start date<%= render Ui::InputComponent.new(name: "start_date", value: @schedule_start_date, type: "date", required: true) %></label>
-        <%= render Ui::ButtonComponent.new(label: @installments.any? ? "Regenerate schedule" : "Generate schedule", type: "submit", variant: :outline, size: :sm, disabled: @loan.repayment_basis.blank?, data: (@installments.any? ? { turbo_confirm: "Regenerate installments and synchronize linked pending plans?" } : {})) %>
+        <label class="space-y-1 text-sm">First payment date<%= render Ui::InputComponent.new(name: "first_payment_date", id: "first-payment-date", value: @first_payment_date, type: "date", required: true) %><span id="first-payment-date-help" class="block max-w-xs text-xs text-muted-foreground">The date the first repayment is due, not the date the loan money was received or disbursed.</span></label>
+        <% manual_installments = @installments.select(&:manual_due_date?) %>
+        <% if manual_installments.any? %>
+          <details class="max-w-xs text-xs">
+            <summary class="cursor-pointer text-primary">Reset manually edited dates</summary>
+            <div class="mt-2 space-y-1 rounded-lg border border-border p-2">
+              <p class="text-muted-foreground">Choose each manual date that may be replaced by the regenerated schedule.</p>
+              <% manual_installments.each do |manual_installment| %>
+                <label class="flex items-center gap-2"><%= check_box_tag "reset_manual_installment_ids[]", manual_installment.id %>Installment #<%= manual_installment.installment_number %> (<%= l(manual_installment.due_date) %>)</label>
+              <% end %>
+            </div>
+          </details>
+        <% end %>
+        <%= render Ui::ButtonComponent.new(label: @installments.any? ? "Regenerate schedule" : "Generate schedule", type: "submit", variant: :outline, size: :sm, disabled: @loan.repayment_basis.blank?, data: (@installments.any? ? { turbo_confirm: "Regenerate installments? Manual dates selected below will be reset; linked planned dates will not be changed automatically." } : {})) %>
       <% end %>
     </div>
 
