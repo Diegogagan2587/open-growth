@@ -8,15 +8,15 @@ Existing entity representing a loan simulation or active loan.
 
 | Attribute | Type | Required | Rules | Compatibility |
 |---|---|---:|---|---|
-| `payment_position` | string | No for annual-rate loans; defaults to `final` | Allowed values: `beginning`, `final`; meaningful when `different_payment_amount` is present | Existing rows and existing final-payment inputs resolve to `final` |
+| `different_payment_position` | string | No for annual-rate loans; defaults to `final` | Allowed values: `beginning`, `final`; meaningful when `different_payment_amount` is present | Existing rows and existing final-payment inputs resolve to `final` |
 
 The existing `final_payment_amount` data becomes `different_payment_amount` in the
 domain. Its stored values remain unchanged; only the name and interpretation become
-position-neutral, while the UI explains the selected `payment_position`.
+position-neutral, while the UI explains the selected `different_payment_position`.
 
 ### Domain behavior
 
-- `repayment_terms` passes `payment_position` and `different_payment_amount` into
+- `repayment_terms` passes `different_payment_position` and `different_payment_amount` into
   `RepaymentTerms`.
 - Payment-amount terms produce an ordered contractual stream from regular payment plus
   the optional different payment and position.
@@ -31,7 +31,7 @@ Immutable value object for validated repayment inputs.
 
 ### New value
 
-`payment_position` is accepted as `beginning` or `final`, defaulting to `final` for
+`different_payment_position` is accepted as `beginning` or `final`, defaulting to `final` for
 compatibility. Invalid values raise the same domain-level argument error style used by
 existing repayment validation.
 
@@ -59,7 +59,7 @@ the existing atomic workflow.
 
 ## State and migration notes
 
-- Migration adds `payment_position` with a database default of `final`.
+- Migration adds `different_payment_position` with a database default of `final`.
 - Migration renames `final_payment_amount` to `different_payment_amount`, or provides
   an explicit compatibility mapping if the project chooses to retain the old column.
 - Existing rows require no amount rewrite and retain their current schedule meaning.

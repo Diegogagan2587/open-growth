@@ -99,7 +99,7 @@ against the selected inputs.
 
 - **FR-001**: The system MUST allow a user simulating a loan to specify whether a
   different payment amount is applied at the beginning or at the final payment
-  position through a `payment_position` choice.
+  position through a `different_payment_position` choice.
 - **FR-002**: The system MUST preserve the existing final-payment behavior when the
   user selects the final position.
 - **FR-003**: The system MUST place a beginning-position different payment first and
@@ -141,7 +141,7 @@ against the selected inputs.
 - **Loan simulation**: The user's proposed borrowing terms, including regular payment,
   optional different payment, payment count, frequency, and repayment position.
 - **Payment terms**: The loan's regular payment, optional different payment amount,
-  and `payment_position` that determines where the different amount is placed.
+  and `different_payment_position` that determines where the different amount is placed.
 - **Extra-payment event**: A user-recorded payment above the scheduled amount, with an
   amount and date, that reduces the outstanding principal and affects later repayment.
 - **Interest policy**: The loan rule that determines whether early principal repayment
@@ -173,7 +173,7 @@ against the selected inputs.
 
 - The feature applies to loan simulation and schedule generation; changing the
   underlying loan product, interest model, or payment frequency is out of scope.
-- A simulation has at most one different payment amount and one `payment_position`,
+- A simulation has at most one different payment amount and one `different_payment_position`,
   which is either beginning or final; supporting both positions simultaneously is out
   of scope unless a later requirement adds it.
 - The regular payment remains the default for all other scheduled payments.

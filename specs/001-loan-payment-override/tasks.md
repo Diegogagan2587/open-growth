@@ -30,8 +30,8 @@ implementation.
 
 **⚠️ CRITICAL**: User-story implementation depends on this phase.
 
-- [ ] T003 Create a reversible migration in `db/migrate/<timestamp>_add_payment_position_and_rename_different_payment_amount.rb` that renames `financial_loans.final_payment_amount` to `different_payment_amount` and adds `payment_position` with a `final` default, preserving existing decimal values
-- [ ] T004 [P] Add the `payment_position` and `different_payment_amount` schema names to `db/schema.rb` by running the migration and verify existing rows retain final-payment semantics
+- [ ] T003 Create a reversible migration in `db/migrate/<timestamp>_add_different_payment_position_and_rename_different_payment_amount.rb` that renames `financial_loans.final_payment_amount` to `different_payment_amount` and adds `different_payment_position` with a `final` default, preserving existing decimal values
+- [ ] T004 [P] Add the `different_payment_position` and `different_payment_amount` schema names to `db/schema.rb` by running the migration and verify existing rows retain final-payment semantics
 - [ ] T005 [P] Add focused migration/compatibility coverage in `test/models/financial/loan_test.rb` for the default `final` position and unchanged existing different-payment amount
 
 **Checkpoint**: The database and model-facing names can represent both beginning and final positions without changing existing financial values.
@@ -47,16 +47,16 @@ implementation.
 ### Tests for User Story 1
 
 - [ ] T006 [P] [US1] Add `beginning` and `final` contractual-payment stream tests, default-position coverage, one-payment coverage, invalid-position coverage, and positive-amount validation in `test/models/financial/loans/repayment_terms_test.rb`
-- [ ] T007 [P] [US1] Add loan configuration and repayment-term mapping tests for `payment_position` and `different_payment_amount` in `test/models/financial/loan_test.rb`
-- [ ] T008 [P] [US1] Add request tests for creating and updating a payment-amount simulation with `payment_position` in `test/controllers/financial/loans_controller_test.rb`
+- [ ] T007 [P] [US1] Add loan configuration and repayment-term mapping tests for `different_payment_position` and `different_payment_amount` in `test/models/financial/loan_test.rb`
+- [ ] T008 [P] [US1] Add request tests for creating and updating a payment-amount simulation with `different_payment_position` in `test/controllers/financial/loans_controller_test.rb`
 
 ### Implementation for User Story 1
 
-- [ ] T009 Update `app/models/financial/loans/repayment_terms.rb` to accept `payment_position`, expose `different_payment_amount`, default the position to `final`, validate only `beginning` and `final`, and place the exceptional amount exactly once in `contractual_payments`
-- [ ] T010 Update `app/models/financial/loan.rb` to validate and persist `payment_position`, configure terms with `different_payment_amount`, and map persisted repayment terms without rewriting monetary values
-- [ ] T011 Update `app/controllers/financial/loans_controller.rb` to permit `payment_position` and `different_payment_amount`, pass both into `RepaymentTerms`, preserve the final default for omitted legacy input, and include the new fields when detecting repayment changes
-- [ ] T012 Update `app/views/financial/loans/_form.html.erb` to replace the final-only amount field with a neutral different-payment field and add an accessible Beginning/Final `payment_position` selector using the existing UI components
-- [ ] T013 Update `app/javascript/controllers/loan_terms_controller.js` to read the selected `payment_position` and construct the estimate payment array with the exceptional amount at the selected position, including the one-payment case
+- [ ] T009 Update `app/models/financial/loans/repayment_terms.rb` to accept `different_payment_position`, expose `different_payment_amount`, default the position to `final`, validate only `beginning` and `final`, and place the exceptional amount exactly once in `contractual_payments`
+- [ ] T010 Update `app/models/financial/loan.rb` to validate and persist `different_payment_position`, configure terms with `different_payment_amount`, and map persisted repayment terms without rewriting monetary values
+- [ ] T011 Update `app/controllers/financial/loans_controller.rb` to permit `different_payment_position` and `different_payment_amount`, pass both into `RepaymentTerms`, preserve the final default for omitted legacy input, and include the new fields when detecting repayment changes
+- [ ] T012 Update `app/views/financial/loans/_form.html.erb` to replace the final-only amount field with a neutral different-payment field and add an accessible Beginning/Final `different_payment_position` selector using the existing UI components
+- [ ] T013 Update `app/javascript/controllers/loan_terms_controller.js` to read the selected `different_payment_position` and construct the estimate payment array with the exceptional amount at the selected position, including the one-payment case
 
 **Checkpoint**: A user can create or edit a simulation with either position, and existing omitted-position records continue to mean final payment.
 

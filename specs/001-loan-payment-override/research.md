@@ -1,14 +1,14 @@
 # Research: Loan Payment Override Position
 
-## Decision 1: Persist `payment_position` with a compatibility default
+## Decision 1: Persist `different_payment_position` with a compatibility default
 
-**Decision**: Persist a constrained `payment_position` value representing `beginning`
+**Decision**: Persist a constrained `different_payment_position` value representing `beginning`
 or `final` on the financial loan repayment configuration. Rename the ambiguous
 `final_payment_amount` concept to `different_payment_amount` in the domain, while
 migrating or compatibility-mapping the existing column values. Existing rows default
 to `final`.
 
-**Rationale**: `payment_position` describes the repayment-term concept, while
+**Rationale**: `different_payment_position` describes the repayment-term concept, while
 `different_payment_amount` describes the value. This is more reusable than naming the
 position after the current final-only behavior. A database default and model validation
 make the compatibility rule visible and testable.
@@ -24,7 +24,7 @@ make the compatibility rule visible and testable.
 
 ## Decision 2: Keep position on repayment terms, not generated installments
 
-**Decision**: `payment_position` belongs to the loan's repayment terms and the
+**Decision**: `different_payment_position` belongs to the loan's repayment terms and the
 `RepaymentTerms` value object. It does not belong on `Financial::LoanInstallment`, which
 represents a generated scheduled result.
 
@@ -34,9 +34,9 @@ complicate regeneration, and make the generated rows a competing source of truth
 
 **Alternatives considered**:
 
-- Add `payment_position` to installments: rejected because it models a derived result,
+- Add `different_payment_position` to installments: rejected because it models a derived result,
   not the loan term that produced it.
-- Use a generic `position` attribute: rejected because `payment_position` is explicit
+- Use a generic `position` attribute: rejected because `different_payment_position` is explicit
   at call sites and avoids ambiguity with installment order or resource position.
 
 ## Decision 3: Build the contractual payment stream before schedule projection

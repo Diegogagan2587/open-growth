@@ -6,7 +6,7 @@ When the repayment basis is payment amounts, the simulation form exposes:
 
 - Regular payment: the default amount for non-exceptional payments.
 - Different payment: optional positive amount for one exceptional payment.
-- Payment position: `Beginning` or `Final`, submitted as `payment_position`.
+- Different payment position: `Beginning` or `Final`, submitted as `different_payment_position`.
 
 The position selector is presented with the different-payment input and has a clear
 label. If no different payment is entered, the position has no schedule effect.

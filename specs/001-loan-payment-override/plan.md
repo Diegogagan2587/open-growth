@@ -6,7 +6,7 @@
 
 ## Summary
 
-Add an explicit `payment_position` choice for the optional different payment in the
+Add an explicit `different_payment_position` choice for the optional different payment in the
 financial loan repayment terms. Model the exceptional value as a neutral
 `different_payment_amount`, while migrating the existing `final_payment_amount` value
 without changing its meaning. Preserve existing records as final-payment overrides,
@@ -44,7 +44,7 @@ persisted calculations; preserve existing final-payment records; prevent invalid
 unreconciled schedules; keep UI behavior accessible and component-consistent.
 
 **Scale/Scope**: One optional different-payment amount per financial loan, positioned
-by `payment_position` at the beginning or final payment; no simultaneous overrides.
+by `different_payment_position` at the beginning or final payment; no simultaneous overrides.
 
 ## Constitution Check
 
@@ -96,7 +96,7 @@ app/
 ├── views/financial/loans/_form.html.erb
 └── javascript/controllers/loan_terms_controller.js
 db/migrate/
-└── <timestamp>_add_payment_position_and_rename_different_payment_amount.rb
+└── <timestamp>_add_different_payment_position_and_rename_different_payment_amount.rb
 test/
 ├── models/financial/loans/repayment_terms_test.rb
 ├── models/financial/loans/amortization_schedule_test.rb
@@ -106,7 +106,7 @@ test/
 ```
 
 **Structure Decision**: Extend the existing Rails financial-loan domain and its current
-simulation form. The `payment_position` value is persisted with the loan's repayment
+simulation form. The `different_payment_position` value is persisted with the loan's repayment
 terms; generated installments continue to be derived projections rather than a second
 source of terms.
 
