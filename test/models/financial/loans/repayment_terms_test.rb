@@ -102,4 +102,35 @@ class Financial::Loans::RepaymentTermsTest < ActiveSupport::TestCase
 
     assert_equal "Payment amounts do not repay the principal", error.message
   end
+
+  test "rejects a beginning payment below the minimum accrued interest" do
+    error = assert_raises(ArgumentError) do
+      Financial::Loans::RepaymentTerms.new(
+        principal: 5_000,
+        number_of_payments: 6,
+        payment_frequency: "monthly",
+        repayment_basis: "payment_amounts",
+        regular_payment: 1_311,
+        different_payment_amount: 50,
+        different_payment_position: "beginning"
+      )
+    end
+
+    assert_match(/Installment 1 payment of 50.*estimated accrued interest.*enter at least/, error.message)
+  end
+
+  test "exposes the minimum first payment for the configured payment stream" do
+    terms = Financial::Loans::RepaymentTerms.new(
+      principal: 5_000,
+      number_of_payments: 6,
+      payment_frequency: "monthly",
+      repayment_basis: "payment_amounts",
+      regular_payment: 1_311,
+      different_payment_amount: 600,
+      different_payment_position: "beginning"
+    )
+
+    assert_operator terms.minimum_payment_for_first_installment, :>, 0
+    assert_operator terms.minimum_payment_for_first_installment, :<, 600
+  end
 end
