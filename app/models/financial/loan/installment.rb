@@ -14,4 +14,5 @@ class Financial::Loan::Installment < ApplicationRecord
   validates :expected_amount, numericality: { greater_than: 0 }
   validates :expected_principal, :expected_interest, numericality: { greater_than_or_equal_to: 0 }
   validates :resolution, inclusion: { in: RESOLUTIONS }
+  validates :manual_due_date, inclusion: { in: [ true, false ] }
 end
