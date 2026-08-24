@@ -103,6 +103,25 @@ class Financial::Loans::RepaymentTerms
     (((low + high) / 2.0).to_d * periods_per_year * 100).round(3)
   end
 
+  def validate_payment_coverage!
+    remaining = principal.round(2)
+
+    contractual_payments.each_with_index do |payment, index|
+      interest = (remaining * periodic_rate).round(2)
+      if index == contractual_payments.length - 1
+        raise ArgumentError, "Final installment payment of #{payment.to_f.round(2)} must cover the remaining balance of #{remaining.to_f.round(2)}" if payment < remaining
+
+        next
+      end
+
+      if payment <= interest
+        raise ArgumentError, "Installment #{index + 1} payment of #{payment.to_f.round(2)} must be greater than estimated accrued interest of #{interest.to_f.round(2)}; enter at least #{(interest + 0.01).to_f.round(2)}"
+      end
+
+      remaining = (remaining - (payment - interest)).round(2)
+    end
+  end
+
   def present_value(payments, rate)
     payments.each_with_index.sum { |payment, index| payment.to_f / ((1 + rate)**(index + 1)) }
   end
