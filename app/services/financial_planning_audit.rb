@@ -71,7 +71,7 @@ class FinancialPlanningAudit
   end
 
   def loan_installments
-    scope = Financial::LoanInstallment.where(account: account)
+    scope = Financial::Loan::Installment.where(account: account)
     return scope unless date_range
 
     scope.where(due_date: date_range)

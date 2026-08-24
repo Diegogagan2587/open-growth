@@ -1,4 +1,4 @@
-class Financial::LoanInstallment < ApplicationRecord
+class Financial::Loan::Installment < ApplicationRecord
   self.table_name = "financial_loan_installments"
 
   RESOLUTIONS = %w[scheduled paid skipped cancelled disputed].freeze

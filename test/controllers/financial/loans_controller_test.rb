@@ -202,7 +202,7 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
     plan = Financial::Plan.create!(account: @account, name: "Request payment plan", planned_for: Date.current, expected_amount: 1)
     loan = Financial::Loan.create!(account: @account, name: "Request loan", principal_amount: 2_000, liability: liability, destination_asset: asset, interest_category: interest_category, lifecycle_status: "active")
     transaction = Financial::PlannedTransaction.create!(account: @account, plan: plan, description: "Request installment", amount: 1_165, kind: "liability_payment", status: "pending_to_pay", financial_account: asset, financial_liability: liability)
-    installment = Financial::LoanInstallment.create!(account: @account, financial_loan: loan, planned_transaction: transaction, installment_number: 1, due_date: Date.current, expected_amount: 1_165, expected_principal: 1_000, expected_interest: 165)
+    installment = Financial::Loan::Installment.create!(account: @account, financial_loan: loan, planned_transaction: transaction, installment_number: 1, due_date: Date.current, expected_amount: 1_165, expected_principal: 1_000, expected_interest: 165)
 
     post finance_loan_installment_payment_path(loan, installment), params: {
       installment_payment: { total: "1165", interest: "165", entry_date: Date.current }

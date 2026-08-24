@@ -8,7 +8,7 @@ class Financial::InstallmentPaymentFormComponentTest < ViewComponent::TestCase
     loan = Financial::Loan.create!(account: account, name: "Component loan", principal_amount: 100)
     plan = Financial::Plan.create!(account: account, name: "Component plan", planned_for: Date.current, expected_amount: 1)
     transaction = Financial::PlannedTransaction.create!(account: account, plan: plan, category: categories(:one), description: "Loan payment", amount: 60, kind: "liability_payment", status: "pending_to_pay")
-    installment = Financial::LoanInstallment.create!(account: account, financial_loan: loan, planned_transaction: transaction, installment_number: 1, due_date: Date.current, expected_amount: 60, expected_principal: 50, expected_interest: 10)
+    installment = Financial::Loan::Installment.create!(account: account, financial_loan: loan, planned_transaction: transaction, installment_number: 1, due_date: Date.current, expected_amount: 60, expected_principal: 50, expected_interest: 10)
 
     render_inline(Financial::InstallmentPaymentFormComponent.new(transaction: transaction))
 
