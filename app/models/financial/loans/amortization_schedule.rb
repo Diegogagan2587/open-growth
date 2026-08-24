@@ -78,6 +78,11 @@ class Financial::Loans::AmortizationSchedule
   end
 
   def due_date_for(number)
+    return first_payment_date.advance(months: number - 1) if first_payment_date && terms.payment_frequency == "monthly"
+    return first_payment_date + ((number - 1) * 1).weeks if first_payment_date && terms.payment_frequency == "weekly"
+    return first_payment_date + ((number - 1) * 2).weeks if first_payment_date && terms.payment_frequency == "biweekly"
+    return first_payment_date + ((number - 1) * 15).days if first_payment_date && terms.payment_frequency == "quincenal"
+
     case terms.payment_frequency
     when "weekly" then start_date + number.weeks
     when "biweekly" then start_date + (number * 2).weeks
