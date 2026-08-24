@@ -11,9 +11,10 @@ class Financial::Loans::AmortizationSchedule
     new(...).projections
   end
 
-  def initialize(terms:, start_date:, paid_installments: [])
+  def initialize(terms:, start_date: nil, first_payment_date: nil, paid_installments: [])
     @terms = terms
-    @start_date = start_date.to_date
+    @start_date = start_date&.to_date
+    @first_payment_date = first_payment_date&.to_date
     @paid_installments = paid_installments.sort_by(&:installment_number)
     validate_paid_prefix!
   end
