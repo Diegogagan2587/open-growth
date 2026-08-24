@@ -8,6 +8,15 @@
 
 **Input**: User description: "On loans, when simulating a loan, the option to change a different payment is treated as the final payment. A loan may instead have a different payment at the beginning, so allow a different payment at either the beginning or final payment."
 
+## Clarifications
+
+### Session 2026-08-23
+
+- Q: Should the loan support only one configured different payment, or should users be able to make extra payments repeatedly and recalculate the remaining schedule? → A: Support both fixed beginning/final payment overrides and repeated extra-payment events.
+- Q: After an extra payment reduces the outstanding principal, should the loan keep the same regular payment and finish earlier, recalculate a lower regular payment over the original remaining term, or let the user choose? → A: Keep the same regular payment and finish earlier.
+- Q: How should the user specify whether early payments reduce interest? → A: Each loan explicitly specifies its interest policy.
+- Q: For a fixed-total-interest loan, when the user makes an extra payment, should the extra amount reduce only the principal while the remaining contracted interest stays distributed across the remaining payments? → A: Reduce principal, preserve total interest, keep regular payments, and adjust the final payment or remaining term as needed.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Choose the Position of a Different Payment (Priority: P1)
@@ -78,13 +87,19 @@ against the selected inputs.
   disclose and resolve it without floating-point financial behavior.
 - An existing loan created under the final-payment behavior is viewed or regenerated;
   its existing meaning and payment position remain unchanged unless the user edits it.
+- A user makes multiple extra payments over the life of a loan; each extra payment is
+  applied once and the remaining schedule reflects the cumulative principal reduction.
+- The loan charges a fixed total interest amount that does not decrease after early
+  repayment; the schedule must not claim interest savings unless the loan's terms allow
+  interest to be recalculated.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 - **FR-001**: The system MUST allow a user simulating a loan to specify whether a
-  different payment is applied at the beginning or at the final payment position.
+  different payment amount is applied at the beginning or at the final payment
+  position through a `payment_position` choice.
 - **FR-002**: The system MUST preserve the existing final-payment behavior when the
   user selects the final position.
 - **FR-003**: The system MUST place a beginning-position different payment first and
@@ -103,13 +118,34 @@ against the selected inputs.
   the selected position and identify the exceptional payment.
 - **FR-010**: The system MUST provide actionable feedback when the selected override
   cannot produce a financially valid schedule.
+- **FR-011**: The system MUST support optional extra-payment events in addition to a
+  single fixed beginning or final payment override.
+- **FR-012**: The system MUST apply each recorded extra-payment event once and include
+  its effect in the remaining principal and future interest calculation.
+- **FR-013**: After an extra-payment event, the system MUST preserve the regular payment
+  amount and reduce the remaining number of payments or final payment as needed to
+  close the loan earlier.
+- **FR-014**: The system MUST calculate interest according to the loan's configured
+  interest policy; early payment MUST reduce future interest only when that policy
+  recalculates interest from the reduced principal.
+- **FR-015**: The system MUST distinguish loans where early payment reduces future
+  interest from loans where the total interest is fixed or otherwise unchanged.
+- **FR-016**: The system MUST allow each loan to specify an interest policy that is
+  either principal-reducing or fixed-total-interest.
+- **FR-017**: For fixed-total-interest loans, an extra payment MUST reduce outstanding
+  principal while preserving the contracted total interest, and the system MUST NOT
+  report interest savings from that payment.
 
 ### Key Entities *(include if feature involves data)*
 
 - **Loan simulation**: The user's proposed borrowing terms, including regular payment,
   optional different payment, payment count, frequency, and repayment position.
-- **Payment position**: The selected location of the different payment: beginning or
-  final.
+- **Payment terms**: The loan's regular payment, optional different payment amount,
+  and `payment_position` that determines where the different amount is placed.
+- **Extra-payment event**: A user-recorded payment above the scheduled amount, with an
+  amount and date, that reduces the outstanding principal and affects later repayment.
+- **Interest policy**: The loan rule that determines whether early principal repayment
+  reduces future interest or leaves the contracted interest amount unchanged.
 - **Repayment schedule**: The ordered set of projected payments, amounts, dates, and
   remaining balance produced from the simulation.
 
@@ -127,16 +163,26 @@ against the selected inputs.
   not produce an accepted inaccurate schedule.
 - **SC-005**: Existing final-position loan simulations retain their prior schedule and
   financial meaning when opened after the change.
+- **SC-006**: Users can record more than one extra-payment event, and the schedule
+  reflects the cumulative principal reduction without duplicating any event.
+- **SC-007**: For loans whose interest policy recalculates from principal, the schedule
+  reflects lower future interest after an extra payment; for fixed-interest loans, it
+  preserves the contracted interest total.
 
 ## Assumptions
 
 - The feature applies to loan simulation and schedule generation; changing the
   underlying loan product, interest model, or payment frequency is out of scope.
-- A simulation has at most one different-payment override, positioned either at the
-  beginning or at the final payment; supporting both positions simultaneously is out
+- A simulation has at most one different payment amount and one `payment_position`,
+  which is either beginning or final; supporting both positions simultaneously is out
   of scope unless a later requirement adds it.
 - The regular payment remains the default for all other scheduled payments.
 - Existing loans without an explicitly stored position continue to be interpreted as
   final-payment overrides for backward compatibility.
 - The existing loan repayment rules determine how a remainder is handled when the
   selected amounts do not divide evenly into the balance.
+- Extra-payment events are optional and are separate from the fixed beginning/final
+  different-payment setting; both mechanisms may be used for the same loan.
+- The loan's interest policy is either already available in the product or must be
+  selected when the loan is configured; the feature must not infer interest savings from
+  early payment alone.
