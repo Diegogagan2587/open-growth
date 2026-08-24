@@ -44,7 +44,7 @@
     <div class="flex flex-wrap items-end justify-between gap-3">
       <div>
         <h2 class="text-xl font-semibold">Expected installments</h2>
-        <p class="text-sm text-muted-foreground">Regeneration updates this schedule and synchronizes linked pending plans. Paid installments remain unchanged.</p>
+        <p class="text-sm text-muted-foreground">Regeneration updates this schedule. Linked planned dates require a separate explicit choice; paid installments remain unchanged.</p>
         <% if @loan.different_payment_amount.present? %>
           <p class="mt-1 text-sm text-muted-foreground">Different payment: <%= number_to_currency(@loan.different_payment_amount) %> at the <%= @loan.different_payment_position %> position.</p>
         <% end %>
