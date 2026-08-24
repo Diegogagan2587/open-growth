@@ -86,6 +86,18 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Updated loan", loan.reload.name
   end
 
+  test "loan form exposes the different payment position selector" do
+    loan = Financial::Loan.create!(account: @account, name: "Position form loan", principal_amount: 500, lifecycle_status: "simulated")
+
+    get edit_finance_loan_path(loan)
+
+    assert_response :success
+    assert_select "select[name='financial_loan[different_payment_position]']" do
+      assert_select "option[value='beginning']", text: "Beginning"
+      assert_select "option[value='final']", text: "Final", selected: true
+    end
+  end
+
   test "creates exact-payment terms and infers the annual rate" do
     post finance_loans_path, params: {
       financial_loan: {
@@ -141,6 +153,46 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to finance_loan_path(loan)
     assert_equal [ 1_165.to_d, 1_165.to_d ], loan.installments.order(:installment_number).pluck(:expected_amount)
+  end
+
+  test "creates a schedule with a different beginning payment" do
+    loan = Financial::Loan.create!(
+      account: @account,
+      name: "Beginning scheduled loan",
+      principal_amount: 1_000,
+      repayment_basis: "payment_amounts",
+      interest_rate: 0,
+      number_of_payments: 3,
+      payment_frequency: "monthly",
+      payment_amount: 400,
+      different_payment_amount: 350,
+      different_payment_position: "beginning"
+    )
+
+    post finance_loan_schedule_path(loan), params: { start_date: "2026-08-01" }
+
+    assert_redirected_to finance_loan_path(loan)
+    assert_equal [ 350.to_d, 400.to_d, 400.to_d ], loan.installments.order(:installment_number).pluck(:expected_amount)
+  end
+
+  test "shows the different payment position on the loan page" do
+    loan = Financial::Loan.create!(
+      account: @account,
+      name: "Position display loan",
+      principal_amount: 1_000,
+      repayment_basis: "payment_amounts",
+      interest_rate: 0,
+      number_of_payments: 3,
+      payment_frequency: "monthly",
+      payment_amount: 400,
+      different_payment_amount: 350,
+      different_payment_position: "beginning"
+    )
+
+    get finance_loan_path(loan)
+
+    assert_response :success
+    assert_select "body", text: /Different payment: \$350\.00 at the beginning position/
   end
 
   test "records a categorized installment payment through the nested payment resource" do

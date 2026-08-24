@@ -33,4 +33,55 @@ class Financial::Loans::AmortizationScheduleTest < ActiveSupport::TestCase
     assert_equal schedule.first.amount, schedule.second.amount
     assert_equal 1_000.to_d, schedule.sum(&:principal)
   end
+
+  test "places a different beginning payment in the first installment" do
+    terms = Financial::Loans::RepaymentTerms.new(
+      principal: 1_000,
+      number_of_payments: 3,
+      payment_frequency: "monthly",
+      repayment_basis: "payment_amounts",
+      regular_payment: 400,
+      different_payment_amount: 350,
+      different_payment_position: "beginning"
+    )
+
+    schedule = Financial::Loans::AmortizationSchedule.build(terms: terms, start_date: Date.new(2026, 8, 1))
+
+    assert_equal [ 350.to_d, 400.to_d, 400.to_d ], schedule.map(&:amount)
+    assert_equal 1_000.to_d, schedule.sum(&:principal)
+  end
+
+  test "applies a different payment once when beginning and final are the same installment" do
+    terms = Financial::Loans::RepaymentTerms.new(
+      principal: 350,
+      number_of_payments: 1,
+      payment_frequency: "monthly",
+      repayment_basis: "payment_amounts",
+      regular_payment: 400,
+      different_payment_amount: 350,
+      different_payment_position: "beginning"
+    )
+
+    schedule = Financial::Loans::AmortizationSchedule.build(terms: terms, start_date: Date.new(2026, 8, 1))
+
+    assert_equal [ 350.to_d ], schedule.map(&:amount)
+    assert_equal 350.to_d, schedule.sum(&:principal)
+  end
+
+  test "rejects a beginning payment that would create a negative balance" do
+    error = assert_raises(ArgumentError) do
+      terms = Financial::Loans::RepaymentTerms.new(
+        principal: 1_000,
+        number_of_payments: 2,
+        payment_frequency: "monthly",
+        repayment_basis: "payment_amounts",
+        regular_payment: 600,
+        different_payment_amount: 1_500,
+        different_payment_position: "beginning"
+      )
+      Financial::Loans::AmortizationSchedule.build(terms: terms, start_date: Date.new(2026, 8, 1))
+    end
+
+    assert_equal "Different payment amount exceeds principal", error.message
+  end
 end
