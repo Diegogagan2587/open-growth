@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["basis", "principal", "payments", "frequency", "rate", "regular", "final", "rateFields", "amountFields", "hint"]
+  static targets = ["basis", "principal", "payments", "frequency", "rate", "regular", "different", "position", "rateFields", "amountFields", "hint"]
 
   connect() {
     this.refresh()
@@ -21,10 +21,12 @@ export default class extends Controller {
     const principal = this.number(this.principalTarget.value)
     const count = this.integer(this.paymentsTarget.value)
     const regular = this.number(this.regularTarget.value)
-    const finalPayment = this.number(this.finalTarget.value) || regular
+    const differentPayment = this.number(this.differentTarget.value)
     if (!principal || !count || !regular || !this.frequencyTarget.value) return this.hideHint()
 
-    const amounts = Array.from({ length: count }, (_, index) => index === count - 1 ? finalPayment : regular)
+    const position = this.positionTarget.value || "final"
+    const differentIndex = position === "beginning" ? 0 : count - 1
+    const amounts = Array.from({ length: count }, (_, index) => index === differentIndex && differentPayment ? differentPayment : regular)
     const total = amounts.reduce((sum, amount) => sum + amount, 0)
     if (total < principal) return this.showHint("These payments do not repay the principal.", true)
 
