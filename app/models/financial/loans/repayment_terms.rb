@@ -60,6 +60,12 @@ class Financial::Loans::RepaymentTerms
     payment_amounts? ? contractual_payments.sum(0.to_d) : nil
   end
 
+  def minimum_payment_for_first_installment
+    return nil unless payment_amounts?
+
+    (principal * periodic_rate).round(2)
+  end
+
   private
 
   def validate!
