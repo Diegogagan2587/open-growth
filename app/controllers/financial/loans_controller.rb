@@ -9,7 +9,7 @@ class Financial::LoansController < ApplicationController
   def show
     @installments = @loan.installments.includes(:planned_transaction, :payment_entry).order(:installment_number)
     @entries = @loan.entries.by_date
-    @schedule_start_date = schedule_start_date
+    @first_payment_date = @loan.first_payment_date || @loan.installments.minimum(:due_date)
   end
 
   def new
