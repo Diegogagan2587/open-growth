@@ -8,7 +8,7 @@ class Financial::Loans::SchedulesController < ApplicationController
     )
 
     redirect_to finance_loan_path(loan),
-      notice: ("Schedule regenerated and pending plans synchronized" if result.success?),
+      notice: ("Schedule regenerated" if result.success?),
       alert: (result.error_message unless result.success?)
   end
 end
