@@ -16,7 +16,8 @@ class Financial::Loan < ApplicationRecord
   validates :principal_amount, numericality: { greater_than: 0 }
   validates :interest_rate, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :repayment_basis, inclusion: { in: Financial::Loans::RepaymentTerms::BASES }, allow_nil: true
-  validates :payment_amount, :final_payment_amount, numericality: { greater_than: 0 }, allow_nil: true
+  validates :payment_amount, :different_payment_amount, numericality: { greater_than: 0 }, allow_nil: true
+  validates :payment_position, inclusion: { in: %w[beginning final] }
   validates :lifecycle_status, inclusion: { in: LIFECYCLE_STATUSES }
   validate :repayment_terms_are_valid
   validate :active_routing_is_complete
