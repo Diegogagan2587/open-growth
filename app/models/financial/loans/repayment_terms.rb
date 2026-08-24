@@ -77,6 +77,10 @@ class Financial::Loans::RepaymentTerms
     end
   end
 
+  def different_payment_index
+    different_payment_position == "beginning" ? 0 : number_of_payments - 1
+  end
+
   def inferred_annual_rate
     payments = contractual_payments
     return 0.to_d if payments.sum(0.to_d) == principal
