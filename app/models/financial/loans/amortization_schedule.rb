@@ -51,7 +51,7 @@ class Financial::Loans::AmortizationSchedule
 
   private
 
-  attr_reader :terms, :start_date, :paid_installments
+  attr_reader :terms, :start_date, :first_payment_date, :paid_installments
 
   def validate_paid_prefix!
     expected_numbers = (1..paid_installments.length).to_a
