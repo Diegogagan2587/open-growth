@@ -45,6 +45,9 @@
       <div>
         <h2 class="text-xl font-semibold">Expected installments</h2>
         <p class="text-sm text-muted-foreground">Regeneration updates this schedule and synchronizes linked pending plans. Paid installments remain unchanged.</p>
+        <% if @loan.different_payment_amount.present? %>
+          <p class="mt-1 text-sm text-muted-foreground">Different payment: <%= number_to_currency(@loan.different_payment_amount) %> at the <%= @loan.different_payment_position %> position.</p>
+        <% end %>
       </div>
       <%= form_with url: finance_loan_schedule_path(@loan), method: :post, class: "flex items-end gap-2" do %>
         <label class="space-y-1 text-sm">Loan start date<%= render Ui::InputComponent.new(name: "start_date", value: @schedule_start_date, type: "date", required: true) %></label>
