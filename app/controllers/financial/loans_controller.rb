@@ -126,5 +126,4 @@ class Financial::LoansController < ApplicationController
     @categories = Category.for_account(Current.account).order(:name)
     @plans = Financial::Plan.for_account(Current.account).where(lifecycle_status: %w[draft active]).chronological
   end
-
 end
