@@ -79,8 +79,9 @@ class Financial::LoansController < ApplicationController
 
   def assign_loan_attributes(loan)
     attributes = loan_params
-    term_keys = %w[repayment_basis interest_rate number_of_payments payment_frequency payment_amount different_payment_amount different_payment_position]
+    term_keys = %w[repayment_basis interest_rate number_of_payments payment_frequency payment_amount different_payment_amount different_payment_position first_payment_date]
     loan.assign_attributes(attributes.except(*term_keys))
+    loan.first_payment_date = attributes[:first_payment_date] if attributes.key?(:first_payment_date)
 
     explicit_basis = attributes.key?(:repayment_basis)
     basis = attributes[:repayment_basis].presence
