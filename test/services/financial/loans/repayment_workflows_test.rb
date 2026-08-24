@@ -45,8 +45,8 @@ class Financial::Loans::RepaymentWorkflowsTest < ActiveSupport::TestCase
 
     assert regenerated.success?
     assert_equal [ 1_175.to_d, 1_175.to_d ], @loan.installments.order(:installment_number).pluck(:expected_amount)
-    assert_equal 1_175.to_d, installment.planned_transaction.reload.amount
-    assert_equal installment.reload.due_date, installment.planned_transaction.planned_for
+    assert_equal 1_165.to_d, installment.planned_transaction.reload.amount
+    assert_equal Date.new(2026, 9, 1), installment.planned_transaction.planned_for
   end
 
   test "regenerates a changed different payment position" do

@@ -12,7 +12,7 @@ class Financial::PlannedTransactions::Execution
       return Result.new(success?: true, transaction: actual) if actual
       return Result.new(success?: false, error_message: "Only pending transactions can be executed") unless planned_transaction.execution_status == "pending"
 
-      installment = Financial::LoanInstallment.find_by(planned_transaction: planned_transaction)
+      installment = Financial::Loan::Installment.find_by(planned_transaction: planned_transaction)
       overrides = attributes.to_h.symbolize_keys.slice(*OVERRIDABLE_ATTRIBUTES).compact
       actual = Financial::Transaction.create!(
         {

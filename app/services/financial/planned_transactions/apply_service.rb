@@ -17,7 +17,7 @@ module Financial
       def call
         return failure("Planned transaction is required") if transaction.blank?
 
-        installment = Financial::LoanInstallment.find_by(planned_transaction_id: transaction.id)
+        installment = Financial::Loan::Installment.find_by(planned_transaction_id: transaction.id)
         if installment
           return Financial::Loans::ApplyInstallmentPayment.call(
             installment: installment,
@@ -53,7 +53,7 @@ module Financial
       attr_reader :transaction, :overrides, :interest_amount
 
       def entry_attributes
-        installment = Financial::LoanInstallment.find_by(planned_transaction_id: transaction.id)
+        installment = Financial::Loan::Installment.find_by(planned_transaction_id: transaction.id)
         {
           account: transaction.account,
           income_event: transaction.income_event,
@@ -76,7 +76,7 @@ module Financial
       end
 
       def reconcile_installment(entry)
-        installment = Financial::LoanInstallment.find_by(planned_transaction_id: transaction.id)
+        installment = Financial::Loan::Installment.find_by(planned_transaction_id: transaction.id)
         installment&.update!(payment_entry: entry, resolution: "paid")
       end
 

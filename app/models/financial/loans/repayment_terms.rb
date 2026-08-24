@@ -24,6 +24,7 @@ class Financial::Loans::RepaymentTerms
 
     validate!
     @annual_rate = inferred_annual_rate if payment_amounts?
+    validate_payment_coverage! if payment_amounts?
     freeze
   end
 
@@ -57,6 +58,12 @@ class Financial::Loans::RepaymentTerms
 
   def total_repayment
     payment_amounts? ? contractual_payments.sum(0.to_d) : nil
+  end
+
+  def minimum_payment_for_first_installment
+    return nil unless payment_amounts?
+
+    (principal * periodic_rate).round(2)
   end
 
   private
@@ -101,6 +108,25 @@ class Financial::Loans::RepaymentTerms
     end
 
     (((low + high) / 2.0).to_d * periods_per_year * 100).round(3)
+  end
+
+  def validate_payment_coverage!
+    remaining = principal.round(2)
+
+    contractual_payments.each_with_index do |payment, index|
+      interest = (remaining * periodic_rate).round(2)
+      if index == contractual_payments.length - 1
+        raise ArgumentError, "Final installment payment of #{payment.to_f.round(2)} must cover the remaining balance of #{remaining.to_f.round(2)}" if payment < remaining
+
+        next
+      end
+
+      if payment <= interest
+        raise ArgumentError, "Installment #{index + 1} payment of #{payment.to_f.round(2)} must be greater than estimated accrued interest of #{interest.to_f.round(2)}; enter at least #{(interest + 0.01).to_f.round(2)}"
+      end
+
+      remaining = (remaining - (payment - interest)).round(2)
+    end
   end
 
   def present_value(payments, rate)

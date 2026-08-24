@@ -1,4 +1,4 @@
-class Financial::LoanInstallment < ApplicationRecord
+class Financial::Loan::Installment < ApplicationRecord
   self.table_name = "financial_loan_installments"
 
   RESOLUTIONS = %w[scheduled paid skipped cancelled disputed].freeze
@@ -14,4 +14,9 @@ class Financial::LoanInstallment < ApplicationRecord
   validates :expected_amount, numericality: { greater_than: 0 }
   validates :expected_principal, :expected_interest, numericality: { greater_than_or_equal_to: 0 }
   validates :resolution, inclusion: { in: RESOLUTIONS }
+  validates :manual_due_date, inclusion: { in: [ true, false ] }
+
+  def edit_due_date!(date)
+    update!(due_date: date.to_date, manual_due_date: true)
+  end
 end

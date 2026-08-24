@@ -9,7 +9,7 @@ class Financial::LoansController < ApplicationController
   def show
     @installments = @loan.installments.includes(:planned_transaction, :payment_entry).order(:installment_number)
     @entries = @loan.entries.by_date
-    @schedule_start_date = schedule_start_date
+    @first_payment_date = @loan.first_payment_date || @loan.installments.minimum(:due_date)
   end
 
   def new
@@ -73,14 +73,15 @@ class Financial::LoansController < ApplicationController
       :name, :lender_name, :principal_amount, :interest_rate, :number_of_payments,
       :payment_frequency, :payment_amount, :different_payment_amount, :different_payment_position, :repayment_basis,
       :interest_category_id, :liability_id, :destination_asset_id,
-      :destination_liability_id, :notes
+      :destination_liability_id, :first_payment_date, :notes
     ])
   end
 
   def assign_loan_attributes(loan)
     attributes = loan_params
-    term_keys = %w[repayment_basis interest_rate number_of_payments payment_frequency payment_amount different_payment_amount different_payment_position]
+    term_keys = %w[repayment_basis interest_rate number_of_payments payment_frequency payment_amount different_payment_amount different_payment_position first_payment_date]
     loan.assign_attributes(attributes.except(*term_keys))
+    loan.first_payment_date = attributes[:first_payment_date] if attributes.key?(:first_payment_date)
 
     explicit_basis = attributes.key?(:repayment_basis)
     basis = attributes[:repayment_basis].presence
@@ -116,7 +117,7 @@ class Financial::LoansController < ApplicationController
   end
 
   def repayment_attributes_changed?
-    (@loan.changes.keys & %w[principal_amount repayment_basis interest_rate number_of_payments payment_frequency payment_amount different_payment_amount different_payment_position]).any?
+    (@loan.changes.keys & %w[principal_amount repayment_basis interest_rate number_of_payments payment_frequency payment_amount different_payment_amount different_payment_position first_payment_date]).any?
   end
 
   def load_collections
@@ -124,17 +125,5 @@ class Financial::LoansController < ApplicationController
     @assets = Financial::Asset.for_account(Current.account).active.order(:name)
     @categories = Category.for_account(Current.account).order(:name)
     @plans = Financial::Plan.for_account(Current.account).where(lifecycle_status: %w[draft active]).chronological
-  end
-
-  def schedule_start_date
-    first_due_date = @loan.installments.minimum(:due_date)
-    return Date.current unless first_due_date
-
-    case @loan.payment_frequency
-    when "weekly" then first_due_date - 1.week
-    when "biweekly" then first_due_date - 2.weeks
-    when "quincenal" then first_due_date - 15.days
-    else first_due_date.prev_month
-    end
   end
 end

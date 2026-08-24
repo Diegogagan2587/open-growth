@@ -44,14 +44,26 @@
     <div class="flex flex-wrap items-end justify-between gap-3">
       <div>
         <h2 class="text-xl font-semibold">Expected installments</h2>
-        <p class="text-sm text-muted-foreground">Regeneration updates this schedule and synchronizes linked pending plans. Paid installments remain unchanged.</p>
+        <p class="text-sm text-muted-foreground">Regeneration updates this schedule. Linked planned dates require a separate explicit choice; paid installments remain unchanged.</p>
         <% if @loan.different_payment_amount.present? %>
           <p class="mt-1 text-sm text-muted-foreground">Different payment: <%= number_to_currency(@loan.different_payment_amount) %> at the <%= @loan.different_payment_position %> position.</p>
         <% end %>
       </div>
       <%= form_with url: finance_loan_schedule_path(@loan), method: :post, class: "flex items-end gap-2" do %>
-        <label class="space-y-1 text-sm">Loan start date<%= render Ui::InputComponent.new(name: "start_date", value: @schedule_start_date, type: "date", required: true) %></label>
-        <%= render Ui::ButtonComponent.new(label: @installments.any? ? "Regenerate schedule" : "Generate schedule", type: "submit", variant: :outline, size: :sm, disabled: @loan.repayment_basis.blank?, data: (@installments.any? ? { turbo_confirm: "Regenerate installments and synchronize linked pending plans?" } : {})) %>
+        <label class="space-y-1 text-sm">First payment date<%= render Ui::InputComponent.new(name: "first_payment_date", id: "first-payment-date", value: @first_payment_date, type: "date", required: true) %><span id="first-payment-date-help" class="block max-w-xs text-xs text-muted-foreground">The date the first repayment is due, not the date the loan money was received or disbursed.</span></label>
+        <% manual_installments = @installments.select(&:manual_due_date?) %>
+        <% if manual_installments.any? %>
+          <details class="max-w-xs text-xs">
+            <summary class="cursor-pointer text-primary">Reset manually edited dates</summary>
+            <div class="mt-2 space-y-1 rounded-lg border border-border p-2">
+              <p class="text-muted-foreground">Choose each manual date that may be replaced by the regenerated schedule.</p>
+              <% manual_installments.each do |manual_installment| %>
+                <label class="flex items-center gap-2"><%= check_box_tag "reset_manual_installment_ids[]", manual_installment.id %>Installment #<%= manual_installment.installment_number %> (<%= l(manual_installment.due_date) %>)</label>
+              <% end %>
+            </div>
+          </details>
+        <% end %>
+        <%= render Ui::ButtonComponent.new(label: @installments.any? ? "Regenerate schedule" : "Generate schedule", type: "submit", variant: :outline, size: :sm, disabled: @loan.repayment_basis.blank?, data: (@installments.any? ? { turbo_confirm: "Regenerate installments? Manual dates selected below will be reset; linked planned dates will not be changed automatically." } : {})) %>
       <% end %>
     </div>
 
@@ -63,7 +75,7 @@
 
     <div class="overflow-x-auto rounded-xl border border-border bg-card">
       <table class="w-full text-left text-sm">
-        <thead class="border-b border-border bg-muted/30"><tr><th class="p-3">#</th><th class="p-3">Due</th><th class="p-3">Expected</th><th class="p-3">Principal</th><th class="p-3">Interest</th><th class="p-3">Status</th><th class="p-3">Planning</th></tr></thead>
+        <thead class="border-b border-border bg-muted/30"><tr><th class="p-3">#</th><th class="p-3">Due</th><th class="p-3">Expected</th><th class="p-3">Principal</th><th class="p-3">Interest</th><th class="p-3">Status</th><th class="p-3">Planning</th><th class="p-3">Due-date actions</th></tr></thead>
         <tbody class="divide-y divide-border">
           <% @installments.each do |installment| %>
             <tr>
@@ -84,9 +96,29 @@
                   <% end %>
                 <% end %>
               </td>
+              <td class="p-3">
+                <details>
+                  <summary class="cursor-pointer text-primary hover:underline">Edit due date</summary>
+                  <%= form_with model: installment, scope: :installment, url: finance_loan_installment_path(@loan, installment), method: :patch, data: { turbo_confirm: "Review the impact summary before saving. Only explicitly selected pending planned records will change; actual payment history remains unchanged." }, class: "mt-2 min-w-64 space-y-2 rounded-lg border border-border p-3" do |form| %>
+                    <%= form.label :due_date, "Contractual due date", class: "block text-xs font-medium" %>
+                    <%= form.date_field :due_date, class: "w-full rounded-md border border-input bg-background px-2 py-1 text-sm" %>
+                    <%= form.hidden_field :expected_updated_at, value: installment.updated_at.iso8601(6) %>
+                    <p class="text-xs text-muted-foreground">Impact review: this changes the installment’s contractual due date. Actual payment dates, amounts, interest, and accounting history remain protected.</p>
+                    <% if installment.planned_transaction&.execution_status == "pending" %>
+                      <label class="flex items-start gap-2 text-xs"><%= form.check_box :update_planned_transaction %><span>Also update this pending planned record's due date. Leave unchecked to keep it unchanged.</span></label>
+                    <% end %>
+                    <% if installment.payment_entry %>
+                      <p class="text-xs text-muted-foreground">Paid installment: this changes only the contractual due date. The actual payment/application date (<%= l(installment.payment_entry.entry_date) %>) and accounting history remain unchanged.</p>
+                    <% elsif installment.planned_transaction && installment.planned_transaction.execution_status != "pending" %>
+                      <p class="text-xs text-muted-foreground">This linked planned record has already been applied. Only the contractual due date changes; the applied record and actual payment date remain unchanged.</p>
+                    <% end %>
+                    <%= render Ui::ButtonComponent.new(label: "Review and save", type: :submit, size: :sm) %>
+                  <% end %>
+                </details>
+              </td>
             </tr>
           <% end %>
-          <% if @installments.empty? %><tr><td colspan="7" class="p-4 text-center text-muted-foreground">No schedule generated yet.</td></tr><% end %>
+          <% if @installments.empty? %><tr><td colspan="8" class="p-4 text-center text-muted-foreground">No schedule generated yet.</td></tr><% end %>
         </tbody>
       </table>
     </div>

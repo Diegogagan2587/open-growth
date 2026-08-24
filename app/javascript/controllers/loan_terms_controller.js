@@ -32,6 +32,12 @@ export default class extends Controller {
 
     const periodicRate = total === principal ? 0 : this.solveRate(principal, amounts)
     const annualRate = periodicRate * this.periodsPerYear() * 100
+    const firstPayment = amounts[0]
+    const minimumFirstPayment = principal * periodicRate
+    if (firstPayment <= minimumFirstPayment && count > 1) {
+      return this.showHint(`First payment of ${firstPayment.toFixed(2)} is below the estimated minimum ${minimumFirstPayment.toFixed(2)} needed to cover accrued interest. Enter at least ${(minimumFirstPayment + 0.01).toFixed(2)}.`, true)
+    }
+
     this.showHint(`Estimated annual rate: ${annualRate.toFixed(3)}%. Total repayment: ${total.toFixed(2)}. Financing cost: ${(total - principal).toFixed(2)}.`)
   }
 
