@@ -37,7 +37,8 @@ class Financial::Loan < ApplicationRecord
     self.payment_frequency = terms.payment_frequency
     self.interest_rate = terms.annual_rate
     self.payment_amount = terms.regular_payment
-    self.final_payment_amount = terms.final_payment
+    self.different_payment_amount = terms.different_payment_amount
+    self.payment_position = terms.payment_position
     self
   end
 
@@ -50,7 +51,8 @@ class Financial::Loan < ApplicationRecord
       repayment_basis: basis,
       annual_rate: interest_rate,
       regular_payment: payment_amount,
-      final_payment: final_payment_amount
+      different_payment_amount: different_payment_amount,
+      payment_position: payment_position
     )
   end
 
