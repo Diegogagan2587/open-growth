@@ -13,7 +13,8 @@
   </div>
   <div class="space-y-3" data-loan-terms-target="amountFields">
     <label class="block space-y-1 text-sm">Regular payment<%= render Ui::InputComponent.new(name: "financial_loan[payment_amount]", value: loan.payment_amount, type: "number", min: 0.01, step: 0.01, data: { loan_terms_target: "regular", action: "input->loan-terms#refresh" }) %></label>
-    <label class="block space-y-1 text-sm">Different final payment (optional)<%= render Ui::InputComponent.new(name: "financial_loan[final_payment_amount]", value: loan.final_payment_amount, type: "number", min: 0.01, step: 0.01, data: { loan_terms_target: "final", action: "input->loan-terms#refresh" }) %></label>
+    <label class="block space-y-1 text-sm">Different payment (optional)<%= render Ui::InputComponent.new(name: "financial_loan[different_payment_amount]", value: loan.different_payment_amount, type: "number", min: 0.01, step: 0.01, data: { loan_terms_target: "different", action: "input->loan-terms#refresh" }) %></label>
+    <label class="block space-y-1 text-sm">Different payment position<%= render Ui::SelectComponent.new(name: "financial_loan[different_payment_position]", options: [ [ "Beginning", "beginning" ], [ "Final", "final" ] ], selected: loan.different_payment_position || "final", data: { loan_terms_target: "position", action: "change->loan-terms#refresh" }) %></label>
   </div>
   <p class="hidden rounded-lg bg-muted/40 p-3 text-sm text-muted-foreground sm:col-span-2" data-loan-terms-target="hint"></p>
   <label class="space-y-1 text-sm">Interest expense category<%= render Ui::SelectComponent.new(name: "financial_loan[interest_category_id]", options: categories.map { |category| [ category.name, category.id ] }, selected: loan.interest_category_id, include_blank: "Select before recording interest") %><span class="block text-xs text-muted-foreground">Each paid installment records its interest as a liability charge in this category.</span></label>
