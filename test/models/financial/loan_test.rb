@@ -60,4 +60,28 @@ class Financial::LoanTest < ActiveSupport::TestCase
   ensure
     Current.account = nil
   end
+
+  test "owns schedule regeneration and preserves manual dates" do
+    account = Account.create!(name: "Regeneration domain tenant")
+    loan = Financial::Loan.create!(
+      account: account,
+      name: "Regeneration loan",
+      principal_amount: 2_000,
+      repayment_basis: "payment_amounts",
+      interest_rate: 129.781,
+      number_of_payments: 2,
+      payment_frequency: "monthly",
+      payment_amount: 1_165,
+      lifecycle_status: "simulated"
+    )
+
+    generated = loan.regenerate_schedule!(start_date: Date.new(2026, 8, 1))
+    generated.first.update!(due_date: Date.new(2026, 9, 5), manual_due_date: true)
+
+    regenerated = loan.regenerate_schedule!(start_date: Date.new(2026, 8, 1))
+
+    assert_equal [ 1_165.to_d, 1_165.to_d ], regenerated.map(&:expected_amount)
+    assert_equal Date.new(2026, 9, 5), regenerated.first.due_date
+    assert regenerated.first.manual_due_date
+  end
 end
