@@ -8,17 +8,19 @@ class Financial::Loans::RepaymentTerms
   }.freeze
 
   attr_reader :principal, :number_of_payments, :payment_frequency, :repayment_basis,
-    :annual_rate, :regular_payment, :final_payment
+    :annual_rate, :regular_payment, :different_payment_amount, :different_payment_position
 
   def initialize(principal:, number_of_payments:, payment_frequency:, repayment_basis:,
-    annual_rate: nil, regular_payment: nil, final_payment: nil)
+    annual_rate: nil, regular_payment: nil, different_payment_amount: nil,
+    different_payment_position: "final")
     @principal = principal.to_d
     @number_of_payments = number_of_payments.to_i
     @payment_frequency = payment_frequency.to_s
     @repayment_basis = repayment_basis.to_s
     @annual_rate = annual_rate.presence&.to_d
     @regular_payment = regular_payment.presence&.to_d
-    @final_payment = final_payment.presence&.to_d
+    @different_payment_amount = different_payment_amount.presence&.to_d
+    @different_payment_position = different_payment_position.presence || "final"
 
     validate!
     @annual_rate = inferred_annual_rate if payment_amounts?
@@ -49,7 +51,7 @@ class Financial::Loans::RepaymentTerms
     return [] unless payment_amounts?
 
     Array.new(number_of_payments) do |index|
-      index == number_of_payments - 1 && final_payment ? final_payment : regular_payment
+      different_payment_index == index && different_payment_amount ? different_payment_amount : regular_payment
     end
   end
 
@@ -70,9 +72,15 @@ class Financial::Loans::RepaymentTerms
       raise ArgumentError, "Annual interest rate cannot be negative" if annual_rate.negative?
     else
       raise ArgumentError, "Regular payment must be greater than 0" unless regular_payment&.positive?
-      raise ArgumentError, "Final payment must be greater than 0" if final_payment && !final_payment.positive?
+      raise ArgumentError, "Different payment must be greater than 0" if different_payment_amount && !different_payment_amount.positive?
+      raise ArgumentError, "Different payment position is not supported" unless %w[beginning final].include?(different_payment_position)
+      raise ArgumentError, "Different payment amount exceeds principal" if different_payment_amount && different_payment_amount > principal
       raise ArgumentError, "Payment amounts do not repay the principal" if contractual_payments.sum(0.to_d) < principal
     end
+  end
+
+  def different_payment_index
+    different_payment_position == "beginning" ? 0 : number_of_payments - 1
   end
 
   def inferred_annual_rate

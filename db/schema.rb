@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_24_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -368,7 +368,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_000000) do
     t.datetime "created_at", null: false
     t.bigint "destination_asset_id"
     t.bigint "destination_liability_id"
-    t.decimal "final_payment_amount", precision: 12, scale: 2
+    t.decimal "different_payment_amount", precision: 12, scale: 2
+    t.string "different_payment_position", default: "final", null: false
     t.bigint "interest_category_id"
     t.decimal "interest_rate"
     t.bigint "legacy_income_event_id"

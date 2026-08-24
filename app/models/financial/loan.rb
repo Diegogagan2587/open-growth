@@ -16,7 +16,8 @@ class Financial::Loan < ApplicationRecord
   validates :principal_amount, numericality: { greater_than: 0 }
   validates :interest_rate, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :repayment_basis, inclusion: { in: Financial::Loans::RepaymentTerms::BASES }, allow_nil: true
-  validates :payment_amount, :final_payment_amount, numericality: { greater_than: 0 }, allow_nil: true
+  validates :payment_amount, :different_payment_amount, numericality: { greater_than: 0 }, allow_nil: true
+  validates :different_payment_position, inclusion: { in: %w[beginning final] }
   validates :lifecycle_status, inclusion: { in: LIFECYCLE_STATUSES }
   validate :repayment_terms_are_valid
   validate :active_routing_is_complete
@@ -36,7 +37,8 @@ class Financial::Loan < ApplicationRecord
     self.payment_frequency = terms.payment_frequency
     self.interest_rate = terms.annual_rate
     self.payment_amount = terms.regular_payment
-    self.final_payment_amount = terms.final_payment
+    self.different_payment_amount = terms.different_payment_amount
+    self.different_payment_position = terms.different_payment_position
     self
   end
 
@@ -49,7 +51,8 @@ class Financial::Loan < ApplicationRecord
       repayment_basis: basis,
       annual_rate: interest_rate,
       regular_payment: payment_amount,
-      final_payment: final_payment_amount
+      different_payment_amount: different_payment_amount,
+      different_payment_position: different_payment_position
     )
   end
 

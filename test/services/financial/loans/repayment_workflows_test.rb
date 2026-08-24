@@ -49,6 +49,24 @@ class Financial::Loans::RepaymentWorkflowsTest < ActiveSupport::TestCase
     assert_equal installment.reload.due_date, installment.planned_transaction.planned_for
   end
 
+  test "regenerates a changed different payment position" do
+    Financial::Loans::RegenerateSchedule.call(loan: @loan, start_date: Date.new(2026, 8, 1))
+    @loan.configure_repayment(Financial::Loans::RepaymentTerms.new(
+      principal: 2_000,
+      number_of_payments: 2,
+      payment_frequency: "monthly",
+      repayment_basis: "payment_amounts",
+      regular_payment: 1_165,
+      different_payment_amount: 1_000,
+      different_payment_position: "beginning"
+    )).save!
+
+    regenerated = Financial::Loans::RegenerateSchedule.call(loan: @loan, start_date: Date.new(2026, 8, 1))
+
+    assert regenerated.success?
+    assert_equal [ 1_000.to_d, 1_165.to_d ], @loan.installments.order(:installment_number).pluck(:expected_amount)
+  end
+
   test "records interest as an expense charge and the full liability payment once" do
     generated = Financial::Loans::RegenerateSchedule.call(loan: @loan, start_date: Date.new(2026, 8, 1))
     installment = generated.installments.first
