@@ -8,6 +8,17 @@
 
 **Input**: User description: "$speckit-specify the chat is super useful for financial stuff; extend the current chat/AI capability to analyze career job applications, identify where the user is getting stuck, and provide feedback on how to improve their chances of getting a job."
 
+## Clarifications
+
+### Session 2026-08-27
+
+- Q: Which career information should the AI analyze by default? → A: Applications, statuses, and timeline events by default; profile, notes, documents, tasks, and meetings only when explicitly requested.
+- Q: Should each career analysis automatically create a saved conversation that the user can revisit and continue later? → A: Automatically save each analysis as a revisitable career conversation.
+- Q: What time range should a career analysis cover by default? → A: All recorded applications by default, with an optional date-range filter.
+- Q: Should users be able to turn an AI recommendation into a career task? → A: Recommendations remain informational; users create tasks manually.
+- Q: How should the AI present the career analysis? → A: Structured sections for funnel snapshot, bottleneck, evidence, recommendations, limitations, and next steps, followed by conversational follow-up support.
+- Q: Should career analysis extend the existing AI chat so the same chat experience supports both career and financial analysis? → A: Yes; extend the existing chat to support both domains.
+
 ## User Scenarios & Testing
 
 ### User Story 1 - Understand the Application Funnel (Priority: P1)
@@ -46,7 +57,7 @@ As a job seeker, I want to ask follow-up questions about my career analysis so I
 
 **Why this priority**: Career searches contain context that aggregate metrics cannot capture. A conversation lets the user challenge assumptions, add context, and request a narrower analysis.
 
-**Independent Test**: Open a career analysis conversation, ask a follow-up question, and verify that the response uses the same account-scoped career context, clearly labels uncertainty, and remains read-only unless the user separately changes a career record.
+**Independent Test**: Open a career analysis conversation in the existing shared AI analysis chat, ask a follow-up question, and verify that the response uses the same account-scoped career context, clearly labels uncertainty, and remains read-only unless the user separately changes a career record.
 
 **Acceptance Scenarios**:
 
@@ -70,29 +81,31 @@ As a job seeker, I want to ask follow-up questions about my career analysis so I
 
 ### Functional Requirements
 
-- **FR-001**: The system MUST allow an authenticated user to request an on-demand AI analysis from the career section.
-- **FR-002**: The analysis MUST use only career records the user is authorized to access in the current account, including job applications, application events, tasks, meetings, documents/notes, profile information, and recorded status history when available.
+- **FR-001**: The system MUST allow an authenticated user to request an on-demand career analysis from the existing shared AI analysis chat in the career section, MUST support an optional date-range filter, and MUST save the result as a revisitable shared analysis conversation that can also support financial analysis.
+- **FR-002**: The analysis MUST use only career records the user is authorized to access in the current account. Applications, recorded statuses, and timeline events MUST be included by default; tasks, meetings, documents/notes, and profile information MUST be included only when the user explicitly requests or selects them.
 - **FR-003**: The analysis MUST summarize application volume, current stage distribution, progression between stages, measurable response/conversion rates, and elapsed time in stages when sufficient data exists.
 - **FR-004**: The analysis MUST identify potential bottlenecks or stalled stages and provide the supporting observations, assumptions, and limitations for each conclusion.
 - **FR-005**: The system MUST distinguish measured facts, user-provided context, hypotheses, and recommendations in the AI response.
 - **FR-006**: The system MUST provide prioritized, specific next actions connected to the identified pattern, including the intended outcome and a reason for each action.
 - **FR-007**: Recommendations MUST account for both application volume and stage conversion; the system MUST NOT treat “apply more” as the universal remedy.
-- **FR-008**: The system MUST support follow-up questions within a career analysis conversation while preserving the same account scope and relevant analysis context.
-- **FR-009**: The system MUST make career analysis and conversation responses read-only with respect to applications, events, tasks, meetings, documents, and profile records; any change MUST require a separate user action and confirmation where applicable.
+- **FR-008**: The system MUST support follow-up questions within a saved career analysis conversation in the existing shared AI analysis chat while preserving the same account scope and relevant analysis context.
+- **FR-009**: The system MUST make career analysis and conversation responses read-only with respect to applications, events, tasks, meetings, documents, and profile records. Recommendations remain informational; users create or update career tasks and other records manually through separate existing workflows.
 - **FR-010**: The system MUST communicate uncertainty, incomplete tracking, small sample sizes, and competing explanations rather than presenting unsupported causal claims or guaranteed hiring probabilities.
 - **FR-011**: The system MUST provide a useful no-data or low-data response that identifies what is known, what is not measurable, and what information the user can record next.
 - **FR-012**: The system MUST handle unavailable, disabled, rate-limited, or failed AI analysis without changing career records and MUST provide an actionable user-facing error.
 - **FR-013**: The system MUST apply the existing account’s AI access and usage limits consistently with other AI analysis conversations.
 - **FR-014**: The system MUST preserve the analysis conversation and its usage history according to the existing AI conversation data-retention behavior, unless the user explicitly deletes the conversation.
 - **FR-015**: The system MUST protect sensitive career information from cross-account access and MUST not include records outside the requested analysis scope.
+- **FR-016**: The initial analysis MUST present a structured report containing a funnel snapshot, bottleneck findings, supporting evidence, recommendations, limitations, and next steps before offering conversational follow-up.
+- **FR-017**: The existing shared AI analysis chat MUST preserve the selected analysis domain and context for each conversation, and MUST NOT mix financial records into career analysis or career records into financial analysis unless the user explicitly requests a cross-domain analysis.
 
 ### Key Entities
 
-- **Career analysis conversation**: A user-owned conversation containing an analysis scope, generated findings, follow-up questions, and AI responses.
+- **Career analysis conversation**: A user-owned, revisitable conversation in the existing shared AI analysis chat containing a selected analysis domain, analysis scope, generated findings, follow-up questions, and AI responses.
 - **Career analysis context**: The account-scoped snapshot or query result of applications, events, pipeline stages, timing, tasks, meetings, documents/notes, and profile data used to answer a request.
 - **Career pattern finding**: An observed metric, bottleneck, hypothesis, or limitation identified from the analysis context.
 - **Career recommendation**: A prioritized action or measurable experiment tied to a finding, including its rationale and intended outcome.
-- **Job application history**: The application records and dated events that describe the user’s search funnel from discovery through outcome.
+- **Job application history**: All application records and dated events that describe the user’s search funnel from discovery through outcome; the default analysis scope includes all recorded history unless the user applies a date-range filter.
 
 ## Success Criteria
 
@@ -106,13 +119,16 @@ As a job seeker, I want to ask follow-up questions about my career analysis so I
 - **SC-006**: 100% of low-data and incomplete-data test cases disclose the relevant limitation instead of inventing a conversion rate, stage duration, or hiring probability.
 - **SC-007**: Follow-up questions retain the original account scope and analysis context for 100% of tested conversations.
 - **SC-008**: When the AI provider is unavailable or a request limit is reached, users receive an actionable failure message and no career record is modified in 100% of tested cases.
+- **SC-009**: 100% of successful first analyses in acceptance testing contain the required structured sections and clearly separate evidence, hypotheses, recommendations, limitations, and next steps.
 
 ## Assumptions
 
-- Analysis is requested on demand from the career dashboard or a job-application context; automatic recurring analysis is out of scope for this slice.
+- Analysis is requested on demand from the career dashboard or a job-application context; automatic recurring analysis is out of scope for this slice. All recorded application history is included by default, with an optional date-range filter.
 - Existing account authentication, authorization, AI access controls, usage limits, conversation storage, and chat presentation conventions are reused.
-- Existing career statuses and dated events are the primary source of funnel data; the system does not infer unrecorded applications or events.
-- The initial release provides guidance and experiments, not automated job submissions, resume edits, outreach, status changes, or task creation.
+- The existing shared AI analysis chat is the single conversational experience for financial and career analysis; the career feature extends it with career context rather than introducing a separate chat system.
+- Existing applications, statuses, and dated events are the default source of funnel data; profile, notes, documents, tasks, and meetings are optional context selected by the user. The system does not infer unrecorded applications or events.
+- The initial release provides guidance and experiments, not automated job submissions, resume edits, outreach, status changes, or task creation from recommendations.
 - Hiring outcomes remain probabilistic and vary by role, market, candidate fit, and tracking quality; the system is a decision-support tool, not an employment predictor.
 - Mobile and external job-board integrations are out of scope unless separately specified.
 - Users are responsible for reviewing AI feedback and deciding which recommendations to act on.
+- The structured first response is the canonical summary; follow-up messages may be conversational but must retain the same evidence and uncertainty boundaries.
