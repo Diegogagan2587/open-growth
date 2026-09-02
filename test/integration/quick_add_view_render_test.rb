@@ -27,6 +27,27 @@ class QuickAddViewRenderTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "quick add selectors use distinct asset and liability icons" do
+    @account.financial_accounts.create!(
+      name: "Primary Checking",
+      account_type: "checking",
+      status: "active",
+      opening_balance: 0
+    )
+    @account.financial_liabilities.create!(
+      name: "Visa Card",
+      liability_type: "credit_card",
+      status: "active",
+      opening_balance: 0
+    )
+
+    get quick_add_financial_path
+
+    assert_response :success
+    assert_select "select[name='expense[origin]'] option", text: /💰 Primary Checking/, count: 1
+    assert_select "select[name='expense[origin]'] option", text: /💳 Visa Card/, count: 1
+  end
+
   test "quick add menu renders on dashboard" do
     get root_path
     if response.status == 200
