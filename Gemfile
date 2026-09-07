@@ -73,4 +73,4 @@ gem "redcarpet", "~> 3.6"
 gem "mission_control-jobs"
 
 # Ofitial OPen AI Gem
-gem "openai", "~> 0.80.0"
+gem "openai", "~> 0.85.0"
