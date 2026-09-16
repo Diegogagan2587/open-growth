@@ -1,12 +1,14 @@
 class Financial::Plan::Projection
+  AccountBalance = Data.define(:account, :amount)
   Row = Data.define(:transaction, :balance)
 
-  def self.for(plan)
-    new(plan)
+  def self.for(plan, order: nil)
+    new(plan, order:)
   end
 
-  def initialize(plan)
+  def initialize(plan, order: nil)
     @plan = plan
+    @order = order
   end
 
   def expected_funding
