@@ -1,4 +1,4 @@
-class Financial::PlanActuals
+class Financial::Plan::Actuals
   FUNDING_ENTRY_TYPES = %w[inflow loan_disbursement].freeze
 
   def self.for(plan)

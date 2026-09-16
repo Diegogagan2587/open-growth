@@ -1,4 +1,4 @@
-class Financial::PlanProjection
+class Financial::Plan::Projection
   Row = Data.define(:transaction, :balance)
 
   def self.for(plan)
