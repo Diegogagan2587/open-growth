@@ -33,28 +33,28 @@
 - `Financial::Plan::PlannedTransaction`: suggests the record cannot participate outside one plan and creates a rename without fixing behavior.
 - Concerns for every operation: one reorder method does not justify a concern. Extract only if the plan later accumulates a cohesive ordering subsystem.
 
-## 3. Use current balances as the execution basis
+## 3. Use funding-source amounts as the execution basis
 
-**Decision**: Available money is the sum of `current_balance` for distinct asset accounts explicitly selected as plan funding destinations. The UI lists each account contribution and labels current account balances as the basis.
+**Decision**: Available money is the sum of each funding source's effective amount: its actual receipt amount when received, otherwise its expected amount. Financial account current balances are not part of the plan opening calculation.
 
-**Rationale**: The user's execution question is “what money do I have now?” Existing `Financial::Account#current_balance` already reflects actual entries. Expected funding answers a different question and must not be presented as currently available cash.
+**Rationale**: A plan executes a declared group of funding sources. Bank ledger balances can be negative or incomplete because transfers and transactions may not yet be registered, so using them would misstate the plan's available funding. A received source amount is more accurate than its projection, while an unreconciled source still contributes its expected amount.
 
 **Alternatives rejected**:
 
-- Expected funding totals: may include money not received and caused the original mismatch.
+- Current account balances: may include unrelated entries or negative balances caused by incomplete registration.
 - Every active asset account: includes money never selected for this plan.
 - A new plan-account join table: existing funding destinations already express the selection; add a table only if users later need accounts with no funding source.
 
 ## 4. Deduct only pending cash requirements
 
-**Decision**: Pending outflows and liability payments contribute to required money and row deductions. Applied movements remain visible but contribute zero because their actual entries already affect current balances. Transfers between assets and liability charges remain visible but do not consume cash in the aggregate plan total.
+**Decision**: Pending outflows and liability payments contribute to required money. Both pending and applied cash-consuming movements reduce the funding-source opening amount. Transfers between assets and liability charges remain visible but do not consume cash in the aggregate plan total.
 
-**Rationale**: Combining current balances with applied planned deductions double-counts completed payments. The calculation must have one temporal basis.
+**Rationale**: Funding sources establish the plan's opening allocation, so applied cash-consuming movements must be deducted once from that allocation. Bank account balances are deliberately outside this calculation because they may be negative or incomplete.
 
 **Alternatives rejected**:
 
-- Retain expected-funding opening balances: mixes forecasts with execution reality.
-- Deduct all planned rows: double-counts applied rows and treats transfers as spending.
+- Use current account balances: lets unrelated or incompletely registered ledger entries distort the plan.
+- Deduct all planned rows indiscriminately: treats transfers and other non-cash movements as spending.
 - Keep `commits_plan_funds` as the deciding switch: plan membership already expresses that a pending liability payment belongs to this plan; requiring another checkbox hides required money.
 
 ## 5. Keep one persisted custom sequence

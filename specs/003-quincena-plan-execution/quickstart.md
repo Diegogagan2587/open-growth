@@ -48,7 +48,7 @@ bin/brakeman --no-pager
 ## Manual acceptance walkthrough
 
 1. Create or open a plan with a `planned_for` reference date.
-2. Add funding sources that select two destination asset accounts with known current balances.
+2. Add two funding sources with known expected amounts, including a case where a selected account has a negative current balance.
 3. Add pending movements due on different dates, including a liability payment and a transfer.
 4. Apply one movement using a date earlier or later than its due date.
 5. Confirm the plan shows each selected account balance, their exact total, pending required money, remainder or shortfall, routes, and no second deduction for the applied movement.

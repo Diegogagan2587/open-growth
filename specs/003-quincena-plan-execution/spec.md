@@ -19,16 +19,17 @@
 - Q: When switching order, should the running-balance projection recalculate or should only the list display change? → A: Recalculate for the selected order and show the resulting balance beside every planned movement.
 - Q: When applying a planned movement on a different date, should its planned due date remain unchanged while the generated actual transaction uses the selected payment date? → A: Yes. Preserve the planned due date, preselect it as the actual payment date, and allow the user to choose an earlier or later actual date.
 - Q: After a planned movement is applied, what timing information should its plan row show? → A: Show the actual payment date and an Early, On time, or Late badge calculated against the preserved due date.
+- Q: How should a plan calculate its opening available funding? → A: Sum every funding source's expected amount, replacing an individual source's expected amount with its actual received amount when a receipt transaction exists; do not use financial account current balances.
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Know Whether the Plan Is Funded (Priority: P1)
 
-As a user preparing a chosen group of payments, I can immediately compare the money available from the plan's selected funding accounts with the amount still required for that plan, so I know whether I can complete every pending payment or must cover a shortfall.
+As a user preparing a chosen group of payments, I can immediately compare the money available from the plan's funding sources with the amount still required for that plan, so I know whether I can complete every pending payment or must cover a shortfall.
 
 **Why this priority**: The plan fails its primary purpose if the user cannot answer how much money is available and how much is still needed for the period being executed.
 
-**Independent Test**: Open a plan containing selected funding accounts and dated planned payments, then verify that the available amount, pending required amount, expected remainder, and shortfall are visible and reconcile with the underlying amounts.
+**Independent Test**: Open a plan containing funding sources and dated planned payments, then verify that the available amount, pending required amount, expected remainder, and shortfall are visible and reconcile with the underlying amounts.
 
 **Acceptance Scenarios**:
 
@@ -97,7 +98,7 @@ As a user managing several financial plans, I can use the plans overview for glo
 
 ### Edge Cases
 
-- A plan has no selected funding accounts; available funding is shown as zero and the plan identifies that no funding source is configured.
+- A plan has no funding sources; available funding is shown as zero and the plan identifies that no funding source is configured.
 - A plan has no planned payments; required funding and shortfall are zero and the empty state explains that no payments are scheduled.
 - A payment has no amount; it remains visible, is excluded from numeric totals, and makes those totals explicitly incomplete.
 - A payment has no due date; it remains visible after dated payments and is marked as unscheduled.
@@ -106,7 +107,8 @@ As a user managing several financial plans, I can use the plans overview for glo
 - A payment is made before or after its planned due date; the planned due date remains unchanged and the actual transaction records the user-selected payment date.
 - An applied movement has no due date; its actual payment date remains visible, but no early/on-time/late comparison is claimed.
 - Current account balances already include a completed payment; calculations do not count the completed payment twice.
-- Money is available across multiple selected accounts; the total equals the sum of the displayed account-level available amounts.
+- Money is available across multiple funding sources; the total equals the sum of each source's effective amount, using its actual receipt amount when received and expected amount otherwise.
+- A selected funding account has a negative or incomplete current ledger balance; that balance does not change the plan's funding-source total.
 - A plan contains movements with dates far from its planned-for reference date; they remain part of the plan and its totals because plan membership is not date-bound.
 - A manually prioritized payment has a later due date than another payment; the manual execution order is preserved while both due dates remain visible.
 - An applied planned movement is reordered; its linked actual transaction retains its selected actual payment date, amount, identity, and financial effect.
@@ -117,8 +119,8 @@ As a user managing several financial plans, I can use the plans overview for glo
 ### Functional Requirements
 
 - **FR-001**: The system MUST preserve and show the plan's existing `planned_for` reference date.
-- **FR-002**: The system MUST show the money available to the plan from its selected funding accounts.
-- **FR-003**: The system MUST show the account-level amounts that compose the plan's total available funding.
+- **FR-002**: The system MUST show the money available to the plan as the sum of every funding source's effective amount, using its actual received amount when available and its expected amount otherwise.
+- **FR-003**: The system MUST show the funding-source contributions that compose the plan's total available funding.
 - **FR-004**: The system MUST show the total amount still required for pending planned payments belonging to the plan.
 - **FR-005**: The system MUST show the expected remainder when funding covers pending payments and the exact shortfall when it does not.
 - **FR-006**: The system MUST state when available, required, remainder, or shortfall calculations are incomplete because required financial information is missing.
@@ -132,13 +134,13 @@ As a user managing several financial plans, I can use the plans overview for glo
 - **FR-014**: The system MUST preserve the distinction between a planned movement and the actual financial movement that fulfills it.
 - **FR-015**: Marking or recognizing a payment as paid MUST NOT silently replace, rewrite, or erase its original planned amount and due date.
 - **FR-029**: Applied planned movements MUST remain independently reorderable as planned records without changing their linked actual transactions.
-- **FR-016**: Plan calculations MUST avoid double-counting paid movements when the balance basis already reflects their actual financial effect.
+- **FR-016**: Plan calculations MUST deduct each plan movement that consumes cash, including applied movements, from the funding-source opening amount; transfers MUST remain neutral and movements that do not consume cash MUST not be deducted.
 - **FR-017**: Individual-plan totals MUST include only funding and movements belonging to that plan, regardless of their dates.
 - **FR-018**: Portfolio-wide calculations MUST remain distinguishable from calculations for an individual plan.
 - **FR-019**: The plans overview MUST present portfolio-wide information, while an individual plan MUST present its own funding, payment schedule, routing, and execution calculations.
 - **FR-020**: All displayed monetary totals MUST reconcile exactly with the monetary items shown as contributing to those totals.
 - **FR-021**: A user MUST be able to determine the running amount expected to remain after each pending payment in the displayed execution order.
-- **FR-022**: The system MUST clearly identify the balance basis used for the plan's execution calculation so paid movements are interpreted consistently.
+- **FR-022**: The system MUST clearly identify that plan execution starts from funding-source amounts rather than financial account current balances.
 - **FR-023**: A user MUST be able to assign or correct a planned movement's due date, and changing that planned date MUST NOT change an actual movement's date.
 - **FR-024**: The plan MUST include refinancing-related movements in the same execution view when they belong to the plan.
 - **FR-025**: Manual reordering MUST NOT change payment amounts, due dates, statuses, account routes, or total required funding.
@@ -172,10 +174,10 @@ As a user managing several financial plans, I can use the plans overview for glo
 - **SC-001**: A user can identify the plan's available money, pending required money, and expected remainder or shortfall within 30 seconds of opening the plan.
 - **SC-002**: In acceptance testing, 100% of plans without manual prioritization default to ascending due-date order with unscheduled payments afterward, and 100% of manually reordered plans preserve the chosen execution order after reopening.
 - **SC-003**: In acceptance testing, 100% of displayed payments show an amount or explicit missing-amount state, a date or unscheduled state, a status, and their account route or explicit missing-route state.
-- **SC-004**: For every complete plan tested, available funding equals the sum of displayed funding amounts and required funding equals the sum of displayed contributing pending payments, with no rounding discrepancy.
+- **SC-004**: For every complete plan tested, available funding equals the sum of displayed funding-source effective amounts and required funding equals the sum of displayed contributing pending payments, with no rounding discrepancy.
 - **SC-005**: For every underfunded plan tested, the displayed shortfall exactly equals pending required money minus available money.
 - **SC-006**: For every overfunded or exactly funded plan tested, the displayed expected remainder exactly equals available money minus pending required money.
-- **SC-007**: Paid movements whose effects are already present in current balances are never deducted a second time in tested plan projections.
+- **SC-007**: Every tested applied cash-consuming movement is deducted once from the funding-source opening amount, while transfers and other non-cash-consuming movements are not deducted.
 - **SC-008**: A user can identify the source and destination accounts for a complete planned movement without navigating away from the plan.
 - **SC-009**: Missing amounts, dates, or routing information never cause a movement to disappear and are explicitly identifiable in 100% of tested incomplete-plan cases.
 - **SC-010**: Portfolio-wide figures and individual-plan figures are labeled and scoped clearly enough that acceptance-test users do not confuse one for the other.
@@ -191,8 +193,8 @@ As a user managing several financial plans, I can use the plans overview for glo
 ## Assumptions
 
 - The existing `planned_for` property is a reference date, not a planning-period boundary, recurrence rule, or restriction on plan membership.
-- Available funding is derived only from accounts intentionally selected for the plan; unrelated account balances do not contribute to plan-specific totals.
-- The balance basis may use current balances or an explicitly established plan basis, but it must be visible and applied consistently so actual payments are not counted twice.
+- Available funding is derived from the plan's funding sources; financial account balances do not contribute to plan-specific totals.
+- The funding-source basis is visible and applied consistently: each received source uses its actual amount, each unreconciled source uses its expected amount, and each cash-consuming plan movement is deducted once.
 - A payment marked paid remains visible because execution history is necessary to understand the plan.
 - A minimum-payment label describes the meaning of a planned amount; calculating a creditor's minimum payment is outside this feature.
 - Account balances, planned movements, actual movements, and account identities already exist or can be obtained from the application's established financial records.

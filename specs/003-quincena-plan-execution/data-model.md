@@ -63,10 +63,10 @@ Viewing due-date order does not change this state.
 
 **Execution meaning**:
 
-- Distinct `expected_destination_asset` records identify the plan's selected funding accounts.
-- Their current balances, not expected amounts, compose available execution money.
-- A selected liability destination remains visible as funding metadata but contributes no spendable cash.
-- Multiple funding sources selecting the same asset contribute that account balance once.
+- Every funding source contributes independently to the plan's opening execution money.
+- A source contributes its receipt entry amount when received; otherwise it contributes `expected_amount`.
+- Financial account `current_balance` is not used for plan availability, so unrelated or incomplete ledger entries cannot distort the plan.
+- Multiple funding sources selecting the same asset contribute each source amount; they are not deduplicated.
 
 ### Financial::PlannedTransaction
 
@@ -142,20 +142,20 @@ Viewing due-date order does not change this state.
 **Equations**:
 
 ```text
-available = sum(distinct selected funding asset current balances)
+available = sum(funding source actual amount when received, otherwise expected amount)
 required = sum(pending cash-requiring movement amounts)
 remainder = max(available - required, 0)
 shortfall = max(required - available, 0)
 
 running[0] = available
-running[n] = running[n-1] - pending_cash_requirement(row[n])
+running[n] = running[n-1] - cash_consuming_amount(row[n])
 ```
 
-Applied rows have a zero pending cash requirement because their actual entries are already represented in current balances.
+Applied cash-consuming rows deduct once from the funding-source opening amount. Transfers and other non-cash-consuming rows deduct zero.
 
 **Completeness**:
 
-- No selected asset account: available is zero and the projection identifies missing funding-account selection.
+- No funding source: available is zero and the projection identifies missing funding-source selection.
 - Missing amount on any cash-requiring row: required, remainder, shortfall, and affected subsequent row balances are incomplete.
 - Missing route: the row is incomplete; totals remain numeric only when the movement's cash meaning is still unambiguous.
 

@@ -6,7 +6,7 @@
 
 ## Summary
 
-Extend the existing financial-plan implementation so one plan is an unrestricted grouping of funding and planned movements, with `planned_for` retained only as reference information. The plan page will use current balances from the plan's explicitly selected destination asset accounts, subtract only pending cash-requiring movements, show account routes and payment timing, and calculate row balances in either due-date or persisted custom order. Existing tables and planned/actual links remain intact; plan-owned calculations move under `Financial::Plan::*`, collection-wide calculations move to `Financial::Plans::Overview`, and a focused order resource updates positions atomically.
+Extend the existing financial-plan implementation so one plan is an unrestricted grouping of funding and planned movements, with `planned_for` retained only as reference information. The plan page will use effective amounts from each funding source, subtract cash-consuming movements, show account routes and payment timing, and calculate row balances in either due-date or persisted custom order. Existing tables and planned/actual links remain intact; plan-owned calculations move under `Financial::Plan::*`, collection-wide calculations move to `Financial::Plans::Overview`, and a focused order resource updates positions atomically.
 
 ## Technical Context
 
@@ -32,7 +32,7 @@ Extend the existing financial-plan implementation so one plan is an unrestricted
 
 *GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design.*
 
-- **Financial correctness**: PASS. Current account balances are the execution basis, applied movements are not deducted twice, money remains decimal, planned and actual dates remain separate, and reorder writes are transactional.
+- **Financial correctness**: PASS. Funding-source amounts are the execution basis, cash-consuming movements are deducted once, money remains decimal, planned and actual dates remain separate, and reorder writes are transactional.
 - **Rich Rails-native domain model**: PASS. `Financial::Plan` protects ordering, `Financial::Plan::Projection` owns plan calculations, and `Financial::PlannedTransaction` owns timing and route semantics. No mandatory service layer is added.
 - **Resource-oriented interfaces**: PASS. Reordering is represented by a singular nested order resource. Due-date/custom viewing remains a query on `PlansController#show` because it changes no resource state.
 - **Boundary tests**: PASS. Model/domain-object tests cover financial rules; controller tests cover order and sort requests; component/view tests cover visible routes and timing; one system test is reserved for the interactive reorder control if lower-level coverage cannot prove it.
@@ -113,10 +113,10 @@ test/
 ### Slice 1: Correct the execution calculation
 
 1. Move the existing flat plan calculators to Rails-autoloadable plan namespaces and update all callers and tests.
-2. Define selected funding accounts as the distinct asset accounts explicitly selected as plan funding destinations (`funding_sources.expected_destination_asset`). Liability destinations remain visible but do not count as available cash.
-3. Build `Financial::Plan::Projection` from those accounts' `current_balance` values and all movements belonging to the plan, without filtering by date.
-4. Count only pending cash requirements: outflows and liability payments. Applied, cancelled, skipped, liability-charge, and asset-transfer rows remain visible but do not reduce pending required money. This makes current balances and planned deductions use one consistent basis.
-5. Calculate rows in the requested order. Applied rows retain the running balance reached before that row because their actual effect is already in current balances.
+2. Define each funding source's effective amount as its actual receipt amount when received, otherwise its expected amount; sum sources independently even when they select the same asset.
+3. Build `Financial::Plan::Projection` from those funding-source amounts and all movements belonging to the plan, without filtering by date or reading account `current_balance`.
+4. Count pending outflows and liability payments as required money, and deduct both pending and applied cash-consuming movements from the funding-source opening amount. Transfers and non-cash-consuming rows remain visible but do not reduce the plan balance.
+5. Calculate rows in the requested order using the same cash-consuming classification as the aggregate remainder and shortfall.
 6. Make incomplete route or amount data explicit and mark totals incomplete rather than substituting zero. Current validations still prevent new amountless records; the display remains defensive for legacy data.
 
 ### Slice 2: Persist and expose execution priority
