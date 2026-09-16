@@ -15,6 +15,12 @@ class Financial::Plan::Projection
     projected_funding_for(plan)
   end
 
+  def account_balances
+    @account_balances ||= selected_accounts.map do |account|
+      AccountBalance.new(account:, amount: account.current_balance.to_d)
+    end
+  end
+
   def planned_consumption
     plan.planned_expenses.budget_consuming.sum(:amount)
   end
