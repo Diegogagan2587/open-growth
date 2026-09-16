@@ -27,6 +27,14 @@ class Financial::PlannedTransaction < PlannedExpense
     financial_entry&.entry_date
   end
 
+  def payment_timing
+    return if due_date.blank? || actual_payment_date.blank?
+    return :early if actual_payment_date < due_date
+    return :late if actual_payment_date > due_date
+
+    :on_time
+  end
+
   private
 
   def append_to_plan
