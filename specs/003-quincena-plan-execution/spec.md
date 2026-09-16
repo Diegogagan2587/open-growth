@@ -17,6 +17,8 @@
 - Q: Should manual reordering apply only to pending payments or also to already-paid payments? → A: Reordering applies to all planned movements, including applied ones, but never changes or reorders the actual transactions generated from them.
 - Q: After custom ordering exists, where should a newly added planned movement appear? → A: Append it to the end of the custom order, while allowing quick switching between custom and due-date order.
 - Q: When switching order, should the running-balance projection recalculate or should only the list display change? → A: Recalculate for the selected order and show the resulting balance beside every planned movement.
+- Q: When applying a planned movement on a different date, should its planned due date remain unchanged while the generated actual transaction uses the selected payment date? → A: Yes. Preserve the planned due date, preselect it as the actual payment date, and allow the user to choose an earlier or later actual date.
+- Q: After a planned movement is applied, what timing information should its plan row show? → A: Show the actual payment date and an Early, On time, or Late badge calculated against the preserved due date.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -54,10 +56,12 @@ As a user carrying out the plan, I can see all payments in execution order and m
 5. **Given** a planned payment has an incorrect or missing due date, **When** the user assigns or corrects its planned due date, **Then** the payment moves to the corresponding chronological position without changing any actual payment date.
 6. **Given** the plan contains a refinancing-related movement, **When** the user reviews the execution order, **Then** its purpose, amount, date, status, and account route are visible alongside other planned movements.
 7. **Given** the user changes the execution order, **When** running remaining funds are recalculated, **Then** each running amount follows the new order without changing total required funding.
-8. **Given** a planned movement has already been applied to an actual transaction, **When** the user reorders that planned movement, **Then** the planned movement changes position while the actual transaction remains unchanged.
+8. **Given** a planned movement has already been applied to an actual transaction, **When** the user reorders that planned movement, **Then** the planned movement changes position while the actual transaction and its selected payment date remain unchanged.
 9. **Given** the plan has a custom order, **When** a new planned movement is added, **Then** it appears at the end of the custom order without changing existing priorities.
 10. **Given** the plan has a custom order, **When** the user switches to due-date order and back, **Then** the list changes quickly between views and the saved custom order is preserved.
 11. **Given** the user selects custom or due-date order, **When** the planned movements are displayed, **Then** the balance beside each movement shows the money remaining at that point in the selected order.
+12. **Given** a planned movement due on one date, **When** the user applies it, **Then** the actual payment date is preselected from the due date and the user can replace it with an earlier or later date without changing the planned due date.
+13. **Given** an applied planned movement has both a due date and actual payment date, **When** the user reviews the plan, **Then** the row shows the actual date and identifies the payment as Early, On time, or Late.
 
 ---
 
@@ -99,12 +103,13 @@ As a user managing several financial plans, I can use the plans overview for glo
 - A payment has no due date; it remains visible after dated payments and is marked as unscheduled.
 - A source or destination account is missing or no longer available; the movement remains visible and its route is marked incomplete.
 - Two or more payments share a due date; their default ordering remains stable until the user manually changes it.
-- A payment is made outside its planned due date; the planned due date and actual payment state remain distinct.
+- A payment is made before or after its planned due date; the planned due date remains unchanged and the actual transaction records the user-selected payment date.
+- An applied movement has no due date; its actual payment date remains visible, but no early/on-time/late comparison is claimed.
 - Current account balances already include a completed payment; calculations do not count the completed payment twice.
 - Money is available across multiple selected accounts; the total equals the sum of the displayed account-level available amounts.
 - A plan contains movements with dates far from its planned-for reference date; they remain part of the plan and its totals because plan membership is not date-bound.
 - A manually prioritized payment has a later due date than another payment; the manual execution order is preserved while both due dates remain visible.
-- An applied planned movement is reordered; its linked actual transaction retains its original date, amount, identity, and financial effect.
+- An applied planned movement is reordered; its linked actual transaction retains its selected actual payment date, amount, identity, and financial effect.
 - A new movement is added after custom ordering exists; it is appended without reshuffling existing planned movements.
 
 ## Requirements *(mandatory)*
@@ -144,6 +149,11 @@ As a user managing several financial plans, I can use the plans overview for glo
 - **FR-031**: A user MUST be able to switch quickly between persisted custom order and due-date order.
 - **FR-032**: Viewing movements in due-date order MUST NOT erase or rewrite the persisted custom order.
 - **FR-033**: The system MUST recalculate and show the running balance beside every planned movement whenever the user switches between custom and due-date order.
+- **FR-034**: When applying a planned movement, the system MUST preselect its due date as the actual payment date and allow the user to choose an earlier or later actual date.
+- **FR-035**: Applying or reordering a planned movement MUST preserve its planned due date separately from the actual transaction's selected payment date.
+- **FR-036**: Each applied planned movement MUST show its actual payment date in the plan's planned-movements view.
+- **FR-037**: When both dates exist, the system MUST label an applied planned movement Early when its actual payment date precedes its due date, On time when the dates match, and Late when its actual payment date follows its due date.
+- **FR-038**: When an applied planned movement has no due date, the system MUST show its actual payment date without assigning an early/on-time/late status.
 
 ### Key Entities
 
@@ -175,6 +185,8 @@ As a user managing several financial plans, I can use the plans overview for glo
 - **SC-014**: After adding a movement to a custom-ordered plan, 100% of previously ordered movements retain their relative positions and the new movement appears last.
 - **SC-015**: A user can switch between custom and due-date order in one interaction, and repeated switching preserves the custom order exactly.
 - **SC-016**: In both custom and due-date views, 100% of planned movements show the mathematically correct balance remaining at that point in the selected order.
+- **SC-017**: In acceptance testing, payments recorded before, on, and after their due dates preserve the planned due date and store the selected actual payment date exactly.
+- **SC-018**: In acceptance testing, 100% of applied movements with both dates show the actual payment date and the correct Early, On time, or Late label.
 
 ## Assumptions
 
