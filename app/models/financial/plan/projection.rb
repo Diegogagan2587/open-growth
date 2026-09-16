@@ -62,4 +62,14 @@ class Financial::Plan::Projection
 
     candidate.expected_amount.to_d
   end
+
+  def selected_accounts
+    @selected_accounts ||= Financial::FundingSource
+      .where(financial_plan_id: plan.id)
+      .where.not(expected_destination_asset_id: nil)
+      .includes(:expected_destination_asset)
+      .map(&:expected_destination_asset)
+      .uniq(&:id)
+      .sort_by(&:id)
+  end
 end
