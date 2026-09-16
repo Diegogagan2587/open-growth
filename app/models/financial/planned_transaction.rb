@@ -23,6 +23,10 @@ class Financial::PlannedTransaction < PlannedExpense
     execution_status == "pending" && kind.in?(%w[outflow liability_payment])
   end
 
+  def actual_payment_date
+    financial_entry&.entry_date
+  end
+
   private
 
   def append_to_plan
