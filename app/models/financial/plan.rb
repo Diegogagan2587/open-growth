@@ -22,6 +22,12 @@ class Financial::Plan < IncomeEvent
 
   scope :chronological, -> { order(:expected_date, :id) }
 
+  def default_transaction_order
+    custom_ordered? ? :custom : :due_date
+  end
+
+
+
   # Loan terms and routing belong to Financial::Loan. Treating a plan row as a
   # legacy IncomeEvent loan would re-run obsolete validations and callbacks.
   def loan?
