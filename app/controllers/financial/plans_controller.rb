@@ -19,10 +19,11 @@ class Financial::PlansController < ApplicationController
   end
 
   def show
-    @projection = Financial::Plan::Projection.for(@plan)
+    @order = params[:order].to_s.in?(%w[custom due_date]) ? params[:order].to_sym : @plan.default_transaction_order
+    @projection = Financial::Plan::Projection.for(@plan, order: @order)
     @actuals = Financial::Plan::Actuals.for(@plan)
     @funding_sources = @plan.funding_sources.includes(:receipt_entry).order(:expected_date, :id)
-    @planned_transactions = @plan.planned_transactions.by_position.to_a
+    @planned_transactions = @projection.transactions
     applied_transactions = @planned_transactions.reject { |transaction| transaction.execution_status == "pending" }
     ActiveRecord::Associations::Preloader.new(records: applied_transactions, associations: :financial_entry).call if applied_transactions.any?
     @actual_entries = @plan.financial_entries.includes(:category).by_date
