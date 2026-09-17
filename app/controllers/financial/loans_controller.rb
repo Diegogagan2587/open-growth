@@ -3,7 +3,16 @@ class Financial::LoansController < ApplicationController
   before_action :load_collections, only: [ :new, :create, :edit, :update, :show ]
 
   def index
-    @loans = Financial::Loan.for_account(Current.account).includes(:liability).order(created_at: :desc)
+    @loans = Financial::Loan.for_account(Current.account)
+      .left_joins(:installments)
+      .select(
+        "financial_loans.*",
+        "COUNT(financial_loan_installments.id) AS installments_count",
+        "COUNT(CASE WHEN financial_loan_installments.resolution = 'paid' THEN 1 END) AS paid_installments_count"
+      )
+      .group("financial_loans.id")
+      .includes(:liability)
+      .order(created_at: :desc)
   end
 
   def show

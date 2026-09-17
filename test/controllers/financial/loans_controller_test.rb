@@ -35,6 +35,29 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{finance_loan_path(loan)}']", text: /Car simulation/
   end
 
+  test "shows installment payment progress on the loan list" do
+    loan = Financial::Loan.create!(account: @account, name: "Progress loan", principal_amount: 300)
+    3.times do |index|
+      Financial::Loan::Installment.create!(
+        account: @account,
+        financial_loan: loan,
+        installment_number: index + 1,
+        due_date: Date.current + index.months,
+        expected_amount: 100,
+        expected_principal: 100,
+        expected_interest: 0,
+        resolution: index.zero? ? "paid" : "scheduled"
+      )
+    end
+
+    get finance_loans_path
+
+    assert_response :success
+    assert_select "[role='progressbar'][aria-valuenow='1'][aria-valuemax='3'][aria-label='Payment progress for Progress loan']"
+    assert_select "span", text: "1 of 3 payments made"
+    assert_select "span", text: "33%"
+  end
+
   test "creates a simulated loan with an annual interest rate above one thousand percent" do
     assert_difference("Financial::Loan.count", 1) do
       post finance_loans_path, params: {
