@@ -19,4 +19,23 @@ class Financial::Loan::Installment < ApplicationRecord
   def edit_due_date!(date)
     update!(due_date: date.to_date, manual_due_date: true)
   end
+
+  def remove_from_plan
+    with_lock do
+      return true unless planned_transaction
+
+      unless planned_transaction.execution_status == "pending"
+        errors.add(:planned_transaction, "must be pending to remove it from the plan")
+        return false
+      end
+
+      transaction = planned_transaction
+      update!(planned_transaction: nil)
+      transaction.destroy!
+    end
+    true
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotDestroyed => error
+    errors.add(:planned_transaction, error.message)
+    false
+  end
 end
