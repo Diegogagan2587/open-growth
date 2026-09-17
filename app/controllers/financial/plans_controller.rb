@@ -126,6 +126,6 @@ class Financial::PlansController < ApplicationController
     @assets = Financial::Asset.for_account(Current.account).active.order(:name)
     @liabilities = Financial::Liability.for_account(Current.account).active.order(:name)
     @categories = Category.for_account(Current.account).order(:name)
-    @other_plans = Financial::Plan.for_account(Current.account).where.not(id: @plan.id).chronological
+    @other_plans = Financial::Plan.for_account(Current.account).where(lifecycle_status: %w[draft active]).where.not(id: @plan.id).chronological
   end
 end
