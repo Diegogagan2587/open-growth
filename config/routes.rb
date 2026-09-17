@@ -49,6 +49,7 @@ Rails.application.routes.draw do
       resources :planned_transactions, controller: "/financial/planned_transactions", only: [ :index, :create, :update, :destroy ]
       resources :funding_sources, controller: "/financial/funding_sources", only: [ :create, :update, :destroy ] do
         member { post :receive }
+        resource :plan_assignment, only: :update, controller: "/financial/funding_sources/plan_assignments"
       end
     end
     resources :planned_transactions, controller: "/financial/planned_transactions", only: :index do

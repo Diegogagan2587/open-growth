@@ -36,7 +36,7 @@
   </header>
 
   <%= render "metrics", projection: @projection, actuals: @actuals %>
-  <%= render "funding_sources", plan: @plan, projection: @projection, funding_sources: @funding_sources, assets: @assets, liabilities: @liabilities %>
+  <%= render "funding_sources", plan: @plan, projection: @projection, funding_sources: @funding_sources, assets: @assets, liabilities: @liabilities, other_plans: @other_plans %>
   <%= render "planned_transactions", plan: @plan, planned_transactions: @planned_transactions, projection: @projection, order: @order, assets: @assets, liabilities: @liabilities, categories: @categories, other_plans: @other_plans %>
   <%= render "actual_entries", plan: @plan, actual_entries: @actual_entries %>
 </section>
