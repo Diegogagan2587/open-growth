@@ -18,7 +18,7 @@ cat specs/003-quincena-plan-execution/contracts/http.md
 ## Validation sequence
 
 1. Verify the migration and plan ordering domain tests.
-2. Verify current-balance, pending-only projection tests.
+2. Verify funding-source effective amounts, pending requirements, and applied cash-consumption projection tests.
 3. Verify order and sort request tests.
 4. Verify route, payment-note, actual-date, and timing presentation.
 5. Verify overview calculations remain separate from plan calculations.
@@ -51,7 +51,7 @@ bin/brakeman --no-pager
 2. Add two funding sources with known expected amounts, including a case where a selected account has a negative current balance.
 3. Add pending movements due on different dates, including a liability payment and a transfer.
 4. Apply one movement using a date earlier or later than its due date.
-5. Confirm the plan shows each selected account balance, their exact total, pending required money, remainder or shortfall, routes, and no second deduction for the applied movement.
+5. Confirm the plan shows each funding-source contribution, their exact total, pending required money, remainder or shortfall, routes, and one deduction for the applied cash-consuming movement.
 6. Confirm the applied row retains its due date and shows the actual date with the correct Early, On time, or Late badge.
 7. Switch between due-date and custom order and confirm every row balance changes with the displayed sequence while totals do not.
 8. Reorder pending and applied rows, reload, and confirm the custom order persists while the linked actual entry is unchanged.
@@ -61,8 +61,8 @@ bin/brakeman --no-pager
 ## Expected invariants
 
 - Plan membership never depends on movement or funding dates.
-- Current available money equals the sum of displayed selected-account balances.
+- Current available money equals the sum of displayed funding-source effective amounts.
 - Pending required money equals displayed pending cash-requiring movements.
-- Applied actual effects are not deducted twice.
+- Applied cash-consuming effects are deducted once from funding-source opening money.
 - Reordering changes only plan positions and the custom-order flag.
 - Actual entry dates always remain user-selected ledger facts.

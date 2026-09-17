@@ -35,7 +35,7 @@ As a user preparing a chosen group of payments, I can immediately compare the mo
 
 1. **Given** a plan whose available funding exceeds its pending payments, **When** the user opens the plan, **Then** the plan shows the available amount, required amount, and non-negative expected remainder.
 2. **Given** a plan whose pending payments exceed its available funding, **When** the user opens the plan, **Then** the plan shows the exact shortfall without presenting the plan as fully funded.
-3. **Given** a plan containing an already-paid movement, **When** current account balances already reflect that payment, **Then** the plan does not deduct the payment a second time from the money available.
+3. **Given** a plan containing an already-paid cash-consuming movement, **When** the plan projection is calculated, **Then** the movement is deducted exactly once from the funding-source opening amount.
 4. **Given** a planned payment without a known amount, **When** the user opens the plan, **Then** the payment is marked incomplete and the plan states that its required-total calculation is incomplete rather than treating the amount as zero.
 
 ---
@@ -78,7 +78,7 @@ As a user executing each payment, I can see where the money must come from and w
 
 1. **Given** a planned movement with a source and destination account, **When** the user reviews the movement, **Then** both accounts and the direction of movement are visible.
 2. **Given** a planned movement with missing routing information, **When** the user reviews the plan, **Then** the movement is marked incomplete and the missing side of the route is identified.
-3. **Given** several funding accounts are selected for a plan, **When** the user reviews available funding, **Then** the contribution or available amount associated with each selected account is visible.
+3. **Given** several funding sources belong to a plan, **When** the user reviews available funding, **Then** each source's effective contribution is visible.
 
 ---
 
@@ -106,7 +106,7 @@ As a user managing several financial plans, I can use the plans overview for glo
 - Two or more payments share a due date; their default ordering remains stable until the user manually changes it.
 - A payment is made before or after its planned due date; the planned due date remains unchanged and the actual transaction records the user-selected payment date.
 - An applied movement has no due date; its actual payment date remains visible, but no early/on-time/late comparison is claimed.
-- Current account balances already include a completed payment; calculations do not count the completed payment twice.
+- A completed cash-consuming movement belongs to the plan; calculations deduct it once from funding-source opening money and do not consult account current balances.
 - Money is available across multiple funding sources; the total equals the sum of each source's effective amount, using its actual receipt amount when received and expected amount otherwise.
 - A selected funding account has a negative or incomplete current ledger balance; that balance does not change the plan's funding-source total.
 - A plan contains movements with dates far from its planned-for reference date; they remain part of the plan and its totals because plan membership is not date-bound.

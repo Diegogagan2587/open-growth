@@ -131,7 +131,7 @@ Viewing due-date order does not change this state.
 
 **Outputs**:
 
-- selected account balances
+- funding-source contributions
 - available money
 - pending required money
 - expected remainder
