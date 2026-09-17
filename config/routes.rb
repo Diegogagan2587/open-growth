@@ -66,7 +66,6 @@ Rails.application.routes.draw do
       end
       member do
         post :activate
-        post "installments/:installment_id/plan", action: :plan_installment, as: :plan_installment
       end
     end
     resources :categories, controller: "/financial/categories"

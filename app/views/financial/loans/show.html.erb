@@ -96,7 +96,7 @@
                     <% end %>
                   </div>
                 <% elsif @loan.lifecycle_status == "active" %>
-                  <%= form_with url: plan_installment_finance_loan_path(@loan, installment_id: installment.id), method: :post, class: "flex min-w-80 items-end gap-2" do %>
+                  <%= form_with url: finance_loan_installment_plan_path(@loan, installment), method: :post, class: "flex min-w-80 items-end gap-2" do %>
                     <%= render Ui::SelectComponent.new(name: "plan_id", options: @plans.map { |plan| [ plan.name, plan.id ] }, include_blank: "Plan", required: true) %>
                     <%= render Ui::SelectComponent.new(name: "financial_account_id", options: @assets.map { |asset| [ asset.name, asset.id ] }, include_blank: "Pay from", required: true) %>
                     <%= render Ui::ButtonComponent.new(label: "Plan", type: "submit", size: :sm) %>

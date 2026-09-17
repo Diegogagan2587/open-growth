@@ -1,5 +1,5 @@
 class Financial::LoansController < ApplicationController
-  before_action :set_loan, only: [ :show, :edit, :update, :destroy, :activate, :plan_installment ]
+  before_action :set_loan, only: [ :show, :edit, :update, :destroy, :activate ]
   before_action :load_collections, only: [ :new, :create, :edit, :update, :show ]
 
   def index
@@ -52,14 +52,6 @@ class Financial::LoansController < ApplicationController
     plan = Financial::Plan.for_account(Current.account).find(params[:plan_id])
     result = Financial::Loans::ActivateService.call(loan: @loan, plan: plan)
     redirect_to finance_loan_path(@loan), notice: ("Loan activated and disbursed" if result.success?), alert: (result.error_message unless result.success?)
-  end
-
-  def plan_installment
-    installment = @loan.installments.find(params[:installment_id])
-    plan = Financial::Plan.for_account(Current.account).find(params[:plan_id])
-    source_account = Financial::Asset.for_account(Current.account).active.find(params[:financial_account_id])
-    result = Financial::Loans::PlanInstallmentService.call(installment: installment, plan: plan, source_account: source_account)
-    redirect_to finance_loan_path(@loan), notice: ("Installment added to plan" if result.success?), alert: (result.error_message unless result.success?)
   end
 
   private
