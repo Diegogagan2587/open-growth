@@ -33,29 +33,31 @@
 - `Financial::Plan::PlannedTransaction`: suggests the record cannot participate outside one plan and creates a rename without fixing behavior.
 - Concerns for every operation: one reorder method does not justify a concern. Extract only if the plan later accumulates a cohesive ordering subsystem.
 
-## 3. Use funding-source amounts as the execution basis
+## 3. Keep planned and actual funding separate
 
-**Decision**: Available money is the sum of each funding source's effective amount: its actual receipt amount when received, otherwise its expected amount. Financial account current balances are not part of the plan opening calculation.
+**Decision**: Planned Funding is the sum of every funding source's expected amount. Actual Funding is the sum of recorded funding receipt entries. Financial account current balances are not part of either calculation.
 
-**Rationale**: A plan executes a declared group of funding sources. Bank ledger balances can be negative or incomplete because transfers and transactions may not yet be registered, so using them would misstate the plan's available funding. A received source amount is more accurate than its projection, while an unreconciled source still contributes its expected amount.
+**Rationale**: The restored Planned/Actual summary should compare intention with execution instead of blending them. Bank ledger balances can include unrelated or incompletely registered activity, so they do not represent either the plan's expected funding or its recorded receipts.
 
 **Alternatives rejected**:
 
+- Replace expected funding with receipts as they arrive: obscures the original plan and duplicates Actual Funding.
 - Current account balances: may include unrelated entries or negative balances caused by incomplete registration.
 - Every active asset account: includes money never selected for this plan.
 - A new plan-account join table: existing funding destinations already express the selection; add a table only if users later need accounts with no funding source.
 
-## 4. Deduct only pending cash requirements
+## 4. Keep planned and actual consumption separate
 
-**Decision**: Pending outflows and liability payments contribute to required money. Both pending and applied cash-consuming movements reduce the funding-source opening amount. Transfers between assets and liability charges remain visible but do not consume cash in the aggregate plan total.
+**Decision**: Planned Consumption includes every cash-consuming planned movement, including applied movements. Actual Consumption includes only actual expense entries produced by applied movements. Transfers between assets and liability charges remain visible but neutral in both balances.
 
-**Rationale**: Funding sources establish the plan's opening allocation, so applied cash-consuming movements must be deducted once from that allocation. Bank account balances are deliberately outside this calculation because they may be negative or incomplete.
+**Rationale**: The Planned row preserves the complete intended plan while the Actual row reports what has happened. Each side counts its own records exactly once, so applying a movement does not erase its planned meaning or double-count one record in the same row.
 
 **Alternatives rejected**:
 
-- Use current account balances: lets unrelated or incompletely registered ledger entries distort the plan.
-- Deduct all planned rows indiscriminately: treats transfers and other non-cash movements as spending.
-- Keep `commits_plan_funds` as the deciding switch: plan membership already expresses that a pending liability payment belongs to this plan; requiring another checkbox hides required money.
+- Pending-only Planned Consumption: turns the Planned row into a changing remainder and loses the original plan total.
+- Add actual entries into Planned Consumption: mixes planned and actual facts.
+- Deduct all movement kinds indiscriminately: treats transfers and other non-cash movements as spending.
+- Keep `commits_plan_funds` as the deciding switch: plan membership already expresses that a liability payment belongs to this plan; requiring another checkbox would make Planned Consumption depend on hidden secondary state.
 
 ## 5. Keep one persisted custom sequence
 
@@ -104,14 +106,15 @@
 - Use `applied_on` as the only actual date: the financial entry is the ledger source of truth.
 - Add a timing-status column: early/on-time/late is derived and would become stale.
 
-## 9. Use existing UI and native browser behavior
+## 9. Restore the existing summary and use compact native controls
 
-**Decision**: Reuse project buttons, badges, inputs, and selects. Provide up/down controls that work with keyboard and forms; optionally enhance the same controls with a small native drag-and-drop Stimulus controller.
+**Decision**: Restore the two-row "Projection and plan execution" summary with Funding, Consumption, and Plan balance columns. Reuse project buttons, badges, inputs, and selects. Keep native drag-and-drop and use icon-sized up/down buttons with inline SVGs and movement-specific accessible labels.
 
-**Rationale**: No sortable dependency is installed, and accessibility cannot depend on dragging.
+**Rationale**: The previous summary is familiar and already matches the planned-versus-actual distinction. The canonical button component already has an icon size, the application already uses inline SVG, no sortable dependency is installed, and accessibility cannot depend on dragging.
 
 **Alternatives rejected**:
 
+- New metric-card summary: consumes more attention and replaces familiar labels without adding behavior.
 - Add SortableJS: unnecessary for a small ordered list.
 - Drag-only UI: excludes keyboard and assistive-technology users.
 - A new shared component before a second use exists: speculative abstraction.
@@ -126,3 +129,27 @@
 
 - Keep carryover inside each plan projection: conflicts with the plan's unrestricted membership and obscures current cash.
 - Put sums directly in the controller/view: financial arithmetic belongs at a testable domain boundary.
+
+## 11. Keep route corrections on the planned record
+
+**Decision**: Add source and destination selectors to the existing planned-movement edit flow. A correction changes only the planned movement, even after application; the linked actual entry remains untouched. Existing amount and due-date protections remain in place.
+
+**Rationale**: The plan route is an expectation and the entry route is a ledger fact. Correcting the former must not silently rewrite the latter. The existing selection writers and validations already encode account-type routing, so no new route model or endpoint is needed.
+
+**Alternatives rejected**:
+
+- A separate route resource: one existing edit flow already owns planned expectation corrections.
+- Editing the actual entry at the same time: violates the planned/actual boundary and can rewrite history unexpectedly.
+- A new polymorphic route model: duplicates existing foreign keys and selection behavior.
+
+## 12. Keep funding destinations on their source items
+
+**Decision**: Show the selected destination account as a badge on each existing funding-source item and remove the separate funding-account summary block.
+
+**Rationale**: A funding source has a destination but no independent origin account. Showing that destination beside the source preserves context with the smallest UI change and avoids repeating the same data in a new section.
+
+**Alternatives rejected**:
+
+- Add an origin-account field: the domain has no requirement for one.
+- Keep a separate destination summary: duplicates information and consumes page space.
+- Show no destination: forces the user to open the edit form to verify where funding goes.

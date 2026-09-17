@@ -124,17 +124,17 @@ description: "Dependency-ordered tasks for financial plan execution"
 
 ### Tests for User Story 4
 
-- [ ] T032 [P] [US4] Replace preceding-plan carryover expectations with failing plan-local actual-entry tests in `test/models/financial/plan/actuals_test.rb`
-- [ ] T033 [P] [US4] Add failing filtered plan-count, expected-funding, pending-requirement, and net-position tests in `test/models/financial/plans/overview_test.rb`
-- [ ] T034 [P] [US4] Add failing overview-versus-plan labeling, filtering, and planned-for ordering assertions in `test/controllers/financial/plans_controller_test.rb`
+- [X] T032 [P] [US4] Replace preceding-plan carryover expectations with failing plan-local actual-entry tests in `test/models/financial/plan/actuals_test.rb`
+- [X] T033 [P] [US4] Add failing filtered plan-count, expected-funding, pending-requirement, and net-position tests in `test/models/financial/plans/overview_test.rb`
+- [X] T034 [P] [US4] Add failing overview-versus-plan labeling, filtering, and planned-for ordering assertions in `test/controllers/financial/plans_controller_test.rb`
 
 ### Implementation for User Story 4
 
-- [ ] T035 [US4] Remove preceding-plan carryover and keep actual calculations plan-local in `app/models/financial/plan/actuals.rb`
-- [ ] T036 [US4] Implement collection forecast totals for an account-scoped plans relation in `app/models/financial/plans/overview.rb`
-- [ ] T037 [US4] Load overview calculations after applying month/status filters in `app/controllers/financial/plans_controller.rb`
-- [ ] T038 [US4] Add clearly labeled portfolio forecast metrics while preserving planned-for display ordering in `app/views/financial/plans/index.html.erb`
-- [ ] T039 [US4] Run the focused User Story 4 tests in `test/models/financial/plan/actuals_test.rb`, `test/models/financial/plans/overview_test.rb`, and `test/controllers/financial/plans_controller_test.rb`
+- [X] T035 [US4] Remove preceding-plan carryover and keep actual calculations plan-local in `app/models/financial/plan/actuals.rb`
+- [X] T036 [US4] Implement collection forecast totals for an account-scoped plans relation in `app/models/financial/plans/overview.rb`
+- [X] T037 [US4] Load overview calculations after applying month/status filters in `app/controllers/financial/plans_controller.rb`
+- [X] T038 [US4] Add clearly labeled portfolio forecast metrics while preserving planned-for display ordering in `app/views/financial/plans/index.html.erb`
+- [X] T039 [US4] Run the focused User Story 4 tests in `test/models/financial/plan/actuals_test.rb`, `test/models/financial/plans/overview_test.rb`, and `test/controllers/financial/plans_controller_test.rb`
 
 **Checkpoint**: Overview forecasts and individual-plan execution figures are independently correct and cannot be mistaken for each other.
 
@@ -146,7 +146,7 @@ description: "Dependency-ordered tasks for financial plan execution"
 
 - [ ] T040 Execute the manual acceptance walkthrough and record any specification correction in `specs/003-quincena-plan-execution/quickstart.md`
 - [ ] T041 Run `bin/rails test`, `npm run herb:lint`, and `bin/rubocop` against the implementation paths listed in `specs/003-quincena-plan-execution/plan.md`
-- [ ] T042 Run `bin/brakeman --no-pager` and verify account-scoped financial lookups against `specs/003-quincena-plan-execution/contracts/http.md`
+- [X] T042 Run `bin/brakeman --no-pager` and verify account-scoped financial lookups against `specs/003-quincena-plan-execution/contracts/http.md`
 
 ---
 
@@ -257,7 +257,7 @@ Task T034: Overview presentation tests in test/controllers/financial/plans_contr
 
 ## Phase 8: Convergence
 
-- [ ] T043 [US4] Implement the account-scoped `Financial::Plans::Overview`, load it after month/status filtering, and render clearly labeled portfolio totals in `app/models/financial/plans/overview.rb`, `app/controllers/financial/plans_controller.rb`, and `app/views/financial/plans/index.html.erb` per US4/AC1-3 and FR-018/019 (missing)
-- [ ] T044 [US4] Remove preceding-plan carryover from `Financial::Plan::Actuals#opening_balance` and complete the plan-local actuals boundary tests in `app/models/financial/plan/actuals.rb` and `test/models/financial/plan/actuals_test.rb` per FR-017 and plan Slice 4.1 (contradicts)
-- [ ] T045 [US1] Reconcile projection/controller test coverage and visible balance-basis assertions with funding-source effective amounts, actual-receipt precedence, applied cash deductions, and immunity to negative account balances in `test/models/financial/plan/projection_test.rb` and `test/controllers/financial/plans_controller_test.rb` per FR-002/003/016/022 and SC-004/007 (partial)
+- [X] T043 [US4] Implement the account-scoped `Financial::Plans::Overview`, load it after month/status filtering, and render clearly labeled portfolio totals in `app/models/financial/plans/overview.rb`, `app/controllers/financial/plans_controller.rb`, and `app/views/financial/plans/index.html.erb` per US4/AC1-3 and FR-018/019 (missing)
+- [X] T044 [US4] Remove preceding-plan carryover from `Financial::Plan::Actuals#opening_balance` and complete the plan-local actuals boundary tests in `app/models/financial/plan/actuals.rb` and `test/models/financial/plan/actuals_test.rb` per FR-017 and plan Slice 4.1 (contradicts)
+- [X] T045 [US1] Reconcile projection/controller test coverage and visible balance-basis assertions with funding-source effective amounts, actual-receipt precedence, applied cash deductions, and immunity to negative account balances in `test/models/financial/plan/projection_test.rb` and `test/controllers/financial/plans_controller_test.rb` per FR-002/003/016/022 and SC-004/007 (partial)
 - [ ] T046 Run the remaining User Story 4 tests, full Rails suite, Herb lint, RuboCop, Brakeman, and the manual acceptance walkthrough; record only verified corrections in `specs/003-quincena-plan-execution/quickstart.md` per Constitution IV and plan Verification Strategy (partial)

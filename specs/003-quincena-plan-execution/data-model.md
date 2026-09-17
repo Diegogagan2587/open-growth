@@ -63,10 +63,11 @@ Viewing due-date order does not change this state.
 
 **Execution meaning**:
 
-- Every funding source contributes independently to the plan's opening execution money.
-- A source contributes its receipt entry amount when received; otherwise it contributes `expected_amount`.
-- Financial account `current_balance` is not used for plan availability, so unrelated or incomplete ledger entries cannot distort the plan.
-- Multiple funding sources selecting the same asset contribute each source amount; they are not deduplicated.
+- Every funding source contributes its `expected_amount` independently to Planned Funding.
+- A source contributes its receipt entry amount to Actual Funding only when that receipt exists.
+- Financial account `current_balance` is not used for either total, so unrelated or incomplete ledger entries cannot distort the plan.
+- Multiple funding sources selecting the same destination contribute independently; they are not deduplicated.
+- The source's selected destination asset or liability is displayed on that source item; no origin account is inferred or persisted.
 
 ### Financial::PlannedTransaction
 
@@ -89,11 +90,11 @@ Viewing due-date order does not change this state.
 
 - `position` is custom priority only; it is not due-date order.
 - Due-date order is `due_date ASC NULLS LAST`, with stable tie-breaking by `position`, then `id`.
-- Pending outflows and liability payments require cash.
-- Applied, cancelled, and skipped rows remain visible but do not contribute to pending required money.
-- Transfers and liability charges remain visible but do not reduce aggregate available cash.
+- Outflows and liability payments consume planned cash regardless of whether they are pending or applied.
+- Transfers and liability charges remain visible but do not reduce Planned Consumption.
 - `notes` communicates limited obligations such as “minimum payment.”
-- The planned due date remains editable only under existing expectation-edit rules and is immutable after application under current historical protections.
+- Source and destination selections remain editable as corrections to the planned record; after application, changing them does not change the linked actual entry.
+- Planned amount and due date remain immutable after application under existing historical protections.
 - Timing is derived from the linked actual entry:
   - actual date before due date → `early`
   - dates equal → `on_time`
@@ -116,6 +117,7 @@ Viewing due-date order does not change this state.
 
 - The entry remains the actual ledger source of truth.
 - Reordering a planned transaction changes no entry field.
+- Correcting a planned transaction's route changes no entry field.
 - Applying defaults `entry_date` from the planned transaction's `due_date`, then `planned_for`, then today; a supplied user date wins.
 
 ## Derived Domain Objects
@@ -131,32 +133,30 @@ Viewing due-date order does not change this state.
 
 **Outputs**:
 
-- funding-source contributions
-- available money
-- pending required money
-- expected remainder
-- shortfall
+- expected funding-source contributions
+- Planned Funding
+- Planned Consumption
+- Planned Plan balance
 - completeness state and reasons
-- ordered rows containing the planned transaction, its cash effect, and running remaining money
+- ordered rows containing the planned transaction, its planned cash effect, and running planned balance
 
 **Equations**:
 
 ```text
-available = sum(funding source actual amount when received, otherwise expected amount)
-required = sum(pending cash-requiring movement amounts)
-remainder = max(available - required, 0)
-shortfall = max(required - available, 0)
+planned_funding = sum(funding source expected amounts)
+planned_consumption = sum(cash-consuming planned movement amounts)
+planned_balance = planned_funding - planned_consumption
 
-running[0] = available
-running[n] = running[n-1] - cash_consuming_amount(row[n])
+running[0] = planned_funding
+running[n] = running[n-1] - planned_cash_consuming_amount(row[n])
 ```
 
-Applied cash-consuming rows deduct once from the funding-source opening amount. Transfers and other non-cash-consuming rows deduct zero.
+Pending and applied cash-consuming rows deduct their planned amount once. Transfers and other non-cash-consuming rows deduct zero. A negative running or final balance remains negative.
 
 **Completeness**:
 
-- No funding source: available is zero and the projection identifies missing funding-source selection.
-- Missing amount on any cash-requiring row: required, remainder, shortfall, and affected subsequent row balances are incomplete.
+- No funding source: Planned Funding is zero and the projection identifies missing funding-source selection.
+- Missing amount on any cash-consuming row: Planned Consumption, Planned Plan balance, and affected subsequent row balances are incomplete.
 - Missing route: the row is incomplete; totals remain numeric only when the movement's cash meaning is still unambiguous.
 
 ### Financial::Plan::Actuals
@@ -165,9 +165,13 @@ Applied cash-consuming rows deduct once from the funding-source opening amount. 
 
 **Input**: one `Financial::Plan`
 
-**Outputs**: actual funding and consumption from entries linked to that plan only.
+**Outputs**:
 
-**Change**: preceding-plan carryover is removed from the individual plan calculation.
+- Actual Funding from `funding_entries`
+- Actual Consumption from the plan's actual expense entries
+- Actual Plan balance as Actual Funding minus Actual Consumption
+
+**Change**: preceding-plan carryover is removed from the individual plan calculation. Actual values never replace Planned values.
 
 ### Financial::Plans::Overview
 

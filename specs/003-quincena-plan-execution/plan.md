@@ -6,7 +6,7 @@
 
 ## Summary
 
-Extend the existing financial-plan implementation so one plan is an unrestricted grouping of funding and planned movements, with `planned_for` retained only as reference information. The plan page will use effective amounts from each funding source, subtract cash-consuming movements, show account routes and payment timing, and calculate row balances in either due-date or persisted custom order. Existing tables and planned/actual links remain intact; plan-owned calculations move under `Financial::Plan::*`, collection-wide calculations move to `Financial::Plans::Overview`, and a focused order resource updates positions atomically.
+Extend the existing financial-plan implementation so one plan is an unrestricted grouping of funding and planned movements, with `planned_for` retained only as reference information. Restore the compact "Projection and plan execution" summary with Planned and Actual rows: planned values use expected funding and every cash-consuming planned movement, while actual values use recorded funding receipts and applied movements' actual entries. Keep routes, payment timing, and running planned balances visible in due-date or persisted custom order. Preserve existing tables and planned/actual links; keep plan-owned calculations under `Financial::Plan::*`, collection-wide calculations in `Financial::Plans::Overview`, and atomic priority updates in the focused order resource.
 
 ## Technical Context
 
@@ -32,11 +32,11 @@ Extend the existing financial-plan implementation so one plan is an unrestricted
 
 *GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design.*
 
-- **Financial correctness**: PASS. Funding-source amounts are the execution basis, cash-consuming movements are deducted once, money remains decimal, planned and actual dates remain separate, and reorder writes are transactional.
+- **Financial correctness**: PASS. Expected and received funding remain separate, planned and actual consumption are counted once at their respective boundaries, money remains decimal, planned and actual dates/routes remain distinct, and reorder writes are transactional.
 - **Rich Rails-native domain model**: PASS. `Financial::Plan` protects ordering, `Financial::Plan::Projection` owns plan calculations, and `Financial::PlannedTransaction` owns timing and route semantics. No mandatory service layer is added.
 - **Resource-oriented interfaces**: PASS. Reordering is represented by a singular nested order resource. Due-date/custom viewing remains a query on `PlansController#show` because it changes no resource state.
 - **Boundary tests**: PASS. Model/domain-object tests cover financial rules; controller tests cover order and sort requests; component/view tests cover visible routes and timing; one system test is reserved for the interactive reorder control if lower-level coverage cannot prove it.
-- **Accessible component UI**: PASS. Existing button, badge, input, and select components are reused. Reordering includes keyboard-operable move controls; drag-and-drop, if retained as an enhancement, is never the only mechanism.
+- **Accessible component UI**: PASS. Existing button, badge, input, and select components are reused. Compact icon buttons retain movement-specific accessible labels, and drag-and-drop remains an enhancement rather than the only reorder mechanism.
 - **Rails-native evolutionary design**: PASS. Existing records, relations, current-balance behavior, position column, unique index, Turbo, and Stimulus are reused. No repository layer, event bus, new framework, or sortable package is introduced.
 - **Data safety and authorization**: PASS. Every plan and movement lookup remains scoped through `Current.account`; order payloads must exactly match the plan's movement IDs before positions change.
 
@@ -61,6 +61,8 @@ specs/003-quincena-plan-execution/
 
 ```text
 app/
+├── components/ui/
+│   └── button_component.rb
 ├── controllers/financial/
 │   ├── plans_controller.rb
 │   └── plans/
@@ -91,6 +93,8 @@ db/
     └── *_add_custom_ordered_to_income_events.rb
 
 test/
+├── components/ui/
+│   └── button_component_test.rb
 ├── controllers/financial/
 │   ├── plans_controller_test.rb
 │   └── plans/planned_transaction_orders_controller_test.rb
@@ -113,11 +117,11 @@ test/
 ### Slice 1: Correct the execution calculation
 
 1. Move the existing flat plan calculators to Rails-autoloadable plan namespaces and update all callers and tests.
-2. Define each funding source's effective amount as its actual receipt amount when received, otherwise its expected amount; sum sources independently even when they select the same asset.
-3. Build `Financial::Plan::Projection` from those funding-source amounts and all movements belonging to the plan, without filtering by date or reading account `current_balance`.
-4. Count pending outflows and liability payments as required money, and deduct both pending and applied cash-consuming movements from the funding-source opening amount. Transfers and non-cash-consuming rows remain visible but do not reduce the plan balance.
-5. Calculate rows in the requested order using the same cash-consuming classification as the aggregate remainder and shortfall.
-6. Make incomplete route or amount data explicit and mark totals incomplete rather than substituting zero. Current validations still prevent new amountless records; the display remains defensive for legacy data.
+2. Define Planned Funding as the sum of funding sources' expected amounts and Actual Funding as the sum of their recorded receipt entries. Never read account `current_balance` for either value.
+3. Define Planned Consumption as every cash-consuming planned movement amount, including applied movements, and Actual Consumption as the corresponding actual expense entries. Transfers and non-cash-consuming movements remain visible but neutral.
+4. Calculate each Plan balance directly as Funding minus Consumption and preserve negative values instead of converting them into a separate remainder or shortfall label.
+5. Calculate running rows from Planned Funding, deducting each cash-consuming planned amount once in the requested order so custom and due-date views produce their own sequence without changing totals.
+6. Make incomplete route or amount data explicit and mark affected Planned values incomplete rather than substituting zero. Current validations still prevent new amountless records; the display remains defensive for legacy data.
 
 ### Slice 2: Persist and expose execution priority
 
@@ -125,29 +129,32 @@ test/
 2. Add `Financial::Plan#reorder_planned_transactions!`. Validate that the submitted IDs are unique and exactly equal the plan's movement IDs, lock the plan, assign temporary negative positions, then assign final positive positions and set `custom_ordered` in one transaction.
 3. Add a singular nested planned-transaction-order resource with only `update`. It loads the plan through `Current.account`, invokes the plan method, and redirects back to custom order.
 4. Default to due-date order while `custom_ordered` is false. Once reordered, default to custom order. `?order=due_date` and `?order=custom` switch the view without changing positions or the flag.
-5. Reuse the existing append callback so new movements are appended to the saved custom sequence. Add accessible up/down controls; a small Stimulus controller may enhance them with native drag-and-drop and submit the same full ordered-ID contract, without adding a package.
+5. Reuse the existing append callback so new movements are appended to the saved custom sequence. Keep native drag-and-drop and replace full-text move controls with the existing icon-sized button style, inline arrow SVGs, and movement-specific accessible labels. Add only the minimal `aria_label` support to the canonical button component if needed.
 
 ### Slice 3: Expose routes, dates, and timing
 
-1. Render each movement's existing `routing_summary`, with explicit missing-source or missing-destination text when the route is incomplete.
+1. Render each movement's existing route information, with explicit missing-source or missing-destination text when the route is incomplete.
 2. Expose the existing `notes` field as an optional payment note for meanings such as “minimum payment”; do not add a one-use classification column.
 3. Change the apply form and apply service default date precedence to `due_date`, then `planned_for`, then `Date.current`; continue accepting an earlier or later user-selected date.
 4. Add planned-transaction timing behavior that compares the preserved due date with the linked entry's actual date and returns early, on-time, late, or no comparison.
 5. Show planned due date, actual date, execution status, and timing badge independently. Reordering never writes to `financial_entries`.
+6. Add source and destination selectors to the existing planned-movement edit flow. Route corrections update only the planned record, including after application, and never rewrite the linked actual entry; amount and due-date historical protections remain unchanged.
 
 ### Slice 4: Separate overview and plan presentation
 
-1. Make `Financial::Plan::Actuals` plan-local by removing preceding-plan carryover from the individual page.
+1. Make `Financial::Plan::Actuals` plan-local by removing preceding-plan carryover and calculating Actual Funding from funding receipts and Actual Consumption from this plan's applied entries.
 2. Move collection-wide expected funding, planned requirements, and net position to `Financial::Plans::Overview`, calculated for the plans relation currently shown on the index and clearly labeled as overview figures.
-3. Keep `PlansController#show` as one page request with partials. The sections do not yet have independent loading, authorization, or lifecycle needs, so Turbo Frames with `src` and additional controllers would add no value.
-4. Keep `planned_for` visible and retain chronological overview ordering, but remove any implication that it limits plan membership or calculations.
+3. Restore the existing two-row summary under "Projection and plan execution" with Funding, Consumption, and Plan balance columns; do not replace it with metric cards.
+4. Remove the added funding-account summary block. Add one compact destination badge to each existing funding-source item so routing context stays where the source is already displayed.
+5. Keep `PlansController#show` as one page request with partials. The sections do not yet have independent loading, authorization, or lifecycle needs, so Turbo Frames with `src` and additional controllers would add no value.
+6. Keep `planned_for` visible and retain chronological overview ordering, but remove any implication that it limits plan membership or calculations.
 
 ## Verification Strategy
 
 1. Write focused failing tests before each domain change.
 2. Run namespace/calculation tests: `bin/rails test test/models/financial/plan test/models/financial/plans/overview_test.rb`.
 3. Run ordering and request tests: `bin/rails test test/models/financial/plan_test.rb test/controllers/financial/plans`.
-4. Run application-date and component tests: `bin/rails test test/services/financial/planned_transactions/apply_service_test.rb test/components/financial/installment_payment_form_component_test.rb`.
+4. Run route, application-date, and component tests: `bin/rails test test/models/financial/planned_transaction_test.rb test/services/financial/planned_transactions/apply_service_test.rb test/components/financial/installment_payment_form_component_test.rb test/components/ui/button_component_test.rb`.
 5. Run the focused system test only if Stimulus behavior cannot be fully covered at lower boundaries.
 6. Run the full suite: `bin/rails test`.
 7. Run `npm run herb:lint` for modified ERB, `bin/rubocop` for Ruby, and `bin/brakeman --no-pager` because financial ownership boundaries are affected.

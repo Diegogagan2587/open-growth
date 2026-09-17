@@ -25,7 +25,12 @@ GET /finance/plans/:id?order=custom
 
 - `200 OK` HTML.
 - Shows the selected order control state.
-- Recalculates every running-balance row in the selected order.
+- Shows "Projection and plan execution" with Planned and Actual rows and Funding, Consumption, and Plan balance columns.
+- Planned Funding uses expected source amounts; Actual Funding uses recorded receipts.
+- Planned Consumption uses every cash-consuming planned movement; Actual Consumption uses actual expense entries.
+- Recalculates every running planned-balance row in the selected order.
+- Shows each funding destination on its existing source item rather than in a separate account-summary section.
+- Provides drag-and-drop plus compact up/down icon buttons with movement-specific accessible labels.
 - Does not write positions or actual entries.
 
 ## Replace a plan's custom movement order
@@ -63,6 +68,36 @@ The request sends the complete intended order, including applied movements.
 
 - Persist no partial order.
 - Redirect with `303 See Other` to the plan's current view and an actionable alert.
+
+## Correct a planned movement route
+
+The existing planned-movement update endpoint remains the edit boundary:
+
+```http
+PATCH /finance/plans/:plan_id/planned_transactions/:id
+```
+
+### Relevant form body
+
+```text
+planned_transaction[source_selection]=asset:12
+planned_transaction[destination_selection]=liability:9
+```
+
+The fields shown depend on the movement kind: an expense needs a source, a transfer needs source and asset destination, a liability payment needs source and liability destination, and a liability charge needs its liability source.
+
+### Authorization and validation
+
+- Load both plan and movement through `Current.account` and require the movement to belong to the plan.
+- Reuse existing account ownership and route-shape validations.
+- Reject invalid or incomplete combinations with an actionable alert and no partial update.
+
+### Behavior
+
+- Update only the planned movement's route fields.
+- Permit route correction after application while keeping planned amount and due date protections unchanged.
+- Never mutate the linked actual entry's source, destination, amount, date, or identity.
+- Redirect with `303 See Other` to the plan.
 
 ## Apply a planned movement with an actual date
 
