@@ -19,10 +19,6 @@ class Financial::PlannedTransaction < PlannedExpense
 
   scope :unassigned, -> { where(income_event_id: nil) }
 
-  def pending_cash_requirement?
-    execution_status == "pending" && kind.in?(%w[outflow liability_payment])
-  end
-
   def actual_payment_date
     financial_entry&.entry_date
   end
