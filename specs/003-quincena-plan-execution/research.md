@@ -48,16 +48,17 @@
 
 ## 4. Keep planned and actual consumption separate
 
-**Decision**: Planned Consumption includes every cash-consuming planned movement, including applied movements. Actual Consumption includes only actual expense entries produced by applied movements. Transfers between assets and liability charges remain visible but neutral in both balances.
+**Decision**: Planned Consumption includes every expense plus every normally neutral movement whose existing plan-funds commitment is enabled, including applied planned movements. Transfers, liability payments, and other neutral movements contribute zero unless reserved. Actual Consumption includes only actual expense entries and does not use the planning-only reservation choice.
 
-**Rationale**: The Planned row preserves the complete intended plan while the Actual row reports what has happened. Each side counts its own records exactly once, so applying a movement does not erase its planned meaning or double-count one record in the same row.
+**Rationale**: The Planned row preserves the user's allocation decision while the Actual row reports accounting facts. A transfer or liability payment may or may not make funds unavailable for later plan uses, so the existing explicit choice is more accurate than a hard-coded movement-kind assumption.
 
 **Alternatives rejected**:
 
+- Treat every liability payment or transfer as consumption: cannot represent a reusable credit line or an internal transfer whose money remains available.
+- Treat every neutral movement as available: cannot represent credit-card payoff or money set aside for a purpose.
 - Pending-only Planned Consumption: turns the Planned row into a changing remainder and loses the original plan total.
 - Add actual entries into Planned Consumption: mixes planned and actual facts.
 - Deduct all movement kinds indiscriminately: treats transfers and other non-cash movements as spending.
-- Keep `commits_plan_funds` as the deciding switch: plan membership already expresses that a liability payment belongs to this plan; requiring another checkbox would make Planned Consumption depend on hidden secondary state.
 
 ## 5. Keep one persisted custom sequence
 
@@ -121,7 +122,7 @@
 
 ## 10. Keep overview calculations separate
 
-**Decision**: `Financial::Plans::Overview` owns totals for the filtered plans collection; `Financial::Plan::Projection` and `Financial::Plan::Actuals` use only one plan's records.
+**Decision**: `Financial::Plans::Overview` owns totals for the filtered plans collection and uses the same planned-funds predicate as `Financial::Plan::Projection`; `Financial::Plan::Projection` and `Financial::Plan::Actuals` use only one plan's records.
 
 **Rationale**: The existing preceding-plan carryover makes a plan page look date-bounded and mixes portfolio chronology into one execution decision. A collection calculation is meaningful on the overview and should be labeled there.
 
@@ -153,3 +154,16 @@
 - Add an origin-account field: the domain has no requirement for one.
 - Keep a separate destination summary: duplicates information and consumes page space.
 - Show no destination: forces the user to open the edit form to verify where funding goes.
+
+## 13. Reuse the existing plan-funds commitment as Reserve funds
+
+**Decision**: Keep the persisted `commits_plan_funds` boolean and present it as "Reserve funds." Expenses reduce Planned balance automatically. Transfers, liability payments, and other normally neutral movements reduce it only when this value is enabled. The value stays editable for pending and applied movements while the plan is `draft` or `active`, and enabled rows show a "Funds reserved" badge.
+
+**Rationale**: The state, controller handling, and lifecycle validation already exist. Reusing them is the smallest safe change and preserves current data. Renaming only the user-facing concept makes its purpose clearer without a migration. One domain predicate can drive summary totals, running balances, overview totals, and badges consistently.
+
+**Alternatives rejected**:
+
+- Rename the database column: presentation wording does not justify data migration risk.
+- Add a separate reservation model: the choice has no independent identity or lifecycle.
+- Add an `apartado` movement type: reservation is an effect the user may choose for several movement types, not a distinct accounting movement.
+- Infer reservation from destination accounts: the same account can hold reusable or intentionally unavailable money in different plans.

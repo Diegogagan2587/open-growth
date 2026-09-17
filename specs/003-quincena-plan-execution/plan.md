@@ -6,7 +6,7 @@
 
 ## Summary
 
-Extend the existing financial-plan implementation so one plan is an unrestricted grouping of funding and planned movements, with `planned_for` retained only as reference information. Restore the compact "Projection and plan execution" summary with Planned and Actual rows: planned values use expected funding and every cash-consuming planned movement, while actual values use recorded funding receipts and applied movements' actual entries. Keep routes, payment timing, and running planned balances visible in due-date or persisted custom order. Preserve existing tables and planned/actual links; keep plan-owned calculations under `Financial::Plan::*`, collection-wide calculations in `Financial::Plans::Overview`, and atomic priority updates in the focused order resource.
+Extend the existing financial-plan implementation so one plan is an unrestricted grouping of funding and planned movements, with `planned_for` retained only as reference information. Restore the compact "Projection and plan execution" summary with Planned and Actual rows: planned values use expected funding, expenses, and neutral movements explicitly marked Reserve funds, while actual values use recorded funding receipts and applied movements' actual entries. Keep routes, reservation state, payment timing, and running planned balances visible in due-date or persisted custom order. Preserve existing tables and planned/actual links; reuse the existing `commits_plan_funds` field behind the clearer Reserve funds label, keep plan-owned calculations under `Financial::Plan::*`, collection-wide calculations in `Financial::Plans::Overview`, and atomic priority updates in the focused order resource.
 
 ## Technical Context
 
@@ -32,7 +32,7 @@ Extend the existing financial-plan implementation so one plan is an unrestricted
 
 *GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design.*
 
-- **Financial correctness**: PASS. Expected and received funding remain separate, planned and actual consumption are counted once at their respective boundaries, money remains decimal, planned and actual dates/routes remain distinct, and reorder writes are transactional.
+- **Financial correctness**: PASS. Expected and received funding remain separate, one domain predicate determines whether a planned movement consumes or reserves plan funds, actual accounting remains independent, money remains decimal, planned and actual dates/routes remain distinct, and reorder writes are transactional.
 - **Rich Rails-native domain model**: PASS. `Financial::Plan` protects ordering, `Financial::Plan::Projection` owns plan calculations, and `Financial::PlannedTransaction` owns timing and route semantics. No mandatory service layer is added.
 - **Resource-oriented interfaces**: PASS. Reordering is represented by a singular nested order resource. Due-date/custom viewing remains a query on `PlansController#show` because it changes no resource state.
 - **Boundary tests**: PASS. Model/domain-object tests cover financial rules; controller tests cover order and sort requests; component/view tests cover visible routes and timing; one system test is reserved for the interactive reorder control if lower-level coverage cannot prove it.
@@ -67,14 +67,16 @@ app/
 │   ├── plans_controller.rb
 │   └── plans/
 │       └── planned_transaction_orders_controller.rb
-├── models/financial/
-│   ├── plan.rb
-│   ├── planned_transaction.rb
-│   ├── plan/
-│   │   ├── actuals.rb
-│   │   └── projection.rb
-│   └── plans/
-│       └── overview.rb
+├── models/
+│   ├── planned_expense.rb
+│   └── financial/
+│       ├── plan.rb
+│       ├── planned_transaction.rb
+│       ├── plan/
+│       │   ├── actuals.rb
+│       │   └── projection.rb
+│       └── plans/
+│           └── overview.rb
 ├── components/financial/
 │   └── installment_payment_form_component.rb
 ├── javascript/controllers/
@@ -98,12 +100,14 @@ test/
 ├── controllers/financial/
 │   ├── plans_controller_test.rb
 │   └── plans/planned_transaction_orders_controller_test.rb
-├── models/financial/
-│   ├── plan_test.rb
-│   ├── planned_transaction_test.rb
-│   ├── plan/projection_test.rb
-│   ├── plan/actuals_test.rb
-│   └── plans/overview_test.rb
+├── models/
+│   ├── planned_expense_test.rb
+│   └── financial/
+│       ├── plan_test.rb
+│       ├── planned_transaction_test.rb
+│       ├── plan/projection_test.rb
+│       ├── plan/actuals_test.rb
+│       └── plans/overview_test.rb
 ├── components/financial/
 │   └── installment_payment_form_component_test.rb
 └── system/
@@ -118,9 +122,9 @@ test/
 
 1. Move the existing flat plan calculators to Rails-autoloadable plan namespaces and update all callers and tests.
 2. Define Planned Funding as the sum of funding sources' expected amounts and Actual Funding as the sum of their recorded receipt entries. Never read account `current_balance` for either value.
-3. Define Planned Consumption as every cash-consuming planned movement amount, including applied movements, and Actual Consumption as the corresponding actual expense entries. Transfers and non-cash-consuming movements remain visible but neutral.
+3. Define Planned Consumption through one movement predicate: expenses reduce the plan automatically; transfers, liability payments, and other normally neutral movements reduce it only when the existing `commits_plan_funds` value is enabled. Applied planned movements keep the same planned treatment. Actual Consumption continues to follow actual entry accounting and ignores this planning-only choice.
 4. Calculate each Plan balance directly as Funding minus Consumption and preserve negative values instead of converting them into a separate remainder or shortfall label.
-5. Calculate running rows from Planned Funding, deducting each cash-consuming planned amount once in the requested order so custom and due-date views produce their own sequence without changing totals.
+5. Calculate running rows from Planned Funding, deducting each movement for which the same plan-balance predicate is true once in the requested order so custom and due-date views produce their own sequence without changing totals.
 6. Make incomplete route or amount data explicit and mark affected Planned values incomplete rather than substituting zero. Current validations still prevent new amountless records; the display remains defensive for legacy data.
 
 ### Slice 2: Persist and expose execution priority
@@ -139,11 +143,12 @@ test/
 4. Add planned-transaction timing behavior that compares the preserved due date with the linked entry's actual date and returns early, on-time, late, or no comparison.
 5. Show planned due date, actual date, execution status, and timing badge independently. Reordering never writes to `financial_entries`.
 6. Add source and destination selectors to the existing planned-movement edit flow. Route corrections update only the planned record, including after application, and never rewrite the linked actual entry; amount and due-date historical protections remain unchanged.
+7. Preserve `commits_plan_funds` as persisted state but present it as "Reserve funds." Offer it for normally neutral movements, keep it editable for pending and applied movements while the plan remains editable (`draft` or `active`), block changes on `closed` or `cancelled` plans through existing lifecycle validation, and show a "Funds reserved" badge on enabled rows.
 
 ### Slice 4: Separate overview and plan presentation
 
 1. Make `Financial::Plan::Actuals` plan-local by removing preceding-plan carryover and calculating Actual Funding from funding receipts and Actual Consumption from this plan's applied entries.
-2. Move collection-wide expected funding, planned requirements, and net position to `Financial::Plans::Overview`, calculated for the plans relation currently shown on the index and clearly labeled as overview figures.
+2. Move collection-wide expected funding, Planned Consumption, and net position to `Financial::Plans::Overview`, calculated for the plans relation currently shown on the index and using the same plan-balance predicate as individual plans.
 3. Restore the existing two-row summary under "Projection and plan execution" with Funding, Consumption, and Plan balance columns; do not replace it with metric cards.
 4. Remove the added funding-account summary block. Add one compact destination badge to each existing funding-source item so routing context stays where the source is already displayed.
 5. Keep `PlansController#show` as one page request with partials. The sections do not yet have independent loading, authorization, or lifecycle needs, so Turbo Frames with `src` and additional controllers would add no value.
@@ -154,7 +159,7 @@ test/
 1. Write focused failing tests before each domain change.
 2. Run namespace/calculation tests: `bin/rails test test/models/financial/plan test/models/financial/plans/overview_test.rb`.
 3. Run ordering and request tests: `bin/rails test test/models/financial/plan_test.rb test/controllers/financial/plans`.
-4. Run route, application-date, and component tests: `bin/rails test test/models/financial/planned_transaction_test.rb test/services/financial/planned_transactions/apply_service_test.rb test/components/financial/installment_payment_form_component_test.rb test/components/ui/button_component_test.rb`.
+4. Run reservation, route, application-date, and component tests: `bin/rails test test/models/planned_expense_test.rb test/models/financial/planned_transaction_test.rb test/services/financial/planned_transactions/apply_service_test.rb test/components/financial/installment_payment_form_component_test.rb test/components/ui/button_component_test.rb`.
 5. Run the focused system test only if Stimulus behavior cannot be fully covered at lower boundaries.
 6. Run the full suite: `bin/rails test`.
 7. Run `npm run herb:lint` for modified ERB, `bin/rubocop` for Ruby, and `bin/brakeman --no-pager` because financial ownership boundaries are affected.
@@ -165,3 +170,4 @@ test/
 - Do not nest `Financial::PlannedTransaction` or `Financial::FundingSource` under `Financial::Plan`; both are persisted concepts with existing cross-workflow relationships, not private implementation details of the calculator.
 - Do not refactor existing close, cancel, move, receive, or apply custom actions unless a task must touch them for this feature. Their resource-oriented cleanup belongs in separate living specifications.
 - Do not add external-bank transfers, refinance recommendations, recurrence, date-range enforcement, or a generic ordering framework.
+- Do not rename the persisted `commits_plan_funds` column solely for presentation wording; "Reserve funds" is the user-facing label for that existing state.

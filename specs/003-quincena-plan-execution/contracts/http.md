@@ -27,9 +27,10 @@ GET /finance/plans/:id?order=custom
 - Shows the selected order control state.
 - Shows "Projection and plan execution" with Planned and Actual rows and Funding, Consumption, and Plan balance columns.
 - Planned Funding uses expected source amounts; Actual Funding uses recorded receipts.
-- Planned Consumption uses every cash-consuming planned movement; Actual Consumption uses actual expense entries.
+- Planned Consumption uses expenses plus normally neutral movements with Reserve funds enabled; Actual Consumption uses actual expense entries.
 - Recalculates every running planned-balance row in the selected order.
 - Shows each funding destination on its existing source item rather than in a separate account-summary section.
+- Shows a "Funds reserved" badge on every movement with Reserve funds enabled.
 - Provides drag-and-drop plus compact up/down icon buttons with movement-specific accessible labels.
 - Does not write positions or actual entries.
 
@@ -61,7 +62,7 @@ The request sends the complete intended order, including applied movements.
 
 - Atomically replace positions with contiguous values beginning at 1.
 - Set `custom_ordered=true`.
-- Change no amount, due date, status, route, planned/actual link, or actual entry field.
+- Change no amount, due date, status, route, Reserve funds value, planned/actual link, or actual entry field.
 - Redirect with `303 See Other` to `/finance/plans/:plan_id?order=custom` and a success notice.
 
 ### Failure
@@ -122,6 +123,36 @@ planned_transaction[entry_date]=2026-09-15
 - The planned movement retains its due date and custom position.
 - Reapplying never creates a second entry.
 
+## Update Reserve funds
+
+The existing planned-movement update endpoint also owns this planning choice:
+
+```http
+PATCH /finance/plans/:plan_id/planned_transactions/:id
+```
+
+### Relevant form body
+
+```text
+planned_transaction[commits_plan_funds]=1
+```
+
+The persisted field remains `commits_plan_funds`; the form label is "Reserve funds."
+
+### Authorization and validation
+
+- Load the account-scoped plan and movement and require their association.
+- Accept the change for pending and applied movements while the plan is `draft` or `active`.
+- Reject changes for closed or cancelled plans.
+
+### Behavior
+
+- Expenses reduce Planned balance automatically without this option.
+- A normally neutral movement reduces Planned Consumption and running Planned balances when enabled and contributes zero when disabled.
+- The response shows "Funds reserved" on enabled movement rows.
+- Changing the value never mutates the linked actual entry or Actual Consumption.
+- Redirect with `303 See Other` to the plan with a success notice or actionable alert.
+
 ## Plans overview
 
 ```http
@@ -134,5 +165,5 @@ GET /finance/plans?month=2026-09&status=active
 - `200 OK` HTML.
 - Plans remain ordered by their `planned_for` reference date.
 - Overview totals apply to the account-scoped, filtered plans shown.
-- Labels identify overview expected funding, pending requirements, and expected net as forecast figures, not one plan's current available money.
+- Labels identify overview expected funding, Planned Consumption, and expected net as forecast figures, not one plan's Planned/Actual summary.
 - Filters do not alter plan membership or exclude movements inside a displayed plan.

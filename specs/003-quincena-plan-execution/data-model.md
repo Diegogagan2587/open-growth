@@ -84,14 +84,18 @@ Viewing due-date order does not change this state.
 - `kind`
 - `description`
 - `notes`
+- `commits_plan_funds`, presented as Reserve funds
 - route foreign keys
 
 **Rules**:
 
 - `position` is custom priority only; it is not due-date order.
 - Due-date order is `due_date ASC NULLS LAST`, with stable tie-breaking by `position`, then `id`.
-- Outflows and liability payments consume planned cash regardless of whether they are pending or applied.
-- Transfers and liability charges remain visible but do not reduce Planned Consumption.
+- Expenses consume planned funds automatically whether pending or applied.
+- Transfers, liability payments, and other normally neutral movements reduce Planned Consumption only when Reserve funds is enabled.
+- Reserve funds remains editable for pending and applied movements while the plan is `draft` or `active`, but not after the plan is `closed` or `cancelled`.
+- Changing Reserve funds never changes the linked actual entry or Actual Consumption.
+- Enabled rows display a "Funds reserved" badge.
 - `notes` communicates limited obligations such as “minimum payment.”
 - Source and destination selections remain editable as corrections to the planned record; after application, changing them does not change the linked actual entry.
 - Planned amount and due date remain immutable after application under existing historical protections.
@@ -100,6 +104,19 @@ Viewing due-date order does not change this state.
   - dates equal → `on_time`
   - actual date after due date → `late`
   - either date absent → no comparison
+
+**Reserve funds state transition**:
+
+```text
+reserved=false
+    -- enable on active plan --> reserved=true
+
+reserved=true
+    -- disable on active plan --> reserved=false
+
+closed or cancelled plan
+    -- any attempted change --> rejected
+```
 
 ### Financial::Entry
 
@@ -144,19 +161,19 @@ Viewing due-date order does not change this state.
 
 ```text
 planned_funding = sum(funding source expected amounts)
-planned_consumption = sum(cash-consuming planned movement amounts)
+planned_consumption = sum(planned movement amounts where reduces_plan_balance is true)
 planned_balance = planned_funding - planned_consumption
 
 running[0] = planned_funding
-running[n] = running[n-1] - planned_cash_consuming_amount(row[n])
+running[n] = running[n-1] - planned_amount(row[n]) when reduces_plan_balance is true
 ```
 
-Pending and applied cash-consuming rows deduct their planned amount once. Transfers and other non-cash-consuming rows deduct zero. A negative running or final balance remains negative.
+`reduces_plan_balance` is true for expenses and for any movement with Reserve funds enabled. Pending and applied qualifying rows deduct their planned amount once. Unreserved transfers, liability payments, and other neutral rows deduct zero. A negative running or final balance remains negative.
 
 **Completeness**:
 
 - No funding source: Planned Funding is zero and the projection identifies missing funding-source selection.
-- Missing amount on any cash-consuming row: Planned Consumption, Planned Plan balance, and affected subsequent row balances are incomplete.
+- Missing amount on any row that reduces Planned balance: Planned Consumption, Planned Plan balance, and affected subsequent row balances are incomplete.
 - Missing route: the row is incomplete; totals remain numeric only when the movement's cash meaning is still unambiguous.
 
 ### Financial::Plan::Actuals
@@ -183,7 +200,7 @@ Pending and applied cash-consuming rows deduct their planned amount once. Transf
 
 - plan count
 - expected funding across shown plans
-- pending cash requirements across shown plans
+- Planned Consumption across shown plans using the same Reserve funds rule
 - expected net position across shown plans
 
 These are forecast/portfolio figures, labeled separately from current-money execution figures on a plan page.
@@ -201,7 +218,7 @@ To preserve the existing unique `(income_event_id, position)` index:
 
 ## Migration Impact
 
-- Add one reversible boolean column to `income_events`.
-- Existing rows receive `false`, so their first display uses derived due-date order.
+- Add one reversible `custom_ordered` boolean column to `income_events`; existing plan rows receive `false` so their first display uses derived due-date order.
+- Reuse the existing `planned_expenses.commits_plan_funds` boolean; no reservation migration or backfill is required.
 - Existing positions and all financial records remain unchanged.
 - No table rename, backfill query, or destructive migration is required.
