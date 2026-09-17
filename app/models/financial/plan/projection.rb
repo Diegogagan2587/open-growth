@@ -78,4 +78,8 @@ class Financial::Plan::Projection
       .uniq(&:id)
       .sort_by(&:id)
   end
+
+  def funding_sources
+    @funding_sources ||= plan.funding_sources.includes(:receipt_entry, :expected_destination_asset).to_a
+  end
 end
