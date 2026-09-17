@@ -124,7 +124,7 @@ class PlannedExpense < ApplicationRecord
   end
 
   def planned_values_are_immutable_after_execution
-    immutable_fields = %w[amount description category_id due_date financial_account_id counterparty_financial_account_id financial_liability_id income_event_id]
+    immutable_fields = %w[amount description category_id due_date income_event_id]
     return if (changes.keys & immutable_fields).empty?
     return if financial_entry.blank?
 
@@ -190,6 +190,7 @@ class PlannedExpense < ApplicationRecord
   def assign_source_selection(value)
     return clear_source_selection if value.blank?
 
+    self.kind = nil
     kind, id = value.split(":", 2)
     case kind
     when "asset"
@@ -204,12 +205,15 @@ class PlannedExpense < ApplicationRecord
   def assign_destination_selection(value)
     return clear_destination_selection if value.blank?
 
+    self.kind = nil
     kind, id = value.split(":", 2)
     case kind
     when "asset"
       self.counterparty_financial_account_id = id
+      self.financial_liability_id = nil if financial_account.present?
     when "liability"
       self.financial_liability_id = id
+      self.counterparty_financial_account_id = nil
     end
   end
 
