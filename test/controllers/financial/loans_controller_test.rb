@@ -223,6 +223,28 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /Different payment: \$350\.00 at the beginning position/
   end
 
+  test "activates and disburses a loan without requiring a financial plan" do
+    liability = Financial::Liability.create!(account: @account, name: "Unplanned request loan", liability_type: "personal_credit", status: "active", opening_balance: 0)
+    asset = Financial::Asset.create!(account: @account, name: "Unplanned request checking", account_type: "checking", status: "active", opening_balance: 0)
+    loan = Financial::Loan.create!(account: @account, name: "Urgent borrowing", principal_amount: 900, liability: liability, destination_asset: asset)
+
+    get finance_loan_path(loan)
+
+    assert_response :success
+    assert_select "select[name='plan_id']:not([required])"
+    assert_select "option[value='']", text: "No plan — plan payments later"
+
+    assert_difference("Financial::Entry.where(entry_type: 'loan_disbursement').count", 1) do
+      post activate_finance_loan_path(loan)
+    end
+
+    assert_redirected_to finance_loan_path(loan)
+    assert_equal "Loan activated and disbursed", flash[:notice]
+    assert_equal "active", loan.reload.lifecycle_status
+    assert_nil loan.entries.last.income_event
+    assert_equal 900.to_d, asset.current_balance
+  end
+
   test "records a categorized installment payment through the nested payment resource" do
     interest_category = Category.create!(account: @account, name: "Loan interest request")
     liability = Financial::Liability.create!(account: @account, name: "Request loan", liability_type: "personal_credit", status: "active", opening_balance: 2_000)

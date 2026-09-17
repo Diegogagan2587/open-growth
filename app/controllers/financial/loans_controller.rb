@@ -49,7 +49,7 @@ class Financial::LoansController < ApplicationController
   end
 
   def activate
-    plan = Financial::Plan.for_account(Current.account).find(params[:plan_id])
+    plan = Financial::Plan.for_account(Current.account).find(params[:plan_id]) if params[:plan_id].present?
     result = Financial::Loans::ActivateService.call(loan: @loan, plan: plan)
     redirect_to finance_loan_path(@loan), notice: ("Loan activated and disbursed" if result.success?), alert: (result.error_message unless result.success?)
   end

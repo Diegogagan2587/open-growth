@@ -61,6 +61,30 @@ class Financial::LoanTest < ActiveSupport::TestCase
     Current.account = nil
   end
 
+  test "activation without a plan disburses directly and remains idempotent" do
+    account = Account.create!(name: "Unplanned loan tenant")
+    Current.account = account
+    liability = Financial::Liability.create!(account: account, name: "Emergency loan", liability_type: "personal_credit", status: "active", opening_balance: 0)
+    asset = Financial::Asset.create!(account: account, name: "Emergency cash", account_type: "checking", status: "active", opening_balance: 0)
+    loan = Financial::Loan.create!(account: account, name: "Unexpected loan", principal_amount: 750, liability: liability, destination_asset: asset)
+
+    first = Financial::Loans::ActivateService.call(loan: loan)
+    second = Financial::Loans::ActivateService.call(loan: loan.reload)
+
+    assert first.success?
+    assert second.success?
+    assert_equal first.entry, second.entry
+    assert_equal "active", loan.reload.lifecycle_status
+    assert_equal 1, loan.entries.where(entry_type: "loan_disbursement").count
+    assert_nil first.entry.income_event
+    assert_nil first.entry.funding_source
+    assert_equal Date.current, first.entry.entry_date
+    assert_equal 750.to_d, asset.current_balance
+    assert_equal 750.to_d, liability.current_balance
+  ensure
+    Current.account = nil
+  end
+
   test "owns schedule regeneration and preserves manual dates" do
     account = Account.create!(name: "Regeneration domain tenant")
     loan = Financial::Loan.create!(
