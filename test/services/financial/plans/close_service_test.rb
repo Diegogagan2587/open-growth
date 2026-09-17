@@ -6,7 +6,8 @@ class Financial::Plans::CloseServiceTest < ActiveSupport::TestCase
     Current.account = account
     asset = Financial::Asset.create!(account: account, name: "Checking", account_type: "checking", status: "active", opening_balance: 0)
     plan = Financial::Plan.create!(account: account, name: "July", planned_for: Date.current, expected_amount: 1)
-    Financial::Entry.create!(account: account, income_event: plan, financial_account: asset, entry_type: "inflow", entry_date: Date.current, amount: 80, description: "Actual income")
+    source = plan.funding_sources.create!(account: account, description: "Actual income", expected_amount: 100, expected_date: Date.current, expected_destination_asset: asset)
+    Financial::Entry.create!(account: account, funding_source: source, financial_account: asset, entry_type: "inflow", entry_date: Date.current, amount: 80, description: "Actual income")
 
     result = Financial::Plans::CloseService.call(plan: plan)
 

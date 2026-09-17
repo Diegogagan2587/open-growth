@@ -195,7 +195,7 @@ class PlannedExpenseTest < ActiveSupport::TestCase
     assert_equal 100.to_d, @budget_period.total_planned
   end
 
-  test "only an explicitly committed liability payment reduces the plan balance" do
+  test "expenses and explicitly reserved neutral movements reduce the plan balance" do
     payment = PlannedExpense.create!(
       income_event: @income_event,
       description: "Close credit card",
@@ -219,14 +219,8 @@ class PlannedExpenseTest < ActiveSupport::TestCase
       counterparty_financial_account: @destination_account,
       commits_plan_funds: true
     )
-    # for now we only allow liability payments to commit plan funds
-    # this is a business rule that may change in the future
-    # in future we may allow transfers to commit plan funds,
-    # but not avaible since we haven't thought on
-    # how to get it back/uncommit the money if planning
-    # to spent it on the future.
-    assert_not transfer.valid?
-    assert_includes transfer.errors[:commits_plan_funds], "is only available for liability payments"
+    assert transfer.valid?
+    assert transfer.reduces_plan_balance?
   end
 
   test "execute service is idempotent for transaction creation" do
