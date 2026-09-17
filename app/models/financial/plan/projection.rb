@@ -22,11 +22,7 @@ class Financial::Plan::Projection
   end
 
   def planned_consumption
-    plan.planned_expenses.budget_consuming.sum(:amount)
-  end
-
-  def planned_commitments
-    plan.planned_expenses.committed_to_plan.sum(:amount)
+    plan_transactions.select(&:reduces_plan_balance?).sum(0.to_d) { |transaction| transaction.amount.to_d }
   end
 
   def opening_balance
