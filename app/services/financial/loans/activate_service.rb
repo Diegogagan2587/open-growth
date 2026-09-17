@@ -3,35 +3,27 @@ module Financial
     class ActivateService
       Result = Struct.new(:success?, :error_message, :entry, keyword_init: true)
 
-      def self.call(loan:, plan:)
+      def self.call(loan:, plan: nil)
         entry = nil
         loan.with_lock do
           loan.lifecycle_status = "active"
           loan.save!
-          source = loan.funding_sources.first_or_create!(
-            account: loan.account,
-            financial_plan: plan,
-            description: loan.name,
-            expected_amount: loan.principal_amount,
-            expected_date: plan.planned_for,
-            expected_destination_asset: loan.destination_asset,
-            expected_destination_liability: loan.destination_liability,
-            kind: "borrowed"
-          )
-          entry = source.receipt_entry || Financial::Entry.create!(
+
+          source = funding_source_for(loan, plan)
+          entry = source&.receipt_entry || loan.entries.find_by(entry_type: "loan_disbursement") || Financial::Entry.create!(
             account: loan.account,
             income_event: plan,
             funding_source: source,
             financial_loan: loan,
             entry_type: "loan_disbursement",
-            entry_date: source.expected_date,
-            amount: source.expected_amount,
-            description: source.description,
+            entry_date: source&.expected_date || Date.current,
+            amount: source&.expected_amount || loan.principal_amount,
+            description: source&.description || loan.name,
             financial_liability: loan.liability,
             financial_account: loan.destination_asset,
             counterparty_financial_liability: loan.destination_liability
           )
-          source.update!(resolution: "received")
+          source&.update!(resolution: "received")
         end
         Result.new(success?: true, entry: entry)
       rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique => error
@@ -40,6 +32,22 @@ module Financial
 
         Result.new(success?: false, error_message: error.message)
       end
+
+      def self.funding_source_for(loan, plan)
+        return unless plan
+
+        loan.funding_sources.first_or_create!(
+          account: loan.account,
+          financial_plan: plan,
+          description: loan.name,
+          expected_amount: loan.principal_amount,
+          expected_date: plan.planned_for,
+          expected_destination_asset: loan.destination_asset,
+          expected_destination_liability: loan.destination_liability,
+          kind: "borrowed"
+        )
+      end
+      private_class_method :funding_source_for
     end
   end
 end
