@@ -69,7 +69,7 @@ class Financial::Plan::Projection
 
   private
 
-  attr_reader :plan
+  attr_reader :plan, :order
 
   def preceding_plans
     plan.account.income_events
