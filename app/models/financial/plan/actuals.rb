@@ -10,7 +10,7 @@ class Financial::Plan::Actuals
   end
 
   def actual_funding
-    entries.where(entry_type: FUNDING_ENTRY_TYPES).sum(:amount)
+    Financial::Entry.where(funding_source_id: plan.funding_sources.select(:id)).sum(:amount)
   end
 
   def actual_consumption
