@@ -21,6 +21,17 @@ class Financial::Plan::Projection
     end
   end
 
+  def transactions
+    @transactions ||= if order.to_s == "custom"
+      plan_transactions.sort_by { |transaction| [ transaction.position.to_i, transaction.id ] }
+    else
+      plan_transactions.sort_by do |transaction|
+        due_on = transaction.due_date || transaction.planned_for
+        [ due_on.nil? ? 1 : 0, due_on || Date.new(9999, 12, 31), transaction.position.to_i, transaction.id ]
+      end
+    end
+  end
+
   def planned_consumption
     plan_transactions.select(&:reduces_plan_balance?).sum(0.to_d) { |transaction| transaction.amount.to_d }
   end
