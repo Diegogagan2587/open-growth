@@ -30,7 +30,7 @@ class Financial::Plan::Projection
   end
 
   def ending_balance
-    opening_balance + expected_funding - planned_consumption - planned_commitments
+    expected_funding - planned_consumption
   end
 
   def rows
