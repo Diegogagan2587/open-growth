@@ -31,7 +31,6 @@ class PlannedExpense < ApplicationRecord
     financial_liability_id.present?
   }
   validate :planned_values_are_immutable_after_execution, on: :update
-  validate :plan_commitment_is_a_liability_payment
 
   scope :by_position, -> { order(:position, :created_at) }
   scope :by_status, ->(status) { where(status: status) }
@@ -40,7 +39,7 @@ class PlannedExpense < ApplicationRecord
     where(counterparty_financial_account_id: nil)
       .where("financial_account_id IS NULL OR financial_liability_id IS NULL")
   }
-  scope :committed_to_plan, -> { where(kind: "liability_payment", commits_plan_funds: true) }
+  scope :committed_to_plan, -> { where(commits_plan_funds: true) }
   scope :balance_reducing, -> { budget_consuming.or(committed_to_plan) }
 
   def percentage_of_income
@@ -167,7 +166,7 @@ class PlannedExpense < ApplicationRecord
   end
 
   def reduces_plan_balance?
-    budget_consuming? || (debt_payment? && commits_plan_funds?)
+    budget_consuming? || commits_plan_funds?
   end
 
   def classification_label
