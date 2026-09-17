@@ -41,6 +41,7 @@ Rails.application.routes.draw do
     root to: "finance#index"
     resources :pending_expectations, only: :index
     resources :plans, controller: "/financial/plans" do
+      resource :planned_transaction_order, only: :update, controller: "/financial/plans/planned_transaction_orders"
       member do
         post :close
         post :cancel

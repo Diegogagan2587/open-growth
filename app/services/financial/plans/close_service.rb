@@ -5,7 +5,7 @@ module Financial
 
       def self.call(plan:)
         plan.with_lock do
-          ending_balance = Financial::PlanActuals.for(plan).ending_balance
+          ending_balance = Financial::Plan::Actuals.for(plan).ending_balance
           plan.update!(
             lifecycle_status: "closed",
             closed_at: Time.current,

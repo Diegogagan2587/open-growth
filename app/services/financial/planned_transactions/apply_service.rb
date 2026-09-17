@@ -23,7 +23,7 @@ module Financial
             installment: installment,
             total: overrides[:amount] || transaction.amount,
             interest: interest_amount.presence || installment.expected_interest,
-            entry_date: overrides[:entry_date] || transaction.planned_for || transaction.due_date || Date.current
+            entry_date: overrides[:entry_date] || transaction.due_date || transaction.planned_for || Date.current
           )
         end
 
@@ -60,7 +60,7 @@ module Financial
           planned_expense: transaction,
           budget_period: transaction.income_event&.budget_period,
           entry_type: transaction.kind,
-          entry_date: transaction.planned_for || transaction.due_date || Date.current,
+          entry_date: transaction.due_date || transaction.planned_for || Date.current,
           amount: transaction.amount,
           description: transaction.description,
           category: transaction.category,
