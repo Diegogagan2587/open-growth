@@ -223,6 +223,26 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /Different payment: \$350\.00 at the beginning position/
   end
 
+  test "deletes a pending planned installment from the loan page" do
+    liability = Financial::Liability.create!(account: @account, name: "Replanned loan debt", liability_type: "personal_credit", status: "active", opening_balance: 500)
+    asset = Financial::Asset.create!(account: @account, name: "Replanned loan cash", account_type: "checking", status: "active", opening_balance: 500)
+    plan = Financial::Plan.create!(account: @account, name: "Wrong loan plan", planned_for: Date.current, expected_amount: 1)
+    loan = Financial::Loan.create!(account: @account, name: "Miscalculated loan", principal_amount: 500, liability: liability, destination_asset: asset, lifecycle_status: "active")
+    transaction = Financial::PlannedTransaction.create!(account: @account, plan: plan, description: "Wrong installment", amount: 500, kind: "liability_payment", status: "pending_to_pay", financial_account: asset, financial_liability: liability)
+    installment = Financial::Loan::Installment.create!(account: @account, financial_loan: loan, planned_transaction: transaction, installment_number: 1, due_date: Date.current, expected_amount: 500, expected_principal: 500, expected_interest: 0)
+
+    get finance_loan_path(loan)
+
+    assert_select "a[href='#{finance_loan_installment_plan_path(loan, installment)}'][aria-label='Delete planned installment']"
+
+    assert_difference("Financial::PlannedTransaction.count", -1) do
+      delete finance_loan_installment_plan_path(loan, installment)
+    end
+
+    assert_redirected_to finance_loan_path(loan)
+    assert_nil installment.reload.planned_transaction
+  end
+
   test "records a categorized installment payment through the nested payment resource" do
     interest_category = Category.create!(account: @account, name: "Loan interest request")
     liability = Financial::Liability.create!(account: @account, name: "Request loan", liability_type: "personal_credit", status: "active", opening_balance: 2_000)
