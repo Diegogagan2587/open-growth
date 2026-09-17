@@ -87,7 +87,14 @@
               <td class="p-3"><%= installment.resolution.humanize %></td>
               <td class="p-3">
                 <% if installment.planned_transaction %>
-                  <%= link_to installment.planned_transaction.plan&.name || "Unassigned", installment.planned_transaction.plan ? finance_plan_path(installment.planned_transaction.plan) : finance_planned_transactions_path, class: "text-primary hover:underline" %>
+                  <div class="flex items-center gap-1">
+                    <%= link_to installment.planned_transaction.plan&.name || "Unassigned", installment.planned_transaction.plan ? finance_plan_path(installment.planned_transaction.plan) : finance_planned_transactions_path, class: "text-primary hover:underline" %>
+                    <% if installment.planned_transaction.execution_status == "pending" %>
+                      <%= render Ui::ButtonComponent.new(href: finance_loan_installment_plan_path(@loan, installment), aria_label: "Delete planned installment", variant: :ghost, method: :delete, size: :icon, css_class: "h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive", data: { turbo_confirm: "Delete this planned installment? The installment will remain in the loan schedule and can be planned again." }) do %>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" /></svg>
+                      <% end %>
+                    <% end %>
+                  </div>
                 <% elsif @loan.lifecycle_status == "active" %>
                   <%= form_with url: plan_installment_finance_loan_path(@loan, installment_id: installment.id), method: :post, class: "flex min-w-80 items-end gap-2" do %>
                     <%= render Ui::SelectComponent.new(name: "plan_id", options: @plans.map { |plan| [ plan.name, plan.id ] }, include_blank: "Plan", required: true) %>
