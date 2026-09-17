@@ -1,6 +1,4 @@
 class Financial::Plan::Actuals
-  FUNDING_ENTRY_TYPES = %w[inflow loan_disbursement].freeze
-
   def self.for(plan)
     new(plan)
   end
@@ -31,11 +29,5 @@ class Financial::Plan::Actuals
 
   def entries
     plan.financial_entries
-  end
-
-  def preceding_plans
-    plan.account.income_events
-      .where("expected_date < :date OR (expected_date = :date AND id < :id)", date: plan.expected_date, id: plan.id)
-      .order(:expected_date, :id)
   end
 end
