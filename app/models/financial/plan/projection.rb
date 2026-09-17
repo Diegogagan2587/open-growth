@@ -84,6 +84,13 @@ class Financial::Plan::Projection
       .sort_by(&:id)
   end
 
+  def plan_transactions
+    @plan_transactions ||= Financial::PlannedTransaction
+      .where(income_event_id: plan.id)
+      .includes(:financial_entry, :financial_account, :counterparty_financial_account, :financial_liability)
+      .to_a
+  end
+
   def funding_sources
     @funding_sources ||= plan.funding_sources.includes(:receipt_entry, :expected_destination_asset).to_a
   end
