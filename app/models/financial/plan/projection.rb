@@ -1,5 +1,4 @@
 class Financial::Plan::Projection
-  AccountBalance = Data.define(:account, :amount)
   Row = Data.define(:transaction, :balance)
 
   def self.for(plan, order: nil)
@@ -13,12 +12,6 @@ class Financial::Plan::Projection
 
   def expected_funding
     funding_sources.sum(0.to_d) { |source| source.expected_amount.to_d }
-  end
-
-  def account_balances
-    @account_balances ||= selected_accounts.map do |account|
-      AccountBalance.new(account:, amount: account.current_balance.to_d)
-    end
   end
 
   def complete?
@@ -70,30 +63,6 @@ class Financial::Plan::Projection
   private
 
   attr_reader :plan, :order
-
-  def preceding_plans
-    plan.account.income_events
-      .where("expected_date < :date OR (expected_date = :date AND id < :id)", date: plan.expected_date, id: plan.id)
-      .order(:expected_date, :id)
-  end
-
-
-  def projected_funding_for(candidate)
-    sources = Financial::FundingSource.where(financial_plan_id: candidate.id)
-    return sources.sum(:expected_amount).to_d if sources.exists?
-
-    candidate.expected_amount.to_d
-  end
-
-  def selected_accounts
-    @selected_accounts ||= Financial::FundingSource
-      .where(financial_plan_id: plan.id)
-      .where.not(expected_destination_asset_id: nil)
-      .includes(:expected_destination_asset)
-      .map(&:expected_destination_asset)
-      .uniq(&:id)
-      .sort_by(&:id)
-  end
 
   def plan_transactions
     @plan_transactions ||= Financial::PlannedTransaction
