@@ -58,6 +58,35 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
     assert_select "span", text: "33%"
   end
 
+  test "filters loans by status and sorts them" do
+    simulated = Financial::Loan.create!(account: @account, name: "Small simulation", principal_amount: 100, lifecycle_status: "simulated")
+    pending = Financial::Loan.create!(account: @account, name: "Pending loan", principal_amount: 300, lifecycle_status: "active", liability: Financial::Liability.create!(account: @account, name: "Pending debt", liability_type: "personal_credit", status: "active"), destination_asset: Financial::Asset.create!(account: @account, name: "Loan cash", account_type: "checking", status: "active"))
+    paid = Financial::Loan.create!(account: @account, name: "Paid loan", principal_amount: 200, lifecycle_status: "paid")
+    completed = Financial::Loan.create!(account: @account, name: "Completed active loan", principal_amount: 250, lifecycle_status: "active", liability: pending.liability, destination_asset: pending.destination_asset)
+    Financial::Loan::Installment.create!(account: @account, financial_loan: completed, installment_number: 1, due_date: Date.current, expected_amount: 250, expected_principal: 250, expected_interest: 0, resolution: "paid")
+
+    get finance_loans_path(status: "active")
+
+    assert_response :success
+    assert_select "a[aria-current='page']", text: "Pending"
+    assert_select "article[data-loan-id='#{pending.id}']", count: 1
+    assert_select "article[data-loan-id='#{completed.id}']", count: 0
+    assert_select "article[data-loan-id='#{simulated.id}']", count: 0
+    assert_select "article[data-loan-id='#{paid.id}']", count: 0
+
+    get finance_loans_path(status: "paid")
+
+    assert_select "article[data-loan-id='#{completed.id}']" do
+      assert_select "span", text: "Paid"
+    end
+    assert_select "article[data-loan-id='#{paid.id}']", count: 1
+    assert_select "article[data-loan-id='#{pending.id}']", count: 0
+
+    get finance_loans_path(sort: "amount_desc")
+
+    assert_equal [ pending.id, completed.id, paid.id, simulated.id ], css_select("article[data-loan-id]").map { |article| article["data-loan-id"].to_i }
+  end
+
   test "creates a simulated loan with an annual interest rate above one thousand percent" do
     assert_difference("Financial::Loan.count", 1) do
       post finance_loans_path, params: {

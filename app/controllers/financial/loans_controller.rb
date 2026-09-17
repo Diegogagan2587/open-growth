@@ -3,7 +3,10 @@ class Financial::LoansController < ApplicationController
   before_action :load_collections, only: [ :new, :create, :edit, :update, :show ]
 
   def index
+    @status = params[:status].to_s if params[:status].to_s.in?(Financial::Loan::LIFECYCLE_STATUSES)
+    @sort = params[:sort].to_s.in?(%w[newest oldest amount_desc amount_asc name]) ? params[:sort].to_s : "newest"
     @loans = Financial::Loan.for_account(Current.account)
+    @loans = @loans
       .left_joins(:installments)
       .select(
         "financial_loans.*",
@@ -12,7 +15,7 @@ class Financial::LoansController < ApplicationController
       )
       .group("financial_loans.id")
       .includes(:liability)
-      .order(created_at: :desc)
+    @loans = filter_loans(@loans).order(loan_order)
   end
 
   def show
@@ -64,6 +67,34 @@ class Financial::LoansController < ApplicationController
   end
 
   private
+
+  def filter_loans(loans)
+    case @status
+    when "paid"
+      loans.where(lifecycle_status: %w[active paid]).having(<<~SQL.squish)
+        financial_loans.lifecycle_status = 'paid' OR
+        (COUNT(financial_loan_installments.id) > 0 AND
+        COUNT(CASE WHEN financial_loan_installments.resolution = 'paid' THEN 1 END) = COUNT(financial_loan_installments.id))
+      SQL
+    when "active"
+      loans.where(lifecycle_status: "active").having(<<~SQL.squish)
+        COUNT(financial_loan_installments.id) = 0 OR
+        COUNT(CASE WHEN financial_loan_installments.resolution = 'paid' THEN 1 END) < COUNT(financial_loan_installments.id)
+      SQL
+    when nil then loans
+    else loans.where(lifecycle_status: @status)
+    end
+  end
+
+  def loan_order
+    case @sort
+    when "oldest" then { created_at: :asc }
+    when "amount_desc" then { principal_amount: :desc, created_at: :desc }
+    when "amount_asc" then { principal_amount: :asc, created_at: :desc }
+    when "name" then { name: :asc }
+    else { created_at: :desc }
+    end
+  end
 
   def set_loan
     @loan = Financial::Loan.for_account(Current.account).find(params[:id])
