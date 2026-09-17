@@ -73,6 +73,53 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{finance_entry_path(receipt)}']", text: "Income funding"
   end
 
+  test "moves received funding to another editable plan without changing its receipt" do
+    source_plan = @plan.becomes(Financial::Plan)
+    target_plan = Financial::Plan.create!(account: @account, name: "Target plan", planned_for: Date.new(2026, 8, 1), expected_amount: 1, lifecycle_status: "draft")
+    closed_plan = Financial::Plan.create!(account: @account, name: "Closed plan", planned_for: Date.new(2026, 9, 1), expected_amount: 1, lifecycle_status: "closed")
+    asset = Financial::Asset.create!(account: @account, name: "Move funding checking", account_type: "checking", status: "active", opening_balance: 0)
+    source = source_plan.funding_sources.create!(account: @account, description: "Movable income", expected_amount: 125, expected_date: source_plan.planned_for, expected_destination_asset: asset, kind: "income")
+    receipt = Financial::FundingSources::ReceiveService.call(funding_source: source, amount: 120, entry_date: Date.new(2026, 7, 16)).entry
+    receipt_attributes = receipt.attributes
+
+    get finance_plan_path(source_plan)
+
+    assert_select "details summary", text: "Move" do
+      assert_select "+ div form[action='#{finance_plan_funding_source_plan_assignment_path(source_plan, source)}'] select[name='target_plan_id']" do
+        assert_select "option[value='#{target_plan.id}']", text: target_plan.name
+        assert_select "option[value='#{closed_plan.id}']", count: 0
+      end
+    end
+
+    patch finance_plan_funding_source_plan_assignment_path(source_plan, source), params: { target_plan_id: target_plan.id }
+
+    assert_redirected_to finance_plan_path(target_plan)
+    assert_equal target_plan, source.reload.financial_plan
+    assert_equal receipt_attributes, receipt.reload.attributes
+    assert_equal 0.to_d, Financial::Plan::Actuals.for(source_plan).actual_funding
+    assert_equal 120.to_d, Financial::Plan::Actuals.for(target_plan).actual_funding
+  end
+
+  test "does not move funding across accounts or from or into a finalized plan" do
+    source_plan = @plan.becomes(Financial::Plan)
+    target_plan = Financial::Plan.create!(account: @account, name: "Move target", planned_for: Date.new(2026, 8, 1), expected_amount: 1, lifecycle_status: "active")
+    source = source_plan.funding_sources.create!(account: @account, description: "Locked funding", expected_amount: 125, expected_date: source_plan.planned_for, kind: "income")
+
+    other_account = Account.create!(name: "Other move account")
+    other_plan = Financial::Plan.create!(account: other_account, name: "Other plan", planned_for: Date.new(2026, 8, 1), expected_amount: 1, lifecycle_status: "active")
+    patch finance_plan_funding_source_plan_assignment_path(source_plan, source), params: { target_plan_id: other_plan.id }
+    assert_equal source_plan, source.reload.financial_plan
+
+    target_plan.update!(lifecycle_status: "closed")
+    patch finance_plan_funding_source_plan_assignment_path(source_plan, source), params: { target_plan_id: target_plan.id }
+    assert_equal source_plan, source.reload.financial_plan
+
+    target_plan.update_columns(lifecycle_status: "active")
+    source_plan.update!(lifecycle_status: "closed")
+    patch finance_plan_funding_source_plan_assignment_path(source_plan, source), params: { target_plan_id: target_plan.id }
+    assert_equal source_plan, source.reload.financial_plan
+  end
+
   test "shows reserve funds controls and badge for a neutral movement" do
     plan = @plan.becomes(Financial::Plan)
     source = Financial::Asset.create!(account: @account, name: "Reserve source", account_type: "checking", status: "active", opening_balance: 100)
