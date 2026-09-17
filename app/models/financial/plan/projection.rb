@@ -21,6 +21,17 @@ class Financial::Plan::Projection
     end
   end
 
+  def complete?
+    incomplete_reasons.empty?
+  end
+
+  def incomplete_reasons
+    reasons = []
+    reasons << :funding_sources if funding_sources.empty?
+    reasons << :amounts if plan_transactions.any? { |transaction| transaction.reduces_plan_balance? && transaction.amount.nil? }
+    reasons
+  end
+
   def transactions
     @transactions ||= if order.to_s == "custom"
       plan_transactions.sort_by { |transaction| [ transaction.position.to_i, transaction.id ] }
