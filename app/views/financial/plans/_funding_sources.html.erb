@@ -12,11 +12,14 @@
 
   <div class="space-y-3">
     <% funding_sources.each do |source| %>
+      <% source_path = source.financial_loan ? finance_loan_path(source.financial_loan) : (finance_entry_path(source.receipt_entry) if source.receipt_entry) %>
       <article class="rounded-xl border border-border bg-card p-4">
         <div class="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
           <div>
             <div class="flex flex-wrap items-center gap-2">
-              <h3 class="font-semibold"><%= source.description %></h3>
+              <h3 class="font-semibold">
+                <%= source_path ? link_to(source.description, source_path, class: "hover:text-primary hover:underline") : source.description %>
+              </h3>
               <%= render Ui::BadgeComponent.new(label: source.kind.humanize, variant: :outline) %>
               <%= render Ui::BadgeComponent.new(label: source.resolution.humanize, variant: source.receipt_entry ? :secondary : :outline) %>
 

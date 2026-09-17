@@ -59,6 +59,20 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     assert_select "#actual-entries-title + p", text: /Planned and unplanned expenses count toward Actual consumption/
   end
 
+  test "links funding sources to their corresponding loan or receipt" do
+    plan = @plan.becomes(Financial::Plan)
+    asset = Financial::Asset.create!(account: @account, name: "Linked checking", account_type: "checking", status: "active", opening_balance: 0)
+    loan = Financial::Loan.create!(account: @account, name: "Linked loan", principal_amount: 500, lifecycle_status: "simulated")
+    plan.funding_sources.create!(account: @account, financial_loan: loan, description: "Loan funding", expected_amount: 500, expected_date: plan.planned_for, expected_destination_asset: asset, kind: "borrowed")
+    income = plan.funding_sources.create!(account: @account, description: "Income funding", expected_amount: 100, expected_date: plan.planned_for, expected_destination_asset: asset, kind: "income")
+    receipt = Financial::FundingSources::ReceiveService.call(funding_source: income).entry
+
+    get finance_plan_path(plan)
+
+    assert_select "a[href='#{finance_loan_path(loan)}']", text: "Loan funding"
+    assert_select "a[href='#{finance_entry_path(receipt)}']", text: "Income funding"
+  end
+
   test "shows reserve funds controls and badge for a neutral movement" do
     plan = @plan.becomes(Financial::Plan)
     source = Financial::Asset.create!(account: @account, name: "Reserve source", account_type: "checking", status: "active", opening_balance: 100)
