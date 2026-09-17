@@ -15,6 +15,7 @@ class Financial::PlansController < ApplicationController
       .includes(:funding_sources)
       .chronological
       .reverse_order
+    @overview = Financial::Plans::Overview.for(@plans)
   end
 
   def show
