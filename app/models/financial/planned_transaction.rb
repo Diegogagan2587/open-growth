@@ -35,6 +35,32 @@ class Financial::PlannedTransaction < PlannedExpense
     :on_time
   end
 
+  def route_description
+    "#{route_source_label} → #{route_destination_label}"
+  end
+
+  def route_complete?
+    !route_source_label.start_with?("Missing") && !route_destination_label.start_with?("Missing")
+  end
+
+  def route_source_label
+    return financial_account.name if financial_account
+    return financial_liability.name if kind == "liability_charge" && financial_liability
+
+    "Missing source"
+  end
+
+  def route_destination_label
+    case kind
+    when "transfer"
+      counterparty_financial_account&.name || "Missing destination"
+    when "liability_payment"
+      financial_liability&.name || "Missing destination"
+    else
+      "Expense"
+    end
+  end
+
   private
 
   def append_to_plan
