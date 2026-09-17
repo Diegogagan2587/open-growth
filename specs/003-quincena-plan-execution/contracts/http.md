@@ -25,9 +25,9 @@ GET /finance/plans/:id?order=custom
 
 - `200 OK` HTML.
 - Shows the selected order control state.
-- Shows "Projection and plan execution" with Planned and Actual rows and Funding, Consumption, and Plan balance columns.
+- Shows "Projection and plan execution" in the existing metric-card grid, with Planned prominent and Actual below for Funding, Consumption, and Plan balance.
 - Planned Funding uses expected source amounts; Actual Funding uses recorded receipts.
-- Planned Consumption uses expenses plus normally neutral movements with Reserve funds enabled; Actual Consumption uses actual expense entries.
+- Planned Consumption uses expenses plus normally neutral movements with Reserve funds enabled; Actual Consumption uses every actual expense entry associated with the plan, including unplanned actuals.
 - Recalculates every running planned-balance row in the selected order.
 - Shows each funding destination on its existing source item rather than in a separate account-summary section.
 - Shows a "Funds reserved" badge on every movement with Reserve funds enabled.

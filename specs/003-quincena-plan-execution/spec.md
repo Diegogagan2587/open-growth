@@ -20,7 +20,7 @@
 - Q: When applying a planned movement on a different date, should its planned due date remain unchanged while the generated actual transaction uses the selected payment date? → A: Yes. Preserve the planned due date, preselect it as the actual payment date, and allow the user to choose an earlier or later actual date.
 - Q: After a planned movement is applied, what timing information should its plan row show? → A: Show the actual payment date and an Early, On time, or Late badge calculated against the preserved due date.
 - Q: How should users correct a planned movement's source and destination accounts? → A: Add source and destination fields to the existing planned-movement edit flow.
-- Q: Which summary layout should the plan use? → A: Use the title "Projection and plan execution" with Planned and Actual rows and Funding, Consumption, and Plan balance columns.
+- Q: Which summary layout should the plan use? → A: Preserve the existing metric-card grid under "Projection and plan execution," with Funding, Consumption, and Plan balance cards showing the Planned amount prominently and the Actual amount below.
 - Q: What should the Planned row's Consumption value include? → A: Include every cash-consuming planned movement, whether pending or applied; the Actual row includes only the actual consumption produced by applied movements.
 - Q: What should the Funding value in each row include? → A: Planned Funding uses every funding source's expected amount; Actual Funding uses only recorded funding receipts.
 - Q: What should each funding-source route badge use as its origin? → A: Funding sources have no origin account to display; show only the destination account as a badge on each existing funding-source item and do not add a separate account section.
@@ -29,6 +29,7 @@
 - Q: Which planned movements should reduce Planned balance automatically, without enabling Reserve funds? → A: Expenses reduce Planned balance automatically; transfers, liability payments, and other normally neutral movements reduce it only when Reserve funds is enabled.
 - Q: After a planned movement has been applied, should Reserve funds remain editable? → A: Yes. It remains editable while the plan is active and becomes immutable when the plan is closed or cancelled; changing it never mutates the linked actual transaction.
 - Q: How should a movement with Reserve funds enabled be identifiable in the planned-movements list? → A: Show a compact "Funds reserved" badge on the movement row and keep the Reserve funds control in the existing edit flow.
+- Q: Should an actual expense associated with the plan but not linked to a planned movement affect Actual Consumption? → A: Yes. It is an unplanned actual paid from the plan's funding, so it contributes once to Actual Consumption and reduces Actual Plan balance.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -46,11 +47,12 @@ As a user preparing a chosen group of payments, I can compare its planned and ac
 2. **Given** a plan whose planned consumption exceeds its planned funding, **When** the user opens the plan, **Then** its Planned row shows the exact negative Plan balance.
 3. **Given** a plan containing an applied cash-consuming movement, **When** the summary is calculated, **Then** its planned amount contributes once to Planned Consumption and its actual financial movement contributes once to Actual Consumption.
 4. **Given** a planned payment without a known amount, **When** the user opens the plan, **Then** the payment is marked incomplete and the plan states that Planned Consumption and Plan balance are incomplete rather than treating the amount as zero.
-5. **Given** the user opens a plan, **When** the execution summary is displayed, **Then** the "Projection and plan execution" section shows Planned above Actual with Funding, Consumption, and Plan balance columns.
+5. **Given** the user opens a plan, **When** the execution summary is displayed, **Then** the "Projection and plan execution" section preserves the existing card grid and shows Planned above Actual for Funding, Consumption, and Plan balance.
 6. **Given** a normally neutral planned movement is marked Reserve funds, **When** the plan is calculated, **Then** its amount contributes once to Planned Consumption and reduces the running Planned balance without changing Actual Consumption rules.
 7. **Given** a transfer or liability payment does not have Reserve funds enabled, **When** the plan is calculated, **Then** it remains visible and neutral in Planned Consumption and Planned balance.
 8. **Given** an applied movement belongs to an active plan, **When** the user enables or disables Reserve funds, **Then** Planned Consumption and running Planned balances recalculate while the linked actual transaction remains unchanged.
 9. **Given** a movement has Reserve funds enabled, **When** the user reviews the planned-movements list, **Then** its row shows a compact "Funds reserved" badge without requiring the edit flow to be opened.
+10. **Given** an actual expense belongs to the plan without a linked planned movement, **When** the execution summary is calculated, **Then** that unplanned actual contributes once to Actual Consumption and reduces Actual Plan balance.
 
 ---
 
@@ -177,8 +179,8 @@ As a user managing several financial plans, I can use the plans overview for glo
 - **FR-037**: When both dates exist, the system MUST label an applied planned movement Early when its actual payment date precedes its due date, On time when the dates match, and Late when its actual payment date follows its due date.
 - **FR-038**: When an applied planned movement has no due date, the system MUST show its actual payment date without assigning an early/on-time/late status.
 - **FR-039**: The existing planned-movement edit flow MUST allow the user to correct the source and destination accounts required by the movement's type.
-- **FR-040**: The plan summary MUST retain the title "Projection and plan execution" and present Planned above Actual using Funding, Consumption, and Plan balance columns.
-- **FR-041**: Actual Consumption MUST include only the actual financial consumption produced by applied planned movements and MUST count each actual movement exactly once.
+- **FR-040**: The plan summary MUST retain the title "Projection and plan execution" and the existing metric-card grid, with Funding, Consumption, and Plan balance cards presenting Planned prominently and Actual below.
+- **FR-041**: Actual Consumption MUST include every actual expense entry associated with the plan exactly once, whether linked to an applied planned movement or recorded as an unplanned actual.
 - **FR-042**: Each funding-source item MUST show its destination account as a compact badge; the plan MUST NOT add a separate section solely to repeat funding-source destinations.
 - **FR-043**: Planned-movement reordering MUST support drag-and-drop plus compact up and down icon buttons whose accessible labels identify the movement and direction.
 - **FR-044**: The existing per-movement plan-funds commitment option MUST remain available under the clearer label "Reserve funds"; enabling it MUST reduce Planned balance without changing how Actual Consumption is classified.
@@ -219,7 +221,7 @@ As a user managing several financial plans, I can use the plans overview for glo
 - **SC-017**: In acceptance testing, payments recorded before, on, and after their due dates preserve the planned due date and store the selected actual payment date exactly.
 - **SC-018**: In acceptance testing, 100% of applied movements with both dates show the actual payment date and the correct Early, On time, or Late label.
 - **SC-019**: In acceptance testing, users can correct every source and destination account required by an expense, transfer, liability charge, or liability payment without leaving the planned-movement edit flow.
-- **SC-020**: In acceptance testing, the plan summary presents Planned and Actual values in the same three-column layout without requiring users to reinterpret renamed card metrics.
+- **SC-020**: In acceptance testing, the plan summary preserves the familiar metric-card component and presents Planned above Actual for Funding, Consumption, and Plan balance without introducing a table.
 - **SC-021**: In acceptance testing, every funding source with a destination shows that destination on its existing item, with no separate destination-summary section consuming additional page space.
 - **SC-022**: Every planned movement can be reordered with compact controls by pointer and keyboard without displaying full-width move-button text.
 - **SC-023**: Enabling or disabling Reserve funds changes Planned Consumption and every affected running Planned balance by exactly that movement's planned amount without changing Actual Consumption.

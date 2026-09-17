@@ -185,7 +185,7 @@ running[n] = running[n-1] - planned_amount(row[n]) when reduces_plan_balance is 
 **Outputs**:
 
 - Actual Funding from `funding_entries`
-- Actual Consumption from the plan's actual expense entries
+- Actual Consumption from every expense entry associated with the plan, including entries without a linked planned movement
 - Actual Plan balance as Actual Funding minus Actual Consumption
 
 **Change**: preceding-plan carryover is removed from the individual plan calculation. Actual values never replace Planned values.

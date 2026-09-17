@@ -54,9 +54,9 @@ bin/brakeman --no-pager
 2. Add two funding sources with known expected amounts and destinations, including a case where a destination account has a negative current balance.
 3. Add pending movements due on different dates, including an expense, liability payment, and transfer.
 4. Apply one movement using a date earlier or later than its due date.
-5. Confirm "Projection and plan execution" shows Planned above Actual with Funding, Consumption, and Plan balance columns.
+5. Confirm "Projection and plan execution" preserves the existing metric-card grid and shows Planned above Actual for Funding, Consumption, and Plan balance.
 6. Confirm Planned Funding equals expected source amounts, Planned Consumption includes every expense, and a negative Plan balance remains negative.
-7. Confirm Actual Funding equals recorded receipts and Actual Consumption equals applied movements' actual expense entries.
+7. Confirm Actual Funding equals recorded receipts and Actual Consumption equals both applied movements' expense entries and unplanned actual expenses associated with the plan.
 8. Confirm each funding source shows one destination badge and no separate funding-account summary appears.
 9. Confirm the applied row retains its due date and shows the actual date with the correct Early, On time, or Late badge.
 10. Correct expense, transfer, and liability-payment routes from their existing edit flow; confirm an applied movement's linked actual entry remains unchanged.
@@ -76,7 +76,7 @@ bin/brakeman --no-pager
 - Actual Funding equals displayed recorded funding receipts.
 - Planned Consumption includes each expense and each movement with Reserve funds enabled exactly once, including applied movements.
 - Unreserved transfers, liability payments, and other neutral movements contribute zero to Planned Consumption.
-- Actual Consumption includes each applied movement's actual expense effect exactly once.
+- Actual Consumption includes each planned or unplanned actual expense associated with the plan exactly once.
 - Each Plan balance equals its row's Funding minus Consumption and may be negative.
 - Reserve funds changes planned calculations only and remains editable for pending and applied movements while the plan is active.
 - Enabled movements show "Funds reserved"; closed and cancelled plans reject reservation changes.

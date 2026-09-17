@@ -23,7 +23,7 @@ description: "Dependency-ordered tasks for financial plan execution"
 
 **Purpose**: Confirm the existing financial-plan behavior before moving or changing it.
 
-- [X] T001 Run the existing baseline tests in `test/models/financial/plan_projection_test.rb`, `test/models/financial/plan_actuals_test.rb`, `test/models/financial/plan_test.rb`, `test/models/financial/planned_transaction_test.rb`, `test/controllers/financial/plans_controller_test.rb`, and `test/services/financial/planned_transactions/apply_service_test.rb`
+- [X] T001 Run the existing financial-plan tests in `test/models/financial/plan/projection_test.rb`, `test/models/financial/plan/actuals_test.rb`, `test/models/financial/plan_test.rb`, `test/models/financial/planned_transaction_test.rb`, `test/controllers/financial/plans_controller_test.rb`, and `test/services/financial/planned_transactions/apply_service_test.rb`
 
 ---
 
@@ -36,117 +36,117 @@ description: "Dependency-ordered tasks for financial plan execution"
 - [X] T002 Move `Financial::PlanProjection` to `Financial::Plan::Projection` in `app/models/financial/plan/projection.rb`, move its tests to `test/models/financial/plan/projection_test.rb`, and update references in `app/controllers/financial/plans_controller.rb`
 - [X] T003 Move `Financial::PlanActuals` to `Financial::Plan::Actuals` in `app/models/financial/plan/actuals.rb`, move its tests to `test/models/financial/plan/actuals_test.rb`, and update references in `app/controllers/financial/plans_controller.rb`
 
-**Checkpoint**: Existing behavior passes under the plan-owned namespaces with no compatibility duplicate classes.
+**Checkpoint**: Existing behavior passes under `Financial::Plan::*` with no compatibility duplicate classes.
 
 ---
 
 ## Phase 3: User Story 1 - Know Whether the Plan Is Funded (Priority: P1) 🎯 MVP
 
-**Goal**: Show current money available from selected plan accounts, pending money required, exact remainder or shortfall, and an honest completeness state without double-counting applied movements.
+**Goal**: Restore the familiar Planned/Actual metric cards and make Reserve funds drive planned consumption consistently.
 
-**Independent Test**: Open a plan with selected destination assets, pending payments, an applied payment, and movements outside the plan reference date; verify account balances reconcile to available money, only pending cash requirements compose required money, and remainder or shortfall is exact.
+**Independent Test**: Open a plan with expected funding, recorded receipts, expenses, reserved and unreserved neutral movements, and applied movements; verify Planned and Actual Funding, Consumption, and Plan balance reconcile independently and can be negative.
 
 ### Tests for User Story 1
 
-- [X] T004 [P] [US1] Replace legacy carryover expectations with failing current-balance, selected-account deduplication, pending-only, transfer, applied-movement, missing-account, and flexible-date tests in `test/models/financial/plan/projection_test.rb`
-- [X] T005 [P] [US1] Add failing cash-requirement classification tests for pending outflows, liability payments, transfers, liability charges, and applied movements in `test/models/financial/planned_transaction_test.rb`
-- [X] T006 [P] [US1] Add failing plan-page assertions for account-level availability, required money, remainder, shortfall, balance-basis labeling, and incomplete states in `test/controllers/financial/plans_controller_test.rb`
+- [X] T004 [P] [US1] Add failing Planned Funding, Reserve funds, applied-movement, negative-balance, and visible-order running-balance tests in `test/models/financial/plan/projection_test.rb`
+- [X] T005 [P] [US1] Add failing plan-balance classification, editable-lifecycle, applied-record, and linked-actual immutability tests in `test/models/planned_expense_test.rb` and `test/models/financial/planned_transaction_test.rb`
+- [X] T006 [P] [US1] Add failing Actual Funding receipt and Actual Consumption expense-entry tests in `test/models/financial/plan/actuals_test.rb`
+- [X] T007 [P] [US1] Add failing metric-card summary, Reserve funds control, and Funds reserved badge assertions in `test/controllers/financial/plans_controller_test.rb`
 
 ### Implementation for User Story 1
 
-- [X] T007 [US1] Add pending cash-requirement behavior to `app/models/financial/planned_transaction.rb` without using `commits_plan_funds` as the execution-total switch
-- [X] T008 [US1] Implement selected funding accounts, current available money, pending required money, completeness, remainder/shortfall, and ordered row balances in `app/models/financial/plan/projection.rb`
-- [X] T009 [US1] Load the plan-local projection and its ordered movements in `app/controllers/financial/plans_controller.rb`
-- [X] T010 [US1] Replace forecast/carryover metrics with current execution metrics and selected-account contributions in `app/views/financial/plans/_metrics.html.erb` and `app/views/financial/plans/_funding_sources.html.erb`
-- [X] T011 [US1] Run the focused User Story 1 tests in `test/models/financial/plan/projection_test.rb`, `test/models/financial/planned_transaction_test.rb`, and `test/controllers/financial/plans_controller_test.rb`
+- [X] T008 [US1] Define one shared plan-balance predicate for expenses and reserved neutral movements in `app/models/planned_expense.rb` and `app/models/financial/planned_transaction.rb`
+- [X] T009 [US1] Calculate expected Planned Funding, predicate-based Planned Consumption, negative Plan balance, and ordered running balances in `app/models/financial/plan/projection.rb`
+- [X] T010 [US1] Calculate Actual Funding from funding receipts and Actual Consumption from actual expense entries in `app/models/financial/plan/actuals.rb`
+- [X] T011 [US1] Permit Reserve funds updates for pending and applied movements on editable plans without mutating linked actual entries in `app/controllers/financial/planned_transactions_controller.rb` and `app/models/financial/planned_transaction.rb`
+- [X] T012 [US1] Restore the existing Funding, Consumption, and Plan balance card grid with Planned above Actual in `app/views/financial/plans/_metrics.html.erb`
+- [X] T013 [US1] Restore the Reserve funds edit control and render the Funds reserved badge in `app/views/financial/plans/_planned_transactions.html.erb`
+- [X] T014 [US1] Run the focused User Story 1 tests from `test/models/financial/plan/projection_test.rb`, `test/models/financial/plan/actuals_test.rb`, `test/models/planned_expense_test.rb`, `test/models/financial/planned_transaction_test.rb`, and `test/controllers/financial/plans_controller_test.rb`
 
-**Checkpoint**: The plan independently answers “what money do I have, what remains to pay, and what is missing?” using only that plan's membership.
+**Checkpoint**: Planned and Actual values remain distinct, reconcile to visible contributors, and use the same Reserve funds rule everywhere.
 
 ---
 
 ## Phase 4: User Story 2 - Prioritize and Execute Payments (Priority: P1)
 
-**Goal**: Persist a custom order for all planned movements, switch between custom and due-date views, recalculate each row balance, and preserve planned versus actual dates during payment.
+**Goal**: Persist custom order, retain due-date order as a quick alternate view, and provide compact accessible controls.
 
-**Independent Test**: Reorder pending and applied movements across due dates, reload, switch to due-date order and back, add a movement, and apply one movement on an earlier or later date; verify custom priority persists, row balances follow the visible order, and the actual entry is unchanged by reorder.
+**Independent Test**: Reorder pending and applied movements, reload, switch between custom and due-date order, and apply a movement on another date; verify planned order changes while actual data remains unchanged.
 
 ### Tests for User Story 2
 
-- [X] T012 [P] [US2] Add failing atomic reorder tests for complete ID validation, duplicate/foreign/missing IDs, contiguous positions, applied movements, rollback, and append-after-custom-order in `test/models/financial/plan_test.rb`
-- [X] T013 [P] [US2] Add failing order endpoint tests for account scoping, successful redirect, invalid payload rollback, and actual-entry immutability in `test/controllers/financial/plans/planned_transaction_orders_controller_test.rb`
-- [X] T014 [P] [US2] Add failing due-date/custom ordering, stable tie, unscheduled-last, and payment-timing tests in `test/models/financial/planned_transaction_test.rb` and `test/models/financial/plan/projection_test.rb`
-- [X] T015 [P] [US2] Add failing due-date default, earlier/later override, and planned-date preservation tests in `test/components/financial/installment_payment_form_component_test.rb` and `test/services/financial/planned_transactions/apply_service_test.rb`
-- [X] T016 [P] [US2] Add failing plan-page assertions for one-interaction sort switching, accessible reorder controls, actual date, timing badge, payment notes, and per-row balances in `test/controllers/financial/plans_controller_test.rb`
-- [X] T017 [P] [US2] Add a failing reorder/sort/application interaction test in `test/system/financial_plan_execution_test.rb`
+- [X] T015 [P] [US2] Add atomic reorder, complete-ID validation, applied-movement, rollback, and append-after-custom-order tests in `test/models/financial/plan_test.rb` and `test/controllers/financial/plans/planned_transaction_orders_controller_test.rb`
+- [X] T016 [P] [US2] Add due-date/custom ordering, stable tie, unscheduled-last, date override, timing, and actual immutability tests in `test/models/financial/planned_transaction_test.rb`, `test/models/financial/plan/projection_test.rb`, and `test/services/financial/planned_transactions/apply_service_test.rb`
+- [X] T017 [P] [US2] Add failing compact icon and movement-specific accessible-label assertions in `test/components/ui/button_component_test.rb` and `test/controllers/financial/plans_controller_test.rb`
 
 ### Implementation for User Story 2
 
-- [X] T018 [US2] Add the reversible `custom_ordered` boolean migration for `income_events` in `db/migrate/*_add_custom_ordered_to_income_events.rb` and update `db/schema.rb`
-- [X] T019 [US2] Implement default order selection and transactional `reorder_planned_transactions!` with plan locking and temporary positions in `app/models/financial/plan.rb`
-- [X] T020 [US2] Add the singular nested order route in `config/routes.rb` and account-scoped update action in `app/controllers/financial/plans/planned_transaction_orders_controller.rb`
-- [X] T021 [US2] Accept only `custom` and `due_date` view modes and pass the selected mode into projection ordering in `app/controllers/financial/plans_controller.rb` and `app/models/financial/plan/projection.rb`
-- [X] T022 [US2] Add custom/due-date switch links, full-order submission, keyboard move controls, payment notes, actual dates, timing badges, and selected-order row balances in `app/views/financial/plans/_planned_transactions.html.erb`
-- [X] T023 [US2] Add dependency-free drag enhancement that submits the same full ordered-ID form while retaining keyboard controls in `app/javascript/controllers/planned_transaction_order_controller.js`
-- [X] T024 [US2] Default actual dates from due date before planned date while preserving user overrides in `app/components/financial/installment_payment_form_component.rb` and `app/services/financial/planned_transactions/apply_service.rb`
-- [X] T025 [US2] Add derived early/on-time/late behavior and optional payment-note permitting in `app/models/financial/planned_transaction.rb` and `app/controllers/financial/planned_transactions_controller.rb`
-- [X] T026 [US2] Run all User Story 2 tests in `test/models/financial/plan_test.rb`, `test/models/financial/plan/projection_test.rb`, `test/models/financial/planned_transaction_test.rb`, `test/controllers/financial/plans/planned_transaction_orders_controller_test.rb`, `test/controllers/financial/plans_controller_test.rb`, `test/components/financial/installment_payment_form_component_test.rb`, `test/services/financial/planned_transactions/apply_service_test.rb`, and `test/system/financial_plan_execution_test.rb`
+- [X] T018 [US2] Add the reversible custom-order state migration and schema update in `db/migrate/*_add_custom_ordered_to_income_events.rb` and `db/schema.rb`
+- [X] T019 [US2] Implement default order selection and transactional full-list reordering in `app/models/financial/plan.rb`
+- [X] T020 [US2] Add the singular nested order route and account-scoped update action in `config/routes.rb` and `app/controllers/financial/plans/planned_transaction_orders_controller.rb`
+- [X] T021 [US2] Add custom/due-date switching, full-order submission, drag enhancement, actual dates, timing badges, and selected-order balances in `app/views/financial/plans/_planned_transactions.html.erb` and `app/javascript/controllers/planned_transaction_order_controller.js`
+- [X] T022 [US2] Preserve due dates and default actual dates while accepting earlier or later user-selected dates in `app/components/financial/installment_payment_form_component.rb` and `app/services/financial/planned_transactions/apply_service.rb`
+- [X] T023 [US2] Support icon-only button content with an explicit accessible label in `app/components/ui/button_component.rb` and `app/components/ui/button_component.html.erb`
+- [X] T024 [US2] Replace full-text move controls with compact up/down SVG icon buttons in `app/views/financial/plans/_planned_transactions.html.erb`
+- [X] T025 [US2] Run the focused User Story 2 tests in `test/models/financial/plan_test.rb`, `test/controllers/financial/plans/planned_transaction_orders_controller_test.rb`, `test/models/financial/planned_transaction_test.rb`, `test/models/financial/plan/projection_test.rb`, `test/services/financial/planned_transactions/apply_service_test.rb`, `test/components/ui/button_component_test.rb`, and `test/system/financial_plan_execution_test.rb`
 
-**Checkpoint**: Custom priority is durable, due-date view is non-destructive, every visible order has correct running balances, and actual ledger facts never change during reorder.
+**Checkpoint**: Custom order persists, due-date view is non-destructive, and both pointer and keyboard users can reorder without changing actual transactions.
 
 ---
 
-## Phase 5: User Story 3 - Verify the Account Route (Priority: P2)
+## Phase 5: User Story 3 - Verify and Correct the Account Route (Priority: P2)
 
-**Goal**: Make every movement's source, destination, direction, and missing route information visible without leaving the plan.
+**Goal**: Show each route where it is used and permit corrections through the existing edit flow.
 
-**Independent Test**: Open a plan containing expense, liability-payment, liability-charge, transfer, and incomplete routes; verify every complete direction is explicit and every missing side is identified.
+**Independent Test**: Review and correct expense, transfer, liability-payment, and liability-charge routes, including an applied movement; verify only the planned route changes and each funding source shows its destination inline.
 
 ### Tests for User Story 3
 
-- [X] T027 [P] [US3] Add failing complete and incomplete route-description tests in `test/models/financial/planned_transaction_test.rb`
-- [X] T028 [P] [US3] Add failing plan-page assertions for source, destination, direction, and missing-route labels in `test/controllers/financial/plans_controller_test.rb`
+- [X] T026 [P] [US3] Add failing route-selector, movement-kind re-derivation, applied-correction, account-scoping, and linked-actual immutability tests in `test/controllers/financial/plans_controller_test.rb` and `test/models/financial/planned_transaction_test.rb`
+- [X] T027 [P] [US3] Add failing funding-source destination badge and no-separate-summary assertions in `test/controllers/financial/plans_controller_test.rb`
 
 ### Implementation for User Story 3
 
-- [X] T029 [US3] Replace nullable route summaries with explicit route presentation and completeness behavior in `app/models/financial/planned_transaction.rb`
-- [X] T030 [US3] Render route direction and missing-side states beside every planned movement in `app/views/financial/plans/_planned_transactions.html.erb`
-- [X] T031 [US3] Run the focused User Story 3 tests in `test/models/financial/planned_transaction_test.rb` and `test/controllers/financial/plans_controller_test.rb`
+- [X] T028 [US3] Render explicit complete and missing route descriptions beside planned movements in `app/models/financial/planned_transaction.rb` and `app/views/financial/plans/_planned_transactions.html.erb`
+- [X] T029 [US3] Permit planned-route corrections after application while preserving linked actual entries in `app/models/planned_expense.rb` and `app/models/financial/planned_transaction.rb`
+- [X] T030 [US3] Accept account-scoped route updates through the existing planned-movement resource in `app/controllers/financial/planned_transactions_controller.rb` and `config/routes.rb`
+- [X] T031 [US3] Add movement-kind-specific source and destination selectors to the existing edit flow in `app/views/financial/plans/_planned_transactions.html.erb`
+- [X] T032 [US3] Add a destination badge to each existing funding-source item and remove the separate account summary in `app/views/financial/plans/_funding_sources.html.erb`
+- [X] T033 [US3] Run the focused User Story 3 tests in `test/models/financial/planned_transaction_test.rb` and `test/controllers/financial/plans_controller_test.rb`
 
-**Checkpoint**: The plan is sufficient to execute each movement through the intended accounts without guessing.
+**Checkpoint**: Users can see and correct every required planned route without changing historical actual entries.
 
 ---
 
 ## Phase 6: User Story 4 - Separate Portfolio and Plan Decisions (Priority: P3)
 
-**Goal**: Keep individual-plan calculations plan-local while presenting clearly labeled forecast totals for the account-scoped plans currently shown on the overview.
+**Goal**: Keep plan details plan-local while the plans overview aggregates only the displayed plans with the same planned-consumption rule.
 
-**Independent Test**: Create multiple plans with different reference dates and movements outside those dates; verify one plan shows only its own execution figures while the filtered overview totals all and only the displayed plans.
+**Independent Test**: Filter the plans overview, compare its totals with an individual plan, and verify overview Planned Consumption applies the same Reserve funds predicate without mixing scopes.
 
 ### Tests for User Story 4
 
-- [X] T032 [P] [US4] Replace preceding-plan carryover expectations with failing plan-local actual-entry tests in `test/models/financial/plan/actuals_test.rb`
-- [X] T033 [P] [US4] Add failing filtered plan-count, expected-funding, pending-requirement, and net-position tests in `test/models/financial/plans/overview_test.rb`
-- [X] T034 [P] [US4] Add failing overview-versus-plan labeling, filtering, and planned-for ordering assertions in `test/controllers/financial/plans_controller_test.rb`
+- [X] T034 [P] [US4] Add failing overview expense, reserved-neutral, unreserved-neutral, and filtered-plan total tests in `test/models/financial/plans/overview_test.rb`
+- [X] T035 [P] [US4] Add failing overview-versus-plan labeling and planned-for ordering assertions in `test/controllers/financial/plans_controller_test.rb`
 
 ### Implementation for User Story 4
 
-- [X] T035 [US4] Remove preceding-plan carryover and keep actual calculations plan-local in `app/models/financial/plan/actuals.rb`
-- [X] T036 [US4] Implement collection forecast totals for an account-scoped plans relation in `app/models/financial/plans/overview.rb`
-- [X] T037 [US4] Load overview calculations after applying month/status filters in `app/controllers/financial/plans_controller.rb`
-- [X] T038 [US4] Add clearly labeled portfolio forecast metrics while preserving planned-for display ordering in `app/views/financial/plans/index.html.erb`
-- [X] T039 [US4] Run the focused User Story 4 tests in `test/models/financial/plan/actuals_test.rb`, `test/models/financial/plans/overview_test.rb`, and `test/controllers/financial/plans_controller_test.rb`
+- [X] T036 [US4] Keep actual calculations plan-local and remove preceding-plan carryover in `app/models/financial/plan/actuals.rb`
+- [X] T037 [US4] Reuse the shared plan-balance predicate for overview Planned Consumption in `app/models/financial/plans/overview.rb`
+- [X] T038 [US4] Present clearly scoped overview labels while preserving planned-for ordering in `app/views/financial/plans/index.html.erb`
+- [X] T039 [US4] Run the focused User Story 4 tests in `test/models/financial/plans/overview_test.rb`, `test/models/financial/plan/actuals_test.rb`, and `test/controllers/financial/plans_controller_test.rb`
 
-**Checkpoint**: Overview forecasts and individual-plan execution figures are independently correct and cannot be mistaken for each other.
+**Checkpoint**: Overview figures and individual-plan figures are independently correct and clearly distinguishable.
 
 ---
 
 ## Phase 7: Polish and Cross-Cutting Verification
 
-**Purpose**: Validate the complete living specification without expanding feature scope.
+**Purpose**: Verify the living specification without broadening scope.
 
-- [ ] T040 Execute the manual acceptance walkthrough and record any specification correction in `specs/003-quincena-plan-execution/quickstart.md`
-- [ ] T041 Run `bin/rails test`, `npm run herb:lint`, and `bin/rubocop` against the implementation paths listed in `specs/003-quincena-plan-execution/plan.md`
-- [X] T042 Run `bin/brakeman --no-pager` and verify account-scoped financial lookups against `specs/003-quincena-plan-execution/contracts/http.md`
+- [X] T040 Execute the manual acceptance walkthrough and record only verified corrections in `specs/003-quincena-plan-execution/quickstart.md`
+- [X] T041 Run `bin/rails test`, `npm run herb:lint`, and `bin/rubocop` for the implementation paths listed in `specs/003-quincena-plan-execution/plan.md`
+- [X] T042 Run `bin/brakeman --no-pager` and verify account scoping against `specs/003-quincena-plan-execution/contracts/http.md`
 
 ---
 
@@ -154,39 +154,36 @@ description: "Dependency-ordered tasks for financial plan execution"
 
 ### Phase Dependencies
 
-- **Phase 1 (Setup)**: Starts immediately and establishes the regression baseline.
-- **Phase 2 (Foundational)**: Depends on Phase 1 and blocks all user stories.
-- **Phase 3 (US1)**: Depends on Phase 2 and is the MVP.
-- **Phase 4 (US2)**: Depends on US1 because its running balances use the new execution projection.
-- **Phase 5 (US3)**: Depends on US1 for selected-account context; its route behavior can otherwise be developed independently of US2.
-- **Phase 6 (US4)**: Depends on US1's pending cash-requirement semantics but not on US2 or US3.
-- **Phase 7 (Polish)**: Depends on every story selected for release.
+- **Setup and Foundation**: Already complete; they establish the regression baseline and plan-owned namespace.
+- **US1**: First remaining slice and the MVP; its shared predicate feeds US4.
+- **US2**: Existing ordering is functional; compact controls can proceed independently of US1 after T017.
+- **US3**: Can proceed independently after its tests; T029 precedes T030 and T031.
+- **US4**: T037 depends on T008; presentation work can proceed independently.
+- **Polish**: Depends on every selected story.
 
 ### User Story Dependency Graph
 
 ```text
 Foundation
-    └── US1 Know whether the plan is funded
-        ├── US2 Prioritize and execute payments
-        ├── US3 Verify the account route
-        └── US4 Separate portfolio and plan decisions
+├── US1 Planned and actual execution totals
+│   └── US4 Portfolio totals
+├── US2 Execution priority
+└── US3 Account routes
 ```
 
 ### Within Each User Story
 
-- Write the story's focused tests and confirm expected failures before implementation.
-- Implement model/domain behavior before controller coordination.
-- Implement controller contracts before view interaction.
-- Run the story's focused test set before its checkpoint.
-- Reuse existing fixtures when representative; create inline records only for scenario-specific financial states.
+- Add and run the focused failing tests before implementation.
+- Implement shared domain behavior before controller and view changes.
+- Reuse existing persistence, controllers, components, and browser behavior.
+- Run the story's focused tests before its checkpoint.
 
 ### Parallel Opportunities
 
-- Within US1, T004, T005, and T006 can run in parallel.
-- Within US2, T012 through T017 can be authored in parallel before implementation.
-- Within US3, T027 and T028 can run in parallel.
-- Within US4, T032, T033, and T034 can run in parallel.
-- After US1, US2, US3, and US4 can be assigned in parallel if changes to shared files are coordinated; US3 and US4 have no behavioral dependency on US2.
+- US1 tests T004-T007 can run in parallel.
+- US2 compact-control test T017 can run alongside US1.
+- US3 tests T026-T027 can run in parallel and alongside US1.
+- US4 tests T034-T035 can run in parallel; T037 waits for T008.
 
 ---
 
@@ -195,32 +192,24 @@ Foundation
 ### User Story 1
 
 ```text
-Task T004: Projection calculation tests in test/models/financial/plan/projection_test.rb
-Task T005: Cash-requirement tests in test/models/financial/planned_transaction_test.rb
-Task T006: Plan-page metric tests in test/controllers/financial/plans_controller_test.rb
-```
-
-### User Story 2
-
-```text
-Task T012: Aggregate reorder tests in test/models/financial/plan_test.rb
-Task T013: HTTP order tests in test/controllers/financial/plans/planned_transaction_orders_controller_test.rb
-Task T015: Actual-date tests in component and service test files
+Task T004: Projection calculations in test/models/financial/plan/projection_test.rb
+Task T005: Reserve funds rules in model tests
+Task T006: Actual calculations in test/models/financial/plan/actuals_test.rb
+Task T007: Summary and control presentation in controller tests
 ```
 
 ### User Story 3
 
 ```text
-Task T027: Route domain tests in test/models/financial/planned_transaction_test.rb
-Task T028: Route presentation tests in test/controllers/financial/plans_controller_test.rb
+Task T026: Planned route correction tests
+Task T027: Funding destination presentation tests
 ```
 
 ### User Story 4
 
 ```text
-Task T032: Plan-local actual tests in test/models/financial/plan/actuals_test.rb
-Task T033: Overview calculation tests in test/models/financial/plans/overview_test.rb
-Task T034: Overview presentation tests in test/controllers/financial/plans_controller_test.rb
+Task T034: Overview calculation tests
+Task T035: Overview presentation tests
 ```
 
 ---
@@ -229,35 +218,31 @@ Task T034: Overview presentation tests in test/controllers/financial/plans_contr
 
 ### MVP First
 
-1. Complete Phase 1 and Phase 2.
-2. Complete User Story 1.
-3. Stop and validate the funding calculation independently.
-4. Demo the plan's current available money, pending required money, remainder/shortfall, and no-double-counting rule.
+1. Complete T004-T014 for User Story 1.
+2. Validate the metric-card summary and Reserve funds behavior independently.
+3. Stop before optional lower-priority stories if a smaller release is desired.
 
 ### Incremental Delivery
 
-1. **US1** makes the plan financially truthful.
-2. **US2** makes that truthful plan executable in user-selected priority.
-3. **US3** removes account-routing guesswork.
-4. **US4** restores useful portfolio context without contaminating one plan.
-5. Run cross-cutting verification after the desired stories are complete.
+1. **US1** makes plan calculations match the clarified financial rules.
+2. **US2** compacts the already-working priority controls.
+3. **US3** removes route-correction guesswork with the existing edit flow.
+4. **US4** aligns portfolio totals with the same shared predicate.
+5. **Polish** validates the complete living specification.
 
 ### Minimality Rules
 
-- Do not add a new dependency, generic sortable abstraction, repository layer, or parallel financial table.
-- Do not rename `Financial::PlannedTransaction` or `Financial::FundingSource` merely to place them below `Financial::Plan`.
-- Do not refactor close, cancel, move, receive, or unrelated legacy workflows unless a failing feature test proves it necessary.
-- Prefer existing UI components and native browser behavior; drag remains an enhancement over keyboard controls.
+- Do not add tables, dependencies, generic sortable abstractions, or duplicate calculation classes.
+- Keep `planned_for` as reference and ordering data only; never constrain plan membership by date.
+- Keep persisted `commits_plan_funds`; expose it as Reserve funds instead of renaming the column.
+- Reuse the existing movement edit flow, funding-source item, button component, and reorder endpoint.
+- Never mutate linked actual entries when planned order, route, or Reserve funds changes.
 
 ## Notes
 
-- `[P]` tasks touch separate files or are otherwise safe to execute concurrently.
-- Every story task includes `[US1]`, `[US2]`, `[US3]`, or `[US4]` for traceability.
-- Commit only when explicitly requested; checkpoints are validation boundaries, not commit instructions.
+- Checked tasks are already implemented and still valid under the clarified specification.
+- Checkpoints are validation boundaries, not commit instructions.
 
-## Phase 8: Convergence
+## Phase 8: Unplanned Actual Consumption
 
-- [X] T043 [US4] Implement the account-scoped `Financial::Plans::Overview`, load it after month/status filtering, and render clearly labeled portfolio totals in `app/models/financial/plans/overview.rb`, `app/controllers/financial/plans_controller.rb`, and `app/views/financial/plans/index.html.erb` per US4/AC1-3 and FR-018/019 (missing)
-- [X] T044 [US4] Remove preceding-plan carryover from `Financial::Plan::Actuals#opening_balance` and complete the plan-local actuals boundary tests in `app/models/financial/plan/actuals.rb` and `test/models/financial/plan/actuals_test.rb` per FR-017 and plan Slice 4.1 (contradicts)
-- [X] T045 [US1] Reconcile projection/controller test coverage and visible balance-basis assertions with funding-source effective amounts, actual-receipt precedence, applied cash deductions, and immunity to negative account balances in `test/models/financial/plan/projection_test.rb` and `test/controllers/financial/plans_controller_test.rb` per FR-002/003/016/022 and SC-004/007 (partial)
-- [ ] T046 Run the remaining User Story 4 tests, full Rails suite, Herb lint, RuboCop, Brakeman, and the manual acceptance walkthrough; record only verified corrections in `specs/003-quincena-plan-execution/quickstart.md` per Constitution IV and plan Verification Strategy (partial)
+- [X] T043 [US1] Characterize unplanned plan expenses in `test/models/financial/plan/actuals_test.rb`, explain their Actual Consumption effect in `app/views/financial/plans/_actual_entries.html.erb`, and verify the plan page in `test/controllers/financial/plans_controller_test.rb`

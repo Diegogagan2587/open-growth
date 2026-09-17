@@ -6,7 +6,7 @@
 
 ## Summary
 
-Extend the existing financial-plan implementation so one plan is an unrestricted grouping of funding and planned movements, with `planned_for` retained only as reference information. Restore the compact "Projection and plan execution" summary with Planned and Actual rows: planned values use expected funding, expenses, and neutral movements explicitly marked Reserve funds, while actual values use recorded funding receipts and applied movements' actual entries. Keep routes, reservation state, payment timing, and running planned balances visible in due-date or persisted custom order. Preserve existing tables and planned/actual links; reuse the existing `commits_plan_funds` field behind the clearer Reserve funds label, keep plan-owned calculations under `Financial::Plan::*`, collection-wide calculations in `Financial::Plans::Overview`, and atomic priority updates in the focused order resource.
+Extend the existing financial-plan implementation so one plan is an unrestricted grouping of funding and planned movements, with `planned_for` retained only as reference information. Restore the compact "Projection and plan execution" metric-card grid with Planned values prominent and Actual values below: planned values use expected funding, expenses, and neutral movements explicitly marked Reserve funds, while actual values use recorded funding receipts and applied movements' actual entries. Keep routes, reservation state, payment timing, and running planned balances visible in due-date or persisted custom order. Preserve existing tables and planned/actual links; reuse the existing `commits_plan_funds` field behind the clearer Reserve funds label, keep plan-owned calculations under `Financial::Plan::*`, collection-wide calculations in `Financial::Plans::Overview`, and atomic priority updates in the focused order resource.
 
 ## Technical Context
 
@@ -147,9 +147,9 @@ test/
 
 ### Slice 4: Separate overview and plan presentation
 
-1. Make `Financial::Plan::Actuals` plan-local by removing preceding-plan carryover and calculating Actual Funding from funding receipts and Actual Consumption from this plan's applied entries.
+1. Make `Financial::Plan::Actuals` plan-local by removing preceding-plan carryover and calculating Actual Funding from funding receipts and Actual Consumption from every expense entry associated with the plan, including unplanned actuals without a linked planned movement.
 2. Move collection-wide expected funding, Planned Consumption, and net position to `Financial::Plans::Overview`, calculated for the plans relation currently shown on the index and using the same plan-balance predicate as individual plans.
-3. Restore the existing two-row summary under "Projection and plan execution" with Funding, Consumption, and Plan balance columns; do not replace it with metric cards.
+3. Preserve the existing metric-card grid under "Projection and plan execution" with Funding, Consumption, and Plan balance cards; show Planned prominently and Actual below without introducing a table.
 4. Remove the added funding-account summary block. Add one compact destination badge to each existing funding-source item so routing context stays where the source is already displayed.
 5. Keep `PlansController#show` as one page request with partials. The sections do not yet have independent loading, authorization, or lifecycle needs, so Turbo Frames with `src` and additional controllers would add no value.
 6. Keep `planned_for` visible and retain chronological overview ordering, but remove any implication that it limits plan membership or calculations.

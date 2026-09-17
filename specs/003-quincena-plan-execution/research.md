@@ -109,7 +109,7 @@
 
 ## 9. Restore the existing summary and use compact native controls
 
-**Decision**: Restore the two-row "Projection and plan execution" summary with Funding, Consumption, and Plan balance columns. Reuse project buttons, badges, inputs, and selects. Keep native drag-and-drop and use icon-sized up/down buttons with inline SVGs and movement-specific accessible labels.
+**Decision**: Preserve the existing "Projection and plan execution" metric-card grid with Funding, Consumption, and Plan balance cards showing Planned prominently and Actual below. Reuse project buttons, badges, inputs, and selects. Keep native drag-and-drop and use icon-sized up/down buttons with inline SVGs and movement-specific accessible labels.
 
 **Rationale**: The previous summary is familiar and already matches the planned-versus-actual distinction. The canonical button component already has an icon size, the application already uses inline SVG, no sortable dependency is installed, and accessibility cannot depend on dragging.
 
