@@ -12,7 +12,7 @@ class Financial::Plan::Projection
   end
 
   def expected_funding
-    projected_funding_for(plan)
+    funding_sources.sum(0.to_d) { |source| source.expected_amount.to_d }
   end
 
   def account_balances
