@@ -12,7 +12,7 @@
     <div class="flex gap-2">
       <%= render Ui::ButtonComponent.new(href: edit_finance_loan_path(@loan), label: "Edit terms", variant: :outline) %>
       <% if @loan.lifecycle_status == "active" && (@loan.entries.where(entry_type: "loan_disbursement").exists? || @loan.funding_sources.exists?) %>
-        <%= render Ui::ButtonComponent.new(href: disbursement_finance_loan_path(@loan), label: "Undo disbursement", variant: :destructive, method: :delete, data: { turbo_confirm: "Undo this disbursement? The actual loan entry and borrowed funding source will be deleted. Installment payments must be undone first." }) %>
+        <%= render Ui::ButtonComponent.new(href: disbursement_finance_loan_path(@loan), label: "Undo disbursement", variant: :destructive, method: :delete, data: { turbo_confirm: "Undo this disbursement? The actual loan transaction and borrowed funding source will be deleted. Installment payments must be undone first." }) %>
       <% elsif @loan.entries.empty? && @loan.funding_sources.empty? %>
         <%= render Ui::ButtonComponent.new(href: finance_loan_path(@loan), label: "Delete loan", variant: :destructive, method: :delete, data: { turbo_confirm: "Delete this loan and its unused schedule? Planned installments must be deleted first." }) %>
       <% end %>
@@ -34,7 +34,7 @@
   <% if @loan.lifecycle_status == "simulated" %>
     <section class="rounded-xl border border-border bg-card p-5">
       <h2 class="font-semibold">Activate and disburse</h2>
-      <p class="mt-1 text-sm text-muted-foreground">Activation creates one actual disbursement entry. Configure one liability and one destination before activating.</p>
+      <p class="mt-1 text-sm text-muted-foreground">Activation creates one actual disbursement transaction. Configure one liability and one destination before activating.</p>
       <%= form_with url: activate_finance_loan_path(@loan), method: :post, class: "mt-4 flex flex-wrap items-end gap-2" do %>
         <label class="min-w-56 space-y-1 text-sm">Financial plan<%= render Ui::SelectComponent.new(name: "plan_id", options: @plans.map { |plan| [ plan.name, plan.id ] }, include_blank: "Select plan", required: true) %></label>
         <%= render Ui::ButtonComponent.new(label: "Activate loan", type: "submit") %>
@@ -98,7 +98,7 @@
                       <%= render Ui::DialogComponent.new(id: "delete-installment-#{installment.id}", title: "Delete this installment's records?", description: "This correction permanently removes the real accounting records and planning history. Installment ##{installment.installment_number} will stay in the schedule so it can be planned again.") do %>
                         <ul class="space-y-2 text-sm">
                           <li class="flex justify-between gap-4"><span class="text-muted-foreground">Actual payment</span><strong><%= number_to_currency(installment.payment_entry.amount) %> on <%= l(installment.payment_entry.entry_date) %></strong></li>
-                          <% if installment.interest_entry %><li class="flex justify-between gap-4"><span class="text-muted-foreground">Interest entry</span><strong><%= number_to_currency(installment.interest_entry.amount) %></strong></li><% end %>
+                          <% if installment.interest_entry %><li class="flex justify-between gap-4"><span class="text-muted-foreground">Interest transaction</span><strong><%= number_to_currency(installment.interest_entry.amount) %></strong></li><% end %>
                           <li class="flex justify-between gap-4"><span class="text-muted-foreground">Planned transaction</span><strong><%= installment.planned_transaction.plan&.name || "Unassigned" %></strong></li>
                         </ul>
                         <p class="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">The payment, interest, and planned transaction will be deleted. The installment remains available to plan again.</p>
@@ -152,10 +152,10 @@
   </section>
 
   <section>
-    <h2 class="text-xl font-semibold">Actual loan entries</h2>
+    <h2 class="text-xl font-semibold">Actual loan transactions</h2>
     <div class="mt-3 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
       <% @entries.each do |entry| %><%= link_to finance_entry_path(entry), class: "flex justify-between p-4 hover:bg-muted/30" do %><span><%= entry.description %> · <%= entry.entry_type.humanize %></span><strong><%= number_to_currency(entry.amount) %></strong><% end %><% end %>
-      <% if @entries.empty? %><p class="p-4 text-sm text-muted-foreground">Simulation only—no actual debt entries.</p><% end %>
+      <% if @entries.empty? %><p class="p-4 text-sm text-muted-foreground">Simulation only—no actual debt transactions.</p><% end %>
     </div>
   </section>
 </section>
