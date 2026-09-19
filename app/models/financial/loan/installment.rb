@@ -38,4 +38,27 @@ class Financial::Loan::Installment < ApplicationRecord
     errors.add(:planned_transaction, error.message)
     false
   end
+
+  def remove_paid_history
+    with_lock do
+      unless planned_transaction && payment_entry && resolution == "paid"
+        errors.add(:base, "only paid planned installment records can be deleted")
+        return false
+      end
+
+      payment = payment_entry
+      interest = interest_entry
+      plan_item = planned_transaction
+      transaction do
+        update!(planned_transaction: nil, payment_entry: nil, interest_entry: nil, resolution: "scheduled")
+        payment&.destroy!
+        interest&.destroy!
+        plan_item.destroy!
+      end
+    end
+    true
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotDestroyed => error
+    errors.add(:base, error.message)
+    false
+  end
 end
