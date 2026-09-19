@@ -1,5 +1,5 @@
 class Financial::LoansController < ApplicationController
-  before_action :set_loan, only: [ :show, :edit, :update, :destroy, :activate ]
+  before_action :set_loan, only: [ :show, :edit, :update, :destroy, :activate, :undo_disbursement ]
   before_action :load_collections, only: [ :new, :create, :edit, :update, :show ]
 
   def index
@@ -19,7 +19,9 @@ class Financial::LoansController < ApplicationController
   end
 
   def show
-    @installments = @loan.installments.includes(:planned_transaction, :payment_entry).order(:installment_number)
+    installments = @loan.installments.includes(:planned_transaction, :payment_entry)
+    installments = installments.includes(:interest_entry) if installments.where.not(interest_entry_id: nil).exists?
+    @installments = installments.order(:installment_number)
     @entries = @loan.entries.by_date
     @first_payment_date = @loan.first_payment_date || @loan.installments.minimum(:due_date)
   end
@@ -53,17 +55,32 @@ class Financial::LoansController < ApplicationController
   end
 
   def destroy
-    if @loan.lifecycle_status == "simulated" && @loan.entries.empty? && @loan.destroy
-      redirect_to finance_loans_path, status: :see_other, notice: "Simulation deleted"
-    else
-      redirect_to finance_loan_path(@loan), alert: "Only a simulation without actual entries can be deleted"
+    return redirect_to(finance_loan_path(@loan), alert: "Undo the disbursement and installment payments before deleting the loan") if @loan.entries.exists?
+    return redirect_to(finance_loan_path(@loan), alert: "Undo each paid installment before deleting the loan") if @loan.installments.where("resolution = 'paid' OR payment_entry_id IS NOT NULL OR interest_entry_id IS NOT NULL").exists?
+    return redirect_to(finance_loan_path(@loan), alert: "Delete each planned installment before deleting the loan") if @loan.installments.where.not(planned_transaction_id: nil).exists?
+
+    ActiveRecord::Base.transaction do
+      @loan.funding_sources.each(&:destroy!)
+      @loan.installments.each(&:destroy!)
+      @loan.reload.destroy!
     end
+    redirect_to finance_loans_path, status: :see_other, notice: "Loan deleted"
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotDestroyed => error
+    redirect_to finance_loan_path(@loan), alert: error.message
   end
 
   def activate
     plan = Financial::Plan.for_account(Current.account).find(params[:plan_id])
     result = Financial::Loans::ActivateService.call(loan: @loan, plan: plan)
     redirect_to finance_loan_path(@loan), notice: ("Loan activated and disbursed" if result.success?), alert: (result.error_message unless result.success?)
+  end
+
+  def undo_disbursement
+    if @loan.undo_disbursement
+      redirect_to finance_loan_path(@loan), notice: "Loan disbursement undone"
+    else
+      redirect_to finance_loan_path(@loan), alert: @loan.errors.full_messages.to_sentence
+    end
   end
 
   private

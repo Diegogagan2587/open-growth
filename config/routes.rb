@@ -61,11 +61,13 @@ Rails.application.routes.draw do
     resources :loans, controller: "/financial/loans" do
       resource :schedule, only: :create, controller: "/financial/loans/schedules"
       resources :installments, only: [ :update ], controller: "/financial/loans/installments" do
+        delete :history, on: :member, action: :destroy_history
         resource :plan, only: [ :create, :destroy ], controller: "/financial/loans/installment_plans"
         resource :payment, only: :create, controller: "/financial/loans/installment_payments"
       end
       member do
         post :activate
+        delete :disbursement, action: :undo_disbursement
       end
     end
     resources :categories, controller: "/financial/categories"

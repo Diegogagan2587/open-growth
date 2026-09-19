@@ -1,17 +1,7 @@
-<div class="hidden md:block">
-  <div class="fixed inset-0 flex items-center justify-center z-50">
-    <div class="bg-background rounded-lg shadow-lg w-full max-w-lg max-h-[80vh] overflow-auto">
-      <div class="p-4 border-b bg-muted">
-        <% if @title.present? %>
-          <h3 class="text-lg font-semibold"><%= @title %></h3>
-        <% end %>
-        <% if @description.present? %>
-          <p class="text-sm text-muted-foreground"><%= @description %></p>
-        <% end %>
-      </div>
-      <div class="p-4">
-        <%= content %>
-      </div>
-    </div>
+<dialog id="<%= @id %>" aria-labelledby="<%= title_id %>" <%= "open" if @show %> class="m-auto w-[calc(100%-2rem)] max-w-lg rounded-xl border border-border bg-background p-0 text-foreground shadow-xl backdrop:bg-black/55">
+  <div class="border-b border-border p-5">
+    <% if @title.present? %><h3 id="<%= title_id %>" class="text-lg font-semibold"><%= @title %></h3><% end %>
+    <% if @description.present? %><p class="mt-1 text-sm text-muted-foreground"><%= @description %></p><% end %>
   </div>
-</div>
+  <div class="p-5"><%= content %></div>
+</dialog>

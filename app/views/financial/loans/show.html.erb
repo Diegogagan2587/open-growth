@@ -11,8 +11,10 @@
     </div>
     <div class="flex gap-2">
       <%= render Ui::ButtonComponent.new(href: edit_finance_loan_path(@loan), label: "Edit terms", variant: :outline) %>
-      <% if @loan.lifecycle_status == "simulated" && @loan.entries.empty? %>
-        <%= render Ui::ButtonComponent.new(href: finance_loan_path(@loan), label: "Delete simulation", variant: :destructive, method: :delete, data: { turbo_confirm: "Delete this simulation?" }) %>
+      <% if @loan.lifecycle_status == "active" && (@loan.entries.where(entry_type: "loan_disbursement").exists? || @loan.funding_sources.exists?) %>
+        <%= render Ui::ButtonComponent.new(href: disbursement_finance_loan_path(@loan), label: "Undo disbursement", variant: :destructive, method: :delete, data: { turbo_confirm: "Undo this disbursement? The actual loan entry and borrowed funding source will be deleted. Installment payments must be undone first." }) %>
+      <% elsif @loan.entries.empty? && @loan.funding_sources.empty? %>
+        <%= render Ui::ButtonComponent.new(href: finance_loan_path(@loan), label: "Delete loan", variant: :destructive, method: :delete, data: { turbo_confirm: "Delete this loan and its unused schedule? Planned installments must be deleted first." }) %>
       <% end %>
     </div>
   </header>
@@ -87,9 +89,25 @@
               <td class="p-3"><%= installment.resolution.humanize %></td>
               <td class="p-3">
                 <% if installment.planned_transaction %>
-                  <div class="flex items-center gap-1">
+                  <div class="flex flex-wrap items-center gap-1" data-controller="dialog">
                     <%= link_to installment.planned_transaction.plan&.name || "Unassigned", installment.planned_transaction.plan ? finance_plan_path(installment.planned_transaction.plan) : finance_planned_transactions_path, class: "text-primary hover:underline" %>
-                    <% if installment.planned_transaction.execution_status == "pending" %>
+                    <% if installment.payment_entry || installment.interest_entry %>
+                      <%= render Ui::ButtonComponent.new(aria_label: "Delete payment records", variant: :ghost, size: :icon, css_class: "h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive", data: { action: "dialog#open" }) do %>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" /></svg>
+                      <% end %>
+                      <%= render Ui::DialogComponent.new(id: "delete-installment-#{installment.id}", title: "Delete this installment's records?", description: "This correction permanently removes the real accounting records and planning history. Installment ##{installment.installment_number} will stay in the schedule so it can be planned again.") do %>
+                        <ul class="space-y-2 text-sm">
+                          <li class="flex justify-between gap-4"><span class="text-muted-foreground">Actual payment</span><strong><%= number_to_currency(installment.payment_entry.amount) %> on <%= l(installment.payment_entry.entry_date) %></strong></li>
+                          <% if installment.interest_entry %><li class="flex justify-between gap-4"><span class="text-muted-foreground">Interest entry</span><strong><%= number_to_currency(installment.interest_entry.amount) %></strong></li><% end %>
+                          <li class="flex justify-between gap-4"><span class="text-muted-foreground">Planned transaction</span><strong><%= installment.planned_transaction.plan&.name || "Unassigned" %></strong></li>
+                        </ul>
+                        <p class="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">The payment, interest, and planned transaction will be deleted. The installment remains available to plan again.</p>
+                        <div class="mt-5 flex justify-end gap-2">
+                          <form method="dialog"><%= render Ui::ButtonComponent.new(label: "Cancel", type: "submit", variant: :outline) %></form>
+                          <%= form_with url: history_finance_loan_installment_path(@loan, installment), method: :delete do %><%= render Ui::ButtonComponent.new(label: "Delete payment records", type: "submit", variant: :destructive) %><% end %>
+                        </div>
+                      <% end %>
+                    <% elsif installment.planned_transaction.execution_status == "pending" %>
                       <%= render Ui::ButtonComponent.new(href: finance_loan_installment_plan_path(@loan, installment), aria_label: "Delete planned installment", variant: :ghost, method: :delete, size: :icon, css_class: "h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive", data: { turbo_confirm: "Delete this planned installment? The installment will remain in the loan schedule and can be planned again." }) do %>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" /></svg>
                       <% end %>
@@ -101,6 +119,8 @@
                     <%= render Ui::SelectComponent.new(name: "financial_account_id", options: @assets.map { |asset| [ asset.name, asset.id ] }, include_blank: "Pay from", required: true) %>
                     <%= render Ui::ButtonComponent.new(label: "Plan", type: "submit", size: :sm) %>
                   <% end %>
+                <% else %>
+                  <span class="text-muted-foreground">—</span>
                 <% end %>
               </td>
               <td class="p-3">

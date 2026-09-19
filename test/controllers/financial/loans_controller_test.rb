@@ -295,6 +295,66 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
     assert_nil installment.reload.planned_transaction
   end
 
+  test "deletes paid records while preserving the installment for replanning" do
+    liability = Financial::Liability.create!(account: @account, name: "Mistaken loan debt", liability_type: "personal_credit", status: "active", opening_balance: 0)
+    asset = Financial::Asset.create!(account: @account, name: "Mistaken loan cash", account_type: "checking", status: "active", opening_balance: 2_000)
+    category = Category.create!(account: @account, name: "Mistaken loan interest")
+    plan = Financial::Plan.create!(account: @account, name: "Mistaken loan plan", planned_for: Date.current, expected_amount: 1)
+    loan = Financial::Loan.create!(account: @account, liability: liability, destination_asset: asset, interest_category: category, name: "Mistaken loan", principal_amount: 1_000)
+    Financial::Loans::ActivateService.call(loan: loan, plan: plan)
+    installment = Financial::Loan::Installment.create!(account: @account, financial_loan: loan, installment_number: 1, due_date: Date.current, expected_amount: 550, expected_principal: 500, expected_interest: 50)
+    planned = Financial::Loans::PlanInstallmentService.call(installment: installment, plan: plan, source_account: asset).planned_transaction
+    Financial::Loans::ApplyInstallmentPayment.call(installment: installment, total: 550, interest: 50, entry_date: Date.current)
+    Financial::Loan::Installment.create!(account: @account, financial_loan: loan, installment_number: 2, due_date: Date.current + 1.month, expected_amount: 500, expected_principal: 500, expected_interest: 0)
+
+    get finance_loan_path(loan)
+    assert_select "button[aria-label='Delete payment records'][data-action='dialog#open']", count: 1
+    assert_select "button[aria-label='Delete installment']", count: 0
+    assert_select "dialog#delete-installment-#{installment.id}" do
+      assert_select "form[action='#{history_finance_loan_installment_path(loan, installment)}']"
+      assert_select "p", text: /installment remains available to plan again/i
+    end
+    assert_select "a[href='#{disbursement_finance_loan_path(loan)}'][data-turbo-confirm*='actual loan entry and borrowed funding source']"
+
+    assert_no_difference("Financial::FundingSource.count") do
+      delete disbursement_finance_loan_path(loan)
+    end
+    assert_match(/undo installment payments/i, flash[:alert])
+
+    assert_difference("Financial::Entry.count", -2) do
+      assert_difference("Financial::PlannedTransaction.count", -1) do
+        assert_no_difference("Financial::Loan::Installment.count") do
+          delete history_finance_loan_installment_path(loan, installment)
+        end
+      end
+    end
+    assert_redirected_to finance_loan_path(loan)
+    assert_not Financial::PlannedTransaction.exists?(planned.id)
+    assert_equal "scheduled", installment.reload.resolution
+    assert_nil installment.payment_entry
+    assert_nil installment.interest_entry
+    assert_nil installment.planned_transaction
+
+    replanned = Financial::Loans::PlanInstallmentService.call(installment: installment, plan: plan, source_account: asset)
+    assert replanned.success?
+    delete finance_loan_installment_plan_path(loan, installment)
+
+    assert_difference("Financial::Entry.count", -1) do
+      assert_difference("Financial::FundingSource.count", -1) do
+        delete disbursement_finance_loan_path(loan)
+      end
+    end
+    assert_equal "simulated", loan.reload.lifecycle_status
+
+    get finance_loan_path(loan)
+    assert_select "a[href='#{finance_loan_path(loan)}'][data-turbo-confirm*='Delete this loan']"
+
+    assert_difference("Financial::Loan.count", -1) do
+      delete finance_loan_path(loan)
+    end
+    assert_redirected_to finance_loans_path
+  end
+
   test "records a categorized installment payment through the nested payment resource" do
     interest_category = Category.create!(account: @account, name: "Loan interest request")
     liability = Financial::Liability.create!(account: @account, name: "Request loan", liability_type: "personal_credit", status: "active", opening_balance: 2_000)
