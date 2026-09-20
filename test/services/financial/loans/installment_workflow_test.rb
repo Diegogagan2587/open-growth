@@ -20,7 +20,7 @@ class Financial::Loans::InstallmentWorkflowTest < ActiveSupport::TestCase
       payment_frequency: "monthly",
       lifecycle_status: "simulated"
     )
-    assert Financial::Loans::ActivateService.call(loan: loan, plan: plan).success?
+    assert loan.disburse(plan: plan).success?
 
     generated = Financial::Loans::GenerateInstallmentsService.call(loan: loan, start_date: Date.new(2026, 8, 1))
     assert generated.success?
