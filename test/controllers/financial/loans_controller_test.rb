@@ -301,7 +301,7 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
     category = Category.create!(account: @account, name: "Mistaken loan interest")
     plan = Financial::Plan.create!(account: @account, name: "Mistaken loan plan", planned_for: Date.current, expected_amount: 1)
     loan = Financial::Loan.create!(account: @account, liability: liability, destination_asset: asset, interest_category: category, name: "Mistaken loan", principal_amount: 1_000)
-    Financial::Loans::ActivateService.call(loan: loan, plan: plan)
+    loan.disburse(plan: plan)
     installment = Financial::Loan::Installment.create!(account: @account, financial_loan: loan, installment_number: 1, due_date: Date.current, expected_amount: 550, expected_principal: 500, expected_interest: 50)
     planned = Financial::Loans::PlanInstallmentService.call(installment: installment, plan: plan, source_account: asset).planned_transaction
     Financial::Loans::ApplyInstallmentPayment.call(installment: installment, total: 550, interest: 50, entry_date: Date.current)
