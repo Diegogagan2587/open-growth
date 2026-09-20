@@ -6,52 +6,55 @@ class Financial::Loan::Disbursement
   def self.create(loan:, plan:)
     transaction = nil
     loan.with_lock do
-      existing = loan.transactions.find_by(transaction_type: "loan_disbursement")
-      return Result.new(success?: true, transaction: existing) if existing
-
-      validate_disbursement!(loan)
-
+      loan.update!(lifecycle_status: "active")
       source = loan.funding_sources.first_or_create!(
         account: loan.account,
         financial_plan: plan,
         description: loan.name,
         expected_amount: loan.principal_amount,
         expected_date: plan.planned_for,
-        expected_destination_account: loan.destination_account,
+        expected_destination_asset: loan.destination_asset,
+        expected_destination_liability: loan.destination_liability,
         kind: "borrowed"
       )
-      result = Financial::FundingSources::Receipt.create(funding_source: source)
-      unless result.success?
-        loan.errors.add(:base, result.error_message)
-        raise ActiveRecord::RecordInvalid, loan
-      end
-
-      transaction = result.transaction
-      loan.update!(lifecycle_status: "active")
+      transaction = source.receipt_entry || Financial::Entry.create!(
+        account: loan.account,
+        income_event: plan,
+        funding_source: source,
+        financial_loan: loan,
+        entry_type: "loan_disbursement",
+        entry_date: source.expected_date,
+        amount: source.expected_amount,
+        description: source.description,
+        financial_liability: loan.liability,
+        financial_account: loan.destination_asset,
+        counterparty_financial_liability: loan.destination_liability
+      )
+      source.update!(resolution: "received")
     end
     Result.new(success?: true, transaction: transaction)
   rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique => error
-    existing = loan&.reload&.transactions&.find_by(transaction_type: "loan_disbursement")
-    return Result.new(success?: true, transaction: existing) if existing
+    existing_transaction = loan&.reload&.entries&.find_by(entry_type: "loan_disbursement")
+    return Result.new(success?: true, transaction: existing_transaction) if existing_transaction
 
     Result.new(success?: false, error_message: error.message)
   end
 
-  def self.validate_disbursement!(loan)
-    loan.errors.add(:lifecycle_status, "must be simulated before disbursement") unless loan.lifecycle_status == "simulated"
-    loan.errors.add(:liability_account, "must be a liability account") unless loan.liability_account&.liability?
-    loan.errors.add(:destination_account, "must be an asset account") unless loan.destination_account&.asset?
-    raise ActiveRecord::RecordInvalid, loan if loan.errors.any?
-  end
-  private_class_method :validate_disbursement!
-
   def self.destroy(loan:)
     loan.with_lock do
-      transaction = loan.transactions.find_by(transaction_type: "loan_disbursement")
-      transaction&.remove!
+      paid_installments = loan.installments.where("resolution = 'paid' OR payment_entry_id IS NOT NULL OR interest_entry_id IS NOT NULL")
+      if loan.entries.where.not(entry_type: "loan_disbursement").exists? || paid_installments.exists?
+        return Result.new(success?: false, error_message: "Undo installment payments before undoing the disbursement")
+      end
+
+      loan.transaction do
+        loan.entries.where(entry_type: "loan_disbursement").each(&:destroy!)
+        loan.funding_sources.each(&:destroy!)
+        loan.update!(lifecycle_status: "simulated")
+      end
     end
     Result.new(success?: true)
-  rescue ActiveRecord::RecordInvalid => error
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotDestroyed => error
     Result.new(success?: false, error_message: error.message)
   end
 end
