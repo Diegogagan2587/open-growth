@@ -99,6 +99,14 @@ class Financial::Loan < ApplicationRecord
     end
   end
 
+  def disburse(plan:)
+    Financial::Loan::Disbursement.create(loan: self, plan: plan)
+  end
+
+  def reverse_disbursement
+    Financial::Loan::Disbursement.destroy(loan: self)
+  end
+
   private
 
   def ensure_removable_schedule_extras!(number_of_payments)
