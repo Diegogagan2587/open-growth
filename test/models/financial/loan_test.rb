@@ -57,6 +57,12 @@ class Financial::LoanTest < ActiveSupport::TestCase
     assert_equal 1, loan.entries.where(entry_type: "loan_disbursement").count
     assert_equal 1_000.to_d, loan.actual_balance
     assert_equal 1_000.to_d, liability.current_balance
+
+    undone = loan.undo_disbursement
+
+    assert undone.success?
+    assert_equal "simulated", loan.reload.lifecycle_status
+    assert_empty loan.entries.reload
   ensure
     Current.account = nil
   end
