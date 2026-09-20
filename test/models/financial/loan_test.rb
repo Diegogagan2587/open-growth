@@ -48,12 +48,12 @@ class Financial::LoanTest < ActiveSupport::TestCase
     assert_equal 0, loan.entries.count
 
     loan.update!(liability: liability, destination_asset: asset)
-    first = Financial::Loans::ActivateService.call(loan: loan, plan: plan)
-    second = Financial::Loans::ActivateService.call(loan: loan.reload, plan: plan)
+    first = loan.disburse(plan: plan)
+    second = loan.reload.disburse(plan: plan)
 
     assert first.success?
     assert second.success?
-    assert_equal first.entry, second.entry
+    assert_equal first.transaction, second.transaction
     assert_equal 1, loan.entries.where(entry_type: "loan_disbursement").count
     assert_equal 1_000.to_d, loan.actual_balance
     assert_equal 1_000.to_d, liability.current_balance
