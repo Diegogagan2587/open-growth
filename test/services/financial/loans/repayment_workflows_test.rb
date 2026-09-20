@@ -22,7 +22,7 @@ class Financial::Loans::RepaymentWorkflowsTest < ActiveSupport::TestCase
       payment_amount: 1_165,
       lifecycle_status: "simulated"
     )
-    Financial::Loans::ActivateService.call(loan: @loan, plan: @plan)
+    @loan.disburse(plan: @plan)
   end
 
   teardown do
