@@ -6,7 +6,7 @@
       <div>
         <h2 class="text-lg font-semibold text-card-foreground"><%= @conversation.title %></h2>
         <p class="mt-1 text-sm text-muted-foreground">
-          <%= l(@conversation.date_from) %> – <%= l(@conversation.date_to) %> · Read-only analysis
+          <%= domain_label %> · <%= l(@conversation.date_from) %> – <%= l(@conversation.date_to) %> · Read-only analysis
         </p>
       </div>
       <%= render Ui::BadgeComponent.new(label: "#{remaining} requests remaining", variant: remaining.positive? ? :secondary : :destructive) %>
@@ -16,7 +16,11 @@
   <div id="analysis_turns" class="max-h-[60vh] space-y-5 overflow-y-auto px-4 py-6 sm:px-6" data-controller="scroll-bottom">
     <% if @conversation.turns.empty? %>
       <div class="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-        Ask about unusual transactions, missing records, category trends, or reconciliation gaps in this period.
+        <% if career? %>
+          Ask about application volume, stage conversion, stalled applications, or what to try next.
+        <% else %>
+          Ask about unusual transactions, missing records, category trends, or reconciliation gaps in this period.
+        <% end %>
       </div>
     <% else %>
       <%= render partial: "reports/analysis_turns/turn", collection: @conversation.turns.order(:created_at), as: :turn %>
@@ -35,7 +39,7 @@
               data: { controller: "autosubmit" }
             ) %>
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <p class="text-xs text-muted-foreground">AI can make mistakes. Verify records before taking action.</p>
+          <p class="text-xs text-muted-foreground">AI can make mistakes. Verify records before taking action. Recommendations are informational and do not update records.</p>
           <%= render Ui::ButtonComponent.new(label: "Ask analyst", type: "submit") %>
         </div>
       <% end %>

@@ -13,4 +13,12 @@ class Reports::AnalysisChatComponent < ViewComponent::Base
   def remaining
     @membership.ai_reports_requests_remaining
   end
+
+  def career?
+    @conversation.career?
+  end
+
+  def domain_label
+    career? ? "Career analysis" : "Financial analysis"
+  end
 end
