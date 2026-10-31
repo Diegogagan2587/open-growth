@@ -254,6 +254,49 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     assert_select "p", text: /Forecast for the plans shown/
   end
 
+  test "lists per-plan funding, consumption, net balance, and running balance for shown plans" do
+    @plan.update!(lifecycle_status: "cancelled")
+    first = Financial::Plan.find(income_events(:forecast_first).id)
+    second = Financial::Plan.find(income_events(:forecast_second).id)
+    filtered = Financial::Plan.find(income_events(:forecast_filtered).id)
+    [ first, second, filtered ].each { |plan| plan.update!(lifecycle_status: "active") }
+
+    get finance_plans_path, params: { month: "2026-07", status: "active" }
+
+    assert_response :success
+    assert_plan_metrics(first, funding: "$1,000.00", consumption: "$300.00", balance: "$700.00", global_balance: "$700.00")
+    assert_plan_metrics(second, funding: "$500.00", consumption: "$800.00", balance: "-$300.00", global_balance: "$400.00")
+    assert_select "a", text: "Filtered forecast", count: 0
+    assert_select "form[action='#{finance_plan_global_balance_correction_path(first, month: "2026-07", status: "active")}']"
+  end
+
+  test "global balance correction resets later plans and can be cleared" do
+    @plan.update!(lifecycle_status: "cancelled")
+    first = Financial::Plan.find(income_events(:forecast_first).id)
+    second = Financial::Plan.find(income_events(:forecast_second).id)
+    [ first, second ].each { |plan| plan.update!(lifecycle_status: "active") }
+    correction_path = finance_plan_global_balance_correction_path(first, month: "2026-07", status: "active")
+
+    patch correction_path, params: { financial_plan: { global_balance_override: "0" } }
+
+    assert_redirected_to finance_plans_path(month: "2026-07", status: "active")
+    assert_equal 0.to_d, first.reload.global_balance_override
+    get finance_plans_path, params: { month: "2026-07", status: "active" }
+    assert_plan_metrics(second, funding: "$500.00", consumption: "$800.00", balance: "-$300.00", global_balance: "-$300.00")
+
+    patch correction_path, params: { financial_plan: { global_balance_override: "-50" } }
+
+    assert_equal(-50.to_d, first.reload.global_balance_override)
+    get finance_plans_path, params: { month: "2026-07", status: "active" }
+    assert_plan_metrics(second, funding: "$500.00", consumption: "$800.00", balance: "-$300.00", global_balance: "-$350.00")
+
+    patch correction_path, params: { financial_plan: { global_balance_override: "" } }
+
+    assert_nil first.reload.global_balance_override
+    get finance_plans_path, params: { month: "2026-07", status: "active" }
+    assert_plan_metrics(second, funding: "$500.00", consumption: "$800.00", balance: "-$300.00", global_balance: "$400.00")
+  end
+
   test "creates a plan and its initial funding source through the plans workflow" do
     asset = Financial::Asset.create!(
       account: @account,
@@ -684,5 +727,16 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to finance_plan_path(@plan)
     assert_nil Financial::Plan.find(@plan.id).budget_period
+  end
+
+  private
+
+  def assert_plan_metrics(plan, funding:, consumption:, balance:, global_balance:)
+    assert_select "article" do |cards|
+      card = cards.find { |element| element.at_css("a[href='#{finance_plan_path(plan)}']") }
+      assert card, "expected a plan card for #{plan.name}"
+      text = card.text.squish
+      assert_match(/Expected funding #{Regexp.escape(funding)}.*Planned consumption #{Regexp.escape(consumption)}.*Plan balance.*#{Regexp.escape(balance)}.*Global balance through this plan.*#{Regexp.escape(global_balance)}/, text)
+    end
   end
 end
