@@ -17,6 +17,7 @@ class Financial::Plan < IncomeEvent
     dependent: :destroy
 
   validates :lifecycle_status, inclusion: { in: LIFECYCLE_STATUSES }
+  validates :global_balance_override, numericality: true, allow_nil: true
   validate :closed_chronology_is_immutable, on: :update
   before_destroy :allow_safe_draft_deletion
 
