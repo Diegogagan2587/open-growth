@@ -15,9 +15,16 @@ export default class extends Controller {
   }
 
   open() {
-    this.filter()
-    this.listTarget.classList.remove("hidden")
-    this.inputTarget.setAttribute("aria-expanded", "true")
+    // Render all options
+    this.optionTargets.forEach((option) => option.classList.remove("hidden"))
+    // Keep the empty state visible when the picker has no options.
+    this.emptyTarget.classList.toggle("hidden", this.optionTargets.length > 0)
+    //finaly open the list
+    this.openList()
+  }
+
+  selectInput() {
+    this.inputTarget.select()
   }
 
   filter() {

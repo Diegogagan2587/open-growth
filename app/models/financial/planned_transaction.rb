@@ -39,6 +39,17 @@ class Financial::PlannedTransaction < PlannedExpense
     !route_source_label.start_with?("Missing") && !route_destination_label.start_with?("Missing")
   end
 
+  def destination_accounts(accounts:)
+    case kind
+    when "transfer"
+      accounts.select(&:asset?)
+    when "liability_payment"
+      accounts.select(&:liability?)
+    else
+      []
+    end
+  end
+
   def route_source_label
     return financial_account.name if financial_account
     return financial_liability.name if kind == "liability_charge" && financial_liability

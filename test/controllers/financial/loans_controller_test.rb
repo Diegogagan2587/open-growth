@@ -314,7 +314,7 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
       assert_select "form[action='#{history_finance_loan_installment_path(loan, installment)}']"
       assert_select "p", text: /installment remains available to plan again/i
     end
-    assert_select "a[href='#{disbursement_finance_loan_path(loan)}'][data-turbo-confirm*='actual loan entry and borrowed funding source']"
+    assert_select "a[href='#{disbursement_finance_loan_path(loan)}'][data-turbo-confirm*='actual loan transaction and borrowed funding source']"
 
     assert_no_difference("Financial::FundingSource.count") do
       delete disbursement_finance_loan_path(loan)
