@@ -27,6 +27,10 @@ class Financial::Plan < IncomeEvent
     custom_ordered? ? :custom : :due_date
   end
 
+  def set_global_balance_checkpoint!(balance)
+    update!(global_balance_override: balance.presence)
+  end
+
   def reorder_planned_transactions!(ordered_ids)
     ids = Array(ordered_ids).map(&:to_i)
 
