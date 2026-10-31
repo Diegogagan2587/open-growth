@@ -37,7 +37,8 @@ class Financial::Plans::Overview
         funding = funding_by_plan.fetch(plan.id, 0).to_d
         consumption = consumption_by_plan.fetch(plan.id, 0).to_d
         balance = funding - consumption
-        global_balance += balance
+        global_balance = plan.global_balance_override.to_d if plan.global_balance_override.present?
+        global_balance += balance unless plan.global_balance_override.present?
         metrics[plan.id] = PlanMetrics.new(funding, consumption, balance, global_balance)
       end
     end
