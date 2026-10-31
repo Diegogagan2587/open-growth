@@ -1,5 +1,5 @@
 class Financial::Plan::Projection
-  Row = Data.define(:transaction, :balance)
+  Row = Data.define(:transaction, :consumed, :balance)
 
   def self.for(plan, order: nil)
     new(plan, order:)
@@ -50,9 +50,13 @@ class Financial::Plan::Projection
 
   def rows
     balance = expected_funding
+    consumed = 0.to_d
     transactions.map do |transaction|
-      balance -= transaction.amount.to_d if transaction.reduces_plan_balance?
-      Row.new(transaction:, balance:)
+      if transaction.reduces_plan_balance?
+        consumed += transaction.amount.to_d
+        balance -= transaction.amount.to_d
+      end
+      Row.new(transaction:, consumed:, balance:)
     end
   end
 
