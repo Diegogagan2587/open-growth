@@ -1,3 +1,4 @@
+<turbo-frame id="planned-transactions">
 <section aria-labelledby="planned-transactions-title" class="space-y-4" data-controller="planned-transaction-order">
   <% all_accounts = assets + liabilities %>
   <% account_options = assets.map { |asset| [ "Asset · #{asset.name}", "asset:#{asset.id}" ] } + liabilities.map { |liability| [ "Liability · #{liability.name}", "liability:#{liability.id}" ] } %>
@@ -12,7 +13,7 @@
     </div>
   </div>
 
-  <%= form_with url: finance_plan_planned_transaction_order_path(plan), method: :patch, class: "hidden", data: { planned_transaction_order_target: "form" } do %>
+  <%= form_with url: finance_plan_planned_transaction_order_path(plan), method: :patch, class: "hidden", data: { planned_transaction_order_target: "form", turbo_frame: "planned-transactions" } do %>
     <div data-planned-transaction-order-target="inputs">
       <% planned_transactions.each do |transaction| %>
         <%= hidden_field_tag "planned_transaction_order[ordered_ids][]", transaction.id %>
@@ -30,10 +31,10 @@
         <% planned_transactions.each do |transaction| %>
           <% destination_accounts = transaction.destination_accounts(accounts: all_accounts).map { |account| [ "#{account.account_group.humanize} · #{account.name}", "#{account.account_group}:#{account.id}" ] } %>
           <tr class="align-top <%= 'bg-destructive/5' if projection_rows[transaction.id]&.balance&.negative? %>" draggable="true" data-planned-transaction-order-target="row" data-transaction-id="<%= transaction.id %>" data-action="dragstart->planned-transaction-order#dragStart dragover->planned-transaction-order#dragOver drop->planned-transaction-order#drop dragend->planned-transaction-order#dragEnd">
-            <td class="p-3">
+            <td class="p-3 text-center">
               <span class="block font-medium"><%= transaction.position %></span>
               <% unless plan.lifecycle_status.in?(%w[closed cancelled]) %>
-                <span class="mt-2 flex gap-1">
+                <span class="mx-auto mt-2 flex w-fit flex-col gap-1">
                   <%= render Ui::ButtonComponent.new(aria_label: "Move #{transaction.description} up", variant: :outline, size: :icon, data: { action: "planned-transaction-order#moveUp" }) do %>
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
                   <% end %>
@@ -143,3 +144,4 @@
     </details>
   <% end %>
 </section>
+</turbo-frame>
