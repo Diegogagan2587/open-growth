@@ -17,6 +17,7 @@ class Financial::Plan < IncomeEvent
     dependent: :destroy
 
   validates :lifecycle_status, inclusion: { in: LIFECYCLE_STATUSES }
+  validates :global_balance_override, numericality: true, allow_nil: true
   validate :closed_chronology_is_immutable, on: :update
   before_destroy :allow_safe_draft_deletion
 
@@ -24,6 +25,10 @@ class Financial::Plan < IncomeEvent
 
   def default_transaction_order
     custom_ordered? ? :custom : :due_date
+  end
+
+  def set_global_balance_checkpoint!(balance)
+    update!(global_balance_override: balance.presence)
   end
 
   def reorder_planned_transactions!(ordered_ids)

@@ -42,6 +42,7 @@ Rails.application.routes.draw do
     resources :pending_expectations, only: :index
     resources :plans, controller: "/financial/plans" do
       resource :planned_transaction_order, only: :update, controller: "/financial/plans/planned_transaction_orders"
+      resource :global_balance_correction, only: :update, controller: "/financial/plans/global_balance_corrections"
       member do
         post :close
         post :cancel
