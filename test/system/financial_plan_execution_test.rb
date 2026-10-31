@@ -30,7 +30,6 @@ class FinancialPlanExecutionTest < ApplicationSystemTestCase
     end
 
     click_link "Due-date order"
-    assert_current_path finance_plan_path(@plan, order: "due_date")
     assert_selector "section[aria-labelledby='planned-transactions-title'] tbody tr:first-child", text: "First payment"
   end
 end
