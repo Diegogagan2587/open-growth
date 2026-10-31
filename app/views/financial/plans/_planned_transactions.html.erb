@@ -59,8 +59,16 @@
               <% end %>
             </td>
             <td class="p-3">
-              <p class="text-xs text-muted-foreground">Consumed <span class="text-sm font-semibold text-foreground"><%= number_to_currency(projection_rows[transaction.id]&.consumed) %></span></p>
-              <p class="text-xs text-muted-foreground">Left <span class="text-sm font-semibold text-foreground"><%= number_to_currency(projection_rows[transaction.id]&.balance) %></span></p>
+              <div class="space-y-1 leading-tight">
+                <div>
+                  <p class="text-xs text-muted-foreground">Consumed</p>
+                  <p class="font-semibold tabular-nums"><%= number_to_currency(projection_rows[transaction.id]&.consumed) %></p>
+                </div>
+                <div>
+                  <p class="text-xs text-muted-foreground">Left</p>
+                  <p class="font-semibold tabular-nums"><%= number_to_currency(projection_rows[transaction.id]&.balance) %></p>
+                </div>
+              </div>
             </td>
             <td class="p-3 space-y-1">
               <%= render Ui::BadgeComponent.new(label: transaction.execution_status.humanize, variant: transaction.execution_status == "applied" ? :secondary : :outline) %>
