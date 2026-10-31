@@ -1,5 +1,5 @@
 <section aria-labelledby="planned-transactions-title" class="space-y-4" data-controller="planned-transaction-order">
-    <% all_accounts = assets + liabilities %>
+  <% all_accounts = assets + liabilities %>
   <% account_options = assets.map { |asset| [ "Asset · #{asset.name}", "asset:#{asset.id}" ] } + liabilities.map { |liability| [ "Liability · #{liability.name}", "liability:#{liability.id}" ] } %>
   <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
     <div>
