@@ -1,3 +1,4 @@
+<turbo-frame id="planned-transactions">
 <section aria-labelledby="planned-transactions-title" class="space-y-4" data-controller="planned-transaction-order">
   <% all_accounts = assets + liabilities %>
   <% account_options = assets.map { |asset| [ "Asset · #{asset.name}", "asset:#{asset.id}" ] } + liabilities.map { |liability| [ "Liability · #{liability.name}", "liability:#{liability.id}" ] } %>
@@ -12,7 +13,7 @@
     </div>
   </div>
 
-  <%= form_with url: finance_plan_planned_transaction_order_path(plan), method: :patch, class: "hidden", data: { planned_transaction_order_target: "form" } do %>
+  <%= form_with url: finance_plan_planned_transaction_order_path(plan), method: :patch, class: "hidden", data: { planned_transaction_order_target: "form", turbo_frame: "planned-transactions" } do %>
     <div data-planned-transaction-order-target="inputs">
       <% planned_transactions.each do |transaction| %>
         <%= hidden_field_tag "planned_transaction_order[ordered_ids][]", transaction.id %>
@@ -143,3 +144,4 @@
     </details>
   <% end %>
 </section>
+</turbo-frame>
