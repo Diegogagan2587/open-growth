@@ -1,13 +1,27 @@
 class Financial::LoansController < ApplicationController
-  before_action :set_loan, only: [ :show, :edit, :update, :destroy, :activate, :plan_installment ]
+  before_action :set_loan, only: [ :show, :edit, :update, :destroy, :activate, :undo_disbursement ]
   before_action :load_collections, only: [ :new, :create, :edit, :update, :show ]
 
   def index
-    @loans = Financial::Loan.for_account(Current.account).includes(:liability).order(created_at: :desc)
+    @status = params[:status].to_s if params[:status].to_s.in?(Financial::Loan::LIFECYCLE_STATUSES)
+    @sort = params[:sort].to_s.in?(%w[newest oldest amount_desc amount_asc name]) ? params[:sort].to_s : "newest"
+    @loans = Financial::Loan.for_account(Current.account)
+    @loans = @loans
+      .left_joins(:installments)
+      .select(
+        "financial_loans.*",
+        "COUNT(financial_loan_installments.id) AS installments_count",
+        "COUNT(CASE WHEN financial_loan_installments.resolution = 'paid' THEN 1 END) AS paid_installments_count"
+      )
+      .group("financial_loans.id")
+      .includes(:liability)
+    @loans = filter_loans(@loans).order(loan_order)
   end
 
   def show
-    @installments = @loan.installments.includes(:planned_transaction, :payment_entry).order(:installment_number)
+    installments = @loan.installments.includes(:planned_transaction, :payment_entry)
+    installments = installments.includes(:interest_entry) if installments.where.not(interest_entry_id: nil).exists?
+    @installments = installments.order(:installment_number)
     @entries = @loan.entries.by_date
     @first_payment_date = @loan.first_payment_date || @loan.installments.minimum(:due_date)
   end
@@ -41,11 +55,18 @@ class Financial::LoansController < ApplicationController
   end
 
   def destroy
-    if @loan.lifecycle_status == "simulated" && @loan.entries.empty? && @loan.destroy
-      redirect_to finance_loans_path, status: :see_other, notice: "Simulation deleted"
-    else
-      redirect_to finance_loan_path(@loan), alert: "Only a simulation without actual entries can be deleted"
+    return redirect_to(finance_loan_path(@loan), alert: "Undo the disbursement and installment payments before deleting the loan") if @loan.entries.exists?
+    return redirect_to(finance_loan_path(@loan), alert: "Undo each paid installment before deleting the loan") if @loan.installments.where("resolution = 'paid' OR payment_entry_id IS NOT NULL OR interest_entry_id IS NOT NULL").exists?
+    return redirect_to(finance_loan_path(@loan), alert: "Delete each planned installment before deleting the loan") if @loan.installments.where.not(planned_transaction_id: nil).exists?
+
+    ActiveRecord::Base.transaction do
+      @loan.funding_sources.each(&:destroy!)
+      @loan.installments.each(&:destroy!)
+      @loan.reload.destroy!
     end
+    redirect_to finance_loans_path, status: :see_other, notice: "Loan deleted"
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotDestroyed => error
+    redirect_to finance_loan_path(@loan), alert: error.message
   end
 
   def activate
@@ -54,15 +75,43 @@ class Financial::LoansController < ApplicationController
     redirect_to finance_loan_path(@loan), notice: ("Loan activated and disbursed" if result.success?), alert: (result.error_message unless result.success?)
   end
 
-  def plan_installment
-    installment = @loan.installments.find(params[:installment_id])
-    plan = Financial::Plan.for_account(Current.account).find(params[:plan_id])
-    source_account = Financial::Asset.for_account(Current.account).active.find(params[:financial_account_id])
-    result = Financial::Loans::PlanInstallmentService.call(installment: installment, plan: plan, source_account: source_account)
-    redirect_to finance_loan_path(@loan), notice: ("Installment added to plan" if result.success?), alert: (result.error_message unless result.success?)
+  def undo_disbursement
+    if @loan.undo_disbursement
+      redirect_to finance_loan_path(@loan), notice: "Loan disbursement undone"
+    else
+      redirect_to finance_loan_path(@loan), alert: @loan.errors.full_messages.to_sentence
+    end
   end
 
   private
+
+  def filter_loans(loans)
+    case @status
+    when "paid"
+      loans.where(lifecycle_status: %w[active paid]).having(<<~SQL.squish)
+        financial_loans.lifecycle_status = 'paid' OR
+        (COUNT(financial_loan_installments.id) > 0 AND
+        COUNT(CASE WHEN financial_loan_installments.resolution = 'paid' THEN 1 END) = COUNT(financial_loan_installments.id))
+      SQL
+    when "active"
+      loans.where(lifecycle_status: "active").having(<<~SQL.squish)
+        COUNT(financial_loan_installments.id) = 0 OR
+        COUNT(CASE WHEN financial_loan_installments.resolution = 'paid' THEN 1 END) < COUNT(financial_loan_installments.id)
+      SQL
+    when nil then loans
+    else loans.where(lifecycle_status: @status)
+    end
+  end
+
+  def loan_order
+    case @sort
+    when "oldest" then { created_at: :asc }
+    when "amount_desc" then { principal_amount: :desc, created_at: :desc }
+    when "amount_asc" then { principal_amount: :asc, created_at: :desc }
+    when "name" then { name: :asc }
+    else { created_at: :desc }
+    end
+  end
 
   def set_loan
     @loan = Financial::Loan.for_account(Current.account).find(params[:id])

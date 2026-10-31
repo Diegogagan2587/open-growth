@@ -38,4 +38,21 @@ class Financial::PlannedTransactions::ApplyServiceTest < ActiveSupport::TestCase
   ensure
     Current.account = nil
   end
+
+  test "defaults the actual date from due date while preserving the plan" do
+    account = Account.create!(name: "Due Date Apply Tenant")
+    Current.account = account
+    category = Category.create!(account:, name: "Bills")
+    asset = Financial::Asset.create!(account:, name: "Checking", account_type: "checking", status: "active", opening_balance: 100)
+    plan = Financial::Plan.create!(account:, name: "Due date", planned_for: Date.new(2026, 9, 16), expected_amount: 1)
+    transaction = Financial::PlannedTransaction.create!(account:, plan:, category:, financial_account: asset, description: "Payment", amount: 50, due_date: Date.new(2026, 9, 17), planned_for: Date.new(2026, 9, 16), status: "pending_to_pay")
+
+    result = Financial::PlannedTransactions::ApplyService.call(planned_transaction: transaction)
+
+    assert result.success?
+    assert_equal Date.new(2026, 9, 17), result.entry.entry_date
+    assert_equal Date.new(2026, 9, 17), transaction.reload.due_date
+  ensure
+    Current.account = nil
+  end
 end

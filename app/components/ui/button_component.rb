@@ -20,9 +20,10 @@ module Ui
       icon: "h-9 w-9"
     }.freeze
 
-    def initialize(href: nil, label: nil, variant: :default, size: :default, disabled: false, type: "button", method: nil, data: {}, css_class: nil, as: nil)
+    def initialize(href: nil, label: nil, aria_label: nil, variant: :default, size: :default, disabled: false, type: "button", method: nil, data: {}, css_class: nil, as: nil)
       @href = href
       @label = label
+      @aria_label = aria_label
       @variant = normalize_variant(variant)
       @size = normalize_size(size)
       @disabled = disabled
@@ -43,6 +44,7 @@ module Ui
 
     def tag_options
       options = { class: classes }
+      options[:aria] = { label: @aria_label } if @aria_label.present?
 
       data_options = @data.present? ? @data.dup : {}
       if link? && @method.present?

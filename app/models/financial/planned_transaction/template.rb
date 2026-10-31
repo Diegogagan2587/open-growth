@@ -1,4 +1,4 @@
-class Financial::PlannedTransactionTemplate < ExpenseTemplate
+class Financial::PlannedTransaction::Template < ExpenseTemplate
   self.table_name = "expense_templates"
 
   alias_attribute :default_amount, :total_amount

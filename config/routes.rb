@@ -41,6 +41,7 @@ Rails.application.routes.draw do
     root to: "finance#index"
     resources :pending_expectations, only: :index
     resources :plans, controller: "/financial/plans" do
+      resource :planned_transaction_order, only: :update, controller: "/financial/plans/planned_transaction_orders"
       member do
         post :close
         post :cancel
@@ -48,6 +49,7 @@ Rails.application.routes.draw do
       resources :planned_transactions, controller: "/financial/planned_transactions", only: [ :index, :create, :update, :destroy ]
       resources :funding_sources, controller: "/financial/funding_sources", only: [ :create, :update, :destroy ] do
         member { post :receive }
+        resource :plan_assignment, only: :update, controller: "/financial/funding_sources/plan_assignments"
       end
     end
     resources :planned_transactions, controller: "/financial/planned_transactions", only: :index do
@@ -59,11 +61,13 @@ Rails.application.routes.draw do
     resources :loans, controller: "/financial/loans" do
       resource :schedule, only: :create, controller: "/financial/loans/schedules"
       resources :installments, only: [ :update ], controller: "/financial/loans/installments" do
+        delete :history, on: :member, action: :destroy_history
+        resource :plan, only: [ :create, :destroy ], controller: "/financial/loans/installment_plans"
         resource :payment, only: :create, controller: "/financial/loans/installment_payments"
       end
       member do
         post :activate
-        post "installments/:installment_id/plan", action: :plan_installment, as: :plan_installment
+        delete :disbursement, action: :undo_disbursement
       end
     end
     resources :categories, controller: "/financial/categories"

@@ -35,6 +35,58 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{finance_loan_path(loan)}']", text: /Car simulation/
   end
 
+  test "shows installment payment progress on the loan list" do
+    loan = Financial::Loan.create!(account: @account, name: "Progress loan", principal_amount: 300)
+    3.times do |index|
+      Financial::Loan::Installment.create!(
+        account: @account,
+        financial_loan: loan,
+        installment_number: index + 1,
+        due_date: Date.current + index.months,
+        expected_amount: 100,
+        expected_principal: 100,
+        expected_interest: 0,
+        resolution: index.zero? ? "paid" : "scheduled"
+      )
+    end
+
+    get finance_loans_path
+
+    assert_response :success
+    assert_select "[role='progressbar'][aria-valuenow='1'][aria-valuemax='3'][aria-label='Payment progress for Progress loan']"
+    assert_select "span", text: "1 of 3 payments made"
+    assert_select "span", text: "33%"
+  end
+
+  test "filters loans by status and sorts them" do
+    simulated = Financial::Loan.create!(account: @account, name: "Small simulation", principal_amount: 100, lifecycle_status: "simulated")
+    pending = Financial::Loan.create!(account: @account, name: "Pending loan", principal_amount: 300, lifecycle_status: "active", liability: Financial::Liability.create!(account: @account, name: "Pending debt", liability_type: "personal_credit", status: "active"), destination_asset: Financial::Asset.create!(account: @account, name: "Loan cash", account_type: "checking", status: "active"))
+    paid = Financial::Loan.create!(account: @account, name: "Paid loan", principal_amount: 200, lifecycle_status: "paid")
+    completed = Financial::Loan.create!(account: @account, name: "Completed active loan", principal_amount: 250, lifecycle_status: "active", liability: pending.liability, destination_asset: pending.destination_asset)
+    Financial::Loan::Installment.create!(account: @account, financial_loan: completed, installment_number: 1, due_date: Date.current, expected_amount: 250, expected_principal: 250, expected_interest: 0, resolution: "paid")
+
+    get finance_loans_path(status: "active")
+
+    assert_response :success
+    assert_select "a[aria-current='page']", text: "Pending"
+    assert_select "article[data-loan-id='#{pending.id}']", count: 1
+    assert_select "article[data-loan-id='#{completed.id}']", count: 0
+    assert_select "article[data-loan-id='#{simulated.id}']", count: 0
+    assert_select "article[data-loan-id='#{paid.id}']", count: 0
+
+    get finance_loans_path(status: "paid")
+
+    assert_select "article[data-loan-id='#{completed.id}']" do
+      assert_select "span", text: "Paid"
+    end
+    assert_select "article[data-loan-id='#{paid.id}']", count: 1
+    assert_select "article[data-loan-id='#{pending.id}']", count: 0
+
+    get finance_loans_path(sort: "amount_desc")
+
+    assert_equal [ pending.id, completed.id, paid.id, simulated.id ], css_select("article[data-loan-id]").map { |article| article["data-loan-id"].to_i }
+  end
+
   test "creates a simulated loan with an annual interest rate above one thousand percent" do
     assert_difference("Financial::Loan.count", 1) do
       post finance_loans_path, params: {
@@ -221,6 +273,86 @@ class Financial::LoansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "body", text: /Different payment: \$350\.00 at the beginning position/
+  end
+
+  test "deletes a pending planned installment from the loan page" do
+    liability = Financial::Liability.create!(account: @account, name: "Replanned loan debt", liability_type: "personal_credit", status: "active", opening_balance: 500)
+    asset = Financial::Asset.create!(account: @account, name: "Replanned loan cash", account_type: "checking", status: "active", opening_balance: 500)
+    plan = Financial::Plan.create!(account: @account, name: "Wrong loan plan", planned_for: Date.current, expected_amount: 1)
+    loan = Financial::Loan.create!(account: @account, name: "Miscalculated loan", principal_amount: 500, liability: liability, destination_asset: asset, lifecycle_status: "active")
+    transaction = Financial::PlannedTransaction.create!(account: @account, plan: plan, description: "Wrong installment", amount: 500, kind: "liability_payment", status: "pending_to_pay", financial_account: asset, financial_liability: liability)
+    installment = Financial::Loan::Installment.create!(account: @account, financial_loan: loan, planned_transaction: transaction, installment_number: 1, due_date: Date.current, expected_amount: 500, expected_principal: 500, expected_interest: 0)
+
+    get finance_loan_path(loan)
+
+    assert_select "a[href='#{finance_loan_installment_plan_path(loan, installment)}'][aria-label='Delete planned installment']"
+
+    assert_difference("Financial::PlannedTransaction.count", -1) do
+      delete finance_loan_installment_plan_path(loan, installment)
+    end
+
+    assert_redirected_to finance_loan_path(loan)
+    assert_nil installment.reload.planned_transaction
+  end
+
+  test "deletes paid records while preserving the installment for replanning" do
+    liability = Financial::Liability.create!(account: @account, name: "Mistaken loan debt", liability_type: "personal_credit", status: "active", opening_balance: 0)
+    asset = Financial::Asset.create!(account: @account, name: "Mistaken loan cash", account_type: "checking", status: "active", opening_balance: 2_000)
+    category = Category.create!(account: @account, name: "Mistaken loan interest")
+    plan = Financial::Plan.create!(account: @account, name: "Mistaken loan plan", planned_for: Date.current, expected_amount: 1)
+    loan = Financial::Loan.create!(account: @account, liability: liability, destination_asset: asset, interest_category: category, name: "Mistaken loan", principal_amount: 1_000)
+    Financial::Loans::ActivateService.call(loan: loan, plan: plan)
+    installment = Financial::Loan::Installment.create!(account: @account, financial_loan: loan, installment_number: 1, due_date: Date.current, expected_amount: 550, expected_principal: 500, expected_interest: 50)
+    planned = Financial::Loans::PlanInstallmentService.call(installment: installment, plan: plan, source_account: asset).planned_transaction
+    Financial::Loans::ApplyInstallmentPayment.call(installment: installment, total: 550, interest: 50, entry_date: Date.current)
+    Financial::Loan::Installment.create!(account: @account, financial_loan: loan, installment_number: 2, due_date: Date.current + 1.month, expected_amount: 500, expected_principal: 500, expected_interest: 0)
+
+    get finance_loan_path(loan)
+    assert_select "button[aria-label='Delete payment records'][data-action='dialog#open']", count: 1
+    assert_select "button[aria-label='Delete installment']", count: 0
+    assert_select "dialog#delete-installment-#{installment.id}" do
+      assert_select "form[action='#{history_finance_loan_installment_path(loan, installment)}']"
+      assert_select "p", text: /installment remains available to plan again/i
+    end
+    assert_select "a[href='#{disbursement_finance_loan_path(loan)}'][data-turbo-confirm*='actual loan entry and borrowed funding source']"
+
+    assert_no_difference("Financial::FundingSource.count") do
+      delete disbursement_finance_loan_path(loan)
+    end
+    assert_match(/undo installment payments/i, flash[:alert])
+
+    assert_difference("Financial::Entry.count", -2) do
+      assert_difference("Financial::PlannedTransaction.count", -1) do
+        assert_no_difference("Financial::Loan::Installment.count") do
+          delete history_finance_loan_installment_path(loan, installment)
+        end
+      end
+    end
+    assert_redirected_to finance_loan_path(loan)
+    assert_not Financial::PlannedTransaction.exists?(planned.id)
+    assert_equal "scheduled", installment.reload.resolution
+    assert_nil installment.payment_entry
+    assert_nil installment.interest_entry
+    assert_nil installment.planned_transaction
+
+    replanned = Financial::Loans::PlanInstallmentService.call(installment: installment, plan: plan, source_account: asset)
+    assert replanned.success?
+    delete finance_loan_installment_plan_path(loan, installment)
+
+    assert_difference("Financial::Entry.count", -1) do
+      assert_difference("Financial::FundingSource.count", -1) do
+        delete disbursement_finance_loan_path(loan)
+      end
+    end
+    assert_equal "simulated", loan.reload.lifecycle_status
+
+    get finance_loan_path(loan)
+    assert_select "a[href='#{finance_loan_path(loan)}'][data-turbo-confirm*='Delete this loan']"
+
+    assert_difference("Financial::Loan.count", -1) do
+      delete finance_loan_path(loan)
+    end
+    assert_redirected_to finance_loans_path
   end
 
   test "records a categorized installment payment through the nested payment resource" do

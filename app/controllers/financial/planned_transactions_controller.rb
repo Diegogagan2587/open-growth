@@ -73,7 +73,7 @@ class Financial::PlannedTransactionsController < ApplicationController
     permitted = params.expect(planned_transaction: [
       :description, :amount, :kind, :planned_for, :due_date, :importance, :category_id,
       :financial_account_id, :counterparty_financial_account_id, :financial_liability_id,
-      :transaction_type, :source_selection, :destination_selection, :commits_plan_funds
+      :transaction_type, :source_selection, :destination_selection, :commits_plan_funds, :notes
     ])
     transaction_type = permitted.delete(:transaction_type)
     return permitted if transaction_type.blank?
@@ -86,8 +86,9 @@ class Financial::PlannedTransactionsController < ApplicationController
   def editable_planned_transaction_params
     return planned_transaction_params if @planned_transaction.execution_status == "pending"
 
-    commitment_params = params.expect(planned_transaction: [ :commits_plan_funds ])
-    commitment_params if @planned_transaction.execution_status == "applied" && commitment_params.key?(:commits_plan_funds)
+    return unless @planned_transaction.execution_status == "applied"
+
+    params.require(:planned_transaction).permit(:source_selection, :destination_selection, :commits_plan_funds)
   end
 
   def apply_params
