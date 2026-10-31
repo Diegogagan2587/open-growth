@@ -15,12 +15,13 @@ class Ui::SelectComponentTest < ViewComponent::TestCase
       options: [ [ "Food", 1 ], [ "Transportation", 2 ] ],
       include_blank: "Select category",
       required: true,
-      searchable: true
+      searchable: true,
+      data: { planned_transaction_form_target: "destination", action: "planned-transaction-form#toggle" }
     ))
 
     assert_selector "[data-controller='searchable-select']"
     assert_selector "input[role='combobox'][required][placeholder='Select category']"
-    assert_selector "select[name='category_id'][required][data-searchable-select-target='select']"
+    assert_selector "select[name='category_id'][required][data-searchable-select-target='select'][data-planned-transaction-form-target='destination'][data-action='planned-transaction-form#toggle']"
     assert_selector "button[data-label='Transportation'][data-value='2']"
     assert_text "No matches found"
   end
