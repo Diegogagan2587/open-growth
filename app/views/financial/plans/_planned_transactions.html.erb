@@ -28,7 +28,6 @@
       <tbody class="divide-y divide-border">
         <% projection_rows = projection.rows.index_by { |row| row.transaction.id } %>
         <% planned_transactions.each do |transaction| %>
-          <% source_route_options = transaction.kind == "liability_charge" ? liabilities.map { |liability| [ "Liability · #{liability.name}", "liability:#{liability.id}" ] } : assets.map { |asset| [ "Asset · #{asset.name}", "asset:#{asset.id}" ] } %>
           <% destination_accounts = transaction.destination_accounts(accounts: all_accounts).map { |account| [ "#{account.account_group.humanize} · #{account.name}", "#{account.account_group}:#{account.id}" ] } %>
           <tr class="align-top <%= 'bg-destructive/5' if projection_rows[transaction.id]&.balance&.negative? %>" draggable="true" data-planned-transaction-order-target="row" data-transaction-id="<%= transaction.id %>" data-action="dragstart->planned-transaction-order#dragStart dragover->planned-transaction-order#dragOver drop->planned-transaction-order#drop dragend->planned-transaction-order#dragEnd">
             <td class="p-3">
@@ -83,7 +82,7 @@
                     <%= render Ui::InputComponent.new(name: "planned_transaction[due_date]", value: transaction.due_date, type: "date") %>
                     <%= render Ui::InputComponent.new(name: "planned_transaction[notes]", value: transaction.notes, placeholder: "Minimum payment, refinance, or other context") %>
                     <%= render Ui::SelectComponent.new(name: "planned_transaction[importance]", options: Financial::PlannedTransaction::IMPORTANCES.map { |importance| [ importance.humanize, importance ] }, selected: transaction.importance) %>
-                    <label class="space-y-1 text-xs text-muted-foreground">Source account<%= render Ui::SelectComponent.new(name: "planned_transaction[source_selection]", options: source_route_options, selected: transaction.source_selection, include_blank: "Select source") %></label>
+                    <label class="space-y-1 text-xs text-muted-foreground">Source account<%= render Ui::SelectComponent.new(name: "planned_transaction[source_selection]", options: account_options, selected: transaction.source_selection, include_blank: "Search all accounts…", required: true, searchable: true) %></label>
                     <% if transaction.kind.in?(%w[transfer liability_payment]) %>
                       <label class="space-y-1 text-xs text-muted-foreground">Destination account<%= render Ui::SelectComponent.new(name: "planned_transaction[destination_selection]", options: destination_accounts, selected: transaction.destination_selection, include_blank: "Select destination", searchable: true) %></label>
                     <% end %>
@@ -102,7 +101,7 @@
                   <details class="text-sm">
                     <summary class="cursor-pointer text-primary">Edit planned route</summary>
                     <%= form_with url: finance_plan_planned_transaction_path(plan, transaction), method: :patch, class: "mt-2 grid gap-2 sm:grid-cols-2" do %>
-                      <label class="space-y-1 text-xs text-muted-foreground">Source account<%= render Ui::SelectComponent.new(name: "planned_transaction[source_selection]", options: source_route_options, selected: transaction.source_selection, include_blank: "Select source") %></label>
+                      <label class="space-y-1 text-xs text-muted-foreground">Source account<%= render Ui::SelectComponent.new(name: "planned_transaction[source_selection]", options: account_options, selected: transaction.source_selection, include_blank: "Search all accounts…", required: true, searchable: true) %></label>
                       <% if transaction.kind.in?(%w[transfer liability_payment]) %>
                         <label class="space-y-1 text-xs text-muted-foreground">Destination account<%= render Ui::SelectComponent.new(name: "planned_transaction[destination_selection]", options: destination_accounts, selected: transaction.destination_selection, include_blank: "Select destination", searchable: true) %></label>
                       <% end %>
