@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_16_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_31_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -404,6 +404,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_000000) do
     t.string "description", null: false
     t.decimal "expected_amount", precision: 10, scale: 2, null: false
     t.date "expected_date", null: false
+    t.decimal "global_balance_override", precision: 12, scale: 2
     t.string "income_type", default: "regular", null: false
     t.decimal "interest_rate", precision: 6, scale: 3
     t.boolean "interest_rate_estimated", default: false, null: false
