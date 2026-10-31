@@ -58,7 +58,10 @@
                 <p class="mt-1 text-xs">Paid <%= l(transaction.actual_payment_date) %></p>
               <% end %>
             </td>
-            <td class="p-3 font-medium"><%= number_to_currency(projection_rows[transaction.id]&.balance) %></td>
+            <td class="p-3">
+              <p class="text-xs text-muted-foreground">Consumed <span class="text-sm font-semibold text-foreground"><%= number_to_currency(projection_rows[transaction.id]&.consumed) %></span></p>
+              <p class="text-xs text-muted-foreground">Left <span class="text-sm font-semibold text-foreground"><%= number_to_currency(projection_rows[transaction.id]&.balance) %></span></p>
+            </td>
             <td class="p-3 space-y-1">
               <%= render Ui::BadgeComponent.new(label: transaction.execution_status.humanize, variant: transaction.execution_status == "applied" ? :secondary : :outline) %>
               <% if transaction.payment_timing %>
