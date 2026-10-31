@@ -11,10 +11,7 @@ class Financial::PlansController < ApplicationController
     @plans = @plans.where(budget_period: @budget_period) if @budget_period
     @plans = @plans.where(expected_date: Date.strptime(@month, "%Y-%m").all_month) if @month
     @plans = @plans.where(lifecycle_status: @status) if @status
-    @plans = @plans
-      .includes(:funding_sources)
-      .chronological
-      .reverse_order
+    @plans = @plans.chronological.reverse_order
     @overview = Financial::Plans::Overview.for(@plans)
   end
 
