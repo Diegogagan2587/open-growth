@@ -131,11 +131,11 @@
         <label class="space-y-1 text-sm">Payment note<%= render Ui::InputComponent.new(name: "planned_transaction[notes]", placeholder: "Minimum payment, refinance, or other context") %></label>
         <label class="space-y-1 text-sm">
           <span data-planned-transaction-form-target="sourceLabel">Source account</span>
-          <%= render Ui::SelectComponent.new(name: "planned_transaction[source_selection]", options: account_options, include_blank: "Select account", required: true, data: { planned_transaction_form_target: "source" }) %>
+          <%= render Ui::SelectComponent.new(name: "planned_transaction[source_selection]", options: account_options, include_blank: "Search all accounts…", required: true, searchable: true, data: { planned_transaction_form_target: "source" }) %>
         </label>
         <label class="space-y-1 text-sm" data-planned-transaction-form-target="categoryFields">Category<%= render Ui::SelectComponent.new(name: "planned_transaction[category_id]", options: categories.map { |category| [ category.name, category.id ] }, include_blank: "Select category", required: true, data: { planned_transaction_form_target: "category" }) %></label>
         <div class="hidden space-y-3" data-planned-transaction-form-target="destinationFields">
-          <label class="space-y-1 text-sm">Destination account<%= render Ui::SelectComponent.new(name: "planned_transaction[destination_selection]", options: account_options, include_blank: "Select destination", data: { planned_transaction_form_target: "destination", action: "planned-transaction-form#toggle" }) %></label>
+          <label class="space-y-1 text-sm">Destination account<%= render Ui::SelectComponent.new(name: "planned_transaction[destination_selection]", options: account_options, include_blank: "Search all accounts…", searchable: true, data: { planned_transaction_form_target: "destination", action: "planned-transaction-form#toggle" }) %></label>
           <label class="flex items-center gap-2 text-sm"><%= hidden_field_tag "planned_transaction[commits_plan_funds]", "0", id: nil %><%= check_box_tag "planned_transaction[commits_plan_funds]", "1" %><span>Reserve funds</span></label>
         </div>
         <div class="self-end md:col-span-2"><%= render Ui::ButtonComponent.new(label: "Add transaction", type: "submit", size: :sm) %></div>
