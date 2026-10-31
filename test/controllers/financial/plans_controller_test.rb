@@ -282,6 +282,7 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to finance_plans_path(month: "2026-07", status: "active")
     assert_equal 0.to_d, first.reload.global_balance_override
     get finance_plans_path, params: { month: "2026-07", status: "active" }
+    assert_select "article span", text: "Balance reconciled", count: 1
     assert_plan_metrics(second, funding: "$500.00", consumption: "$800.00", balance: "-$300.00", global_balance: "-$300.00")
 
     patch correction_path, params: { financial_plan: { global_balance_override: "-50" } }
@@ -294,6 +295,7 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
 
     assert_nil first.reload.global_balance_override
     get finance_plans_path, params: { month: "2026-07", status: "active" }
+    assert_select "article span", text: "Balance reconciled", count: 0
     assert_plan_metrics(second, funding: "$500.00", consumption: "$800.00", balance: "-$300.00", global_balance: "$400.00")
   end
 
