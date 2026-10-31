@@ -20,6 +20,10 @@ export default class extends Controller {
     this.inputTarget.setAttribute("aria-expanded", "true")
   }
 
+  selectInput() {
+    this.inputTarget.select()
+  }
+
   filter() {
     const query = this.normalize(this.inputTarget.value)
     let visibleCount = 0

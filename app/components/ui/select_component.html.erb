@@ -13,7 +13,7 @@
       <%= "disabled" if @disabled %>
       class="<%= [BASE_CLASSES, @extra_class].compact.join(" ") %>"
       data-searchable-select-target="input"
-      data-action="input->searchable-select#filter focus->searchable-select#open keydown->searchable-select#navigate"
+      data-action="input->searchable-select#filter focus->searchable-select#open click->searchable-select#selectInput keydown->searchable-select#navigate"
     >
     <%= select_tag @name, rendered_options, html_attributes.merge(class: "sr-only", data: { searchable_select_target: "select" }) %>
     <div
