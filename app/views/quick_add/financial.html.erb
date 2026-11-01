@@ -19,10 +19,19 @@
 
     <div class="p-4 md:p-6">
       <div data-controller="quick-add-tabs" class="space-y-4">
-        <div role="tablist" aria-label="<%= t('quick_add.money_form.tabs_label') %>" class="grid grid-cols-3 gap-2 rounded-lg border border-border bg-muted/35 p-1">
-          <button type="button" role="tab" aria-selected="true" data-quick-add-tabs-target="tab" data-panel="expense-panel" data-action="click->quick-add-tabs#selectTab" class="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"><%= t("quick_add.money_form.expense") %></button>
-          <button type="button" role="tab" aria-selected="false" data-quick-add-tabs-target="tab" data-panel="income-panel" data-action="click->quick-add-tabs#selectTab" class="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-card hover:text-foreground"><%= t("quick_add.money_form.income") %></button>
-          <button type="button" role="tab" aria-selected="false" data-quick-add-tabs-target="tab" data-panel="transfer-panel" data-action="click->quick-add-tabs#selectTab" class="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-card hover:text-foreground"><%= t("quick_add.money_form.transfer") %></button>
+        <div role="tablist" aria-label="<%= t('quick_add.money_form.tabs_label') %>" class="grid grid-cols-3 border-b border-border">
+          <button type="button" role="tab" aria-selected="true" data-quick-add-tabs-target="tab" data-panel="expense-panel" data-action="click->quick-add-tabs#selectTab" class="-mb-px inline-flex min-h-12 flex-col items-center justify-center gap-1 border-b-2 border-transparent px-2 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground aria-selected:border-primary aria-selected:font-semibold aria-selected:text-primary focus-visible:underline focus-visible:underline-offset-4 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm">
+            <svg aria-hidden="true" class="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5zM8 8h8m-8 4h8m-8 4h4" /></svg>
+            <%= t("quick_add.money_form.expense") %>
+          </button>
+          <button type="button" role="tab" aria-selected="false" data-quick-add-tabs-target="tab" data-panel="income-panel" data-action="click->quick-add-tabs#selectTab" class="-mb-px inline-flex min-h-12 flex-col items-center justify-center gap-1 border-b-2 border-transparent px-2 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground aria-selected:border-primary aria-selected:font-semibold aria-selected:text-primary focus-visible:underline focus-visible:underline-offset-4 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm">
+            <svg aria-hidden="true" class="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0 6 6m-6-6-6 6" /></svg>
+            <%= t("quick_add.money_form.income") %>
+          </button>
+          <button type="button" role="tab" aria-selected="false" data-quick-add-tabs-target="tab" data-panel="transfer-panel" data-action="click->quick-add-tabs#selectTab" class="-mb-px inline-flex min-h-12 flex-col items-center justify-center gap-1 border-b-2 border-transparent px-2 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground aria-selected:border-primary aria-selected:font-semibold aria-selected:text-primary focus-visible:underline focus-visible:underline-offset-4 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm">
+            <svg aria-hidden="true" class="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h13m0 0-4-4m4 4-4 4M17 17H4m0 0 4 4m-4-4 4-4" /></svg>
+            <%= t("quick_add.money_form.transfer") %>
+          </button>
         </div>
 
         <div id="expense-panel" role="tabpanel" data-quick-add-tabs-target="panel" class="space-y-4">
