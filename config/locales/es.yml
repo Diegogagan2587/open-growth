@@ -815,7 +815,7 @@ es:
       destroyed: "Tarea eliminada exitosamente."
     status:
       blocked: "Bloqueado"
-      backlog: "Backlog"
+      backlog: "Pendiente"
       in_progress: "En Progreso"
       in_review: "En Revisión"
       done: "Hecha"
