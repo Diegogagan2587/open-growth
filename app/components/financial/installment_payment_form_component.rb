@@ -3,7 +3,7 @@
 class Financial::InstallmentPaymentFormComponent < ViewComponent::Base
   def initialize(transaction:, entry_date: nil)
     @transaction = transaction
-    @entry_date = entry_date || transaction.due_date || transaction.planned_for || Date.current
+    @entry_date = entry_date
     @installment = Financial::Loan::Installment.includes(:financial_loan).find_by(planned_transaction_id: transaction.id)
   end
 

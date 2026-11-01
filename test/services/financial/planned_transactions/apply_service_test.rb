@@ -39,7 +39,7 @@ class Financial::PlannedTransactions::ApplyServiceTest < ActiveSupport::TestCase
     Current.account = nil
   end
 
-  test "defaults the actual date from due date while preserving the plan" do
+  test "defaults the actual date to today while preserving the plan" do
     account = Account.create!(name: "Due Date Apply Tenant")
     Current.account = account
     category = Category.create!(account:, name: "Bills")
@@ -50,7 +50,7 @@ class Financial::PlannedTransactions::ApplyServiceTest < ActiveSupport::TestCase
     result = Financial::PlannedTransactions::ApplyService.call(planned_transaction: transaction)
 
     assert result.success?
-    assert_equal Date.new(2026, 9, 17), result.entry.entry_date
+    assert_equal Date.current, result.entry.entry_date
     assert_equal Date.new(2026, 9, 17), transaction.reload.due_date
   ensure
     Current.account = nil

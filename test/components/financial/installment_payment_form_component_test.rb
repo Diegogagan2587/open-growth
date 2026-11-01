@@ -17,13 +17,13 @@ class Financial::InstallmentPaymentFormComponentTest < ViewComponent::TestCase
     assert_css "input[name='installment_payment[interest]'][value='10.0']"
   end
 
-  test "defaults a planned transaction actual date from its due date" do
+  test "uses the browser's local date for a planned transaction actual date" do
     account = accounts(:one)
     plan = Financial::Plan.create!(account:, name: "Due date plan", planned_for: Date.new(2026, 9, 16), expected_amount: 1)
     transaction = Financial::PlannedTransaction.create!(account:, plan:, category: categories(:one), description: "Due payment", amount: 60, due_date: Date.new(2026, 9, 17), planned_for: Date.new(2026, 9, 16), status: "pending_to_pay")
 
     render_inline(Financial::InstallmentPaymentFormComponent.new(transaction:))
 
-    assert_css "input[name='planned_transaction[entry_date]'][value='2026-09-17']"
+    assert_css "input[name='planned_transaction[entry_date]'][data-controller='local-date']"
   end
 end
