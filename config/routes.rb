@@ -43,9 +43,9 @@ Rails.application.routes.draw do
     resources :plans, controller: "/financial/plans" do
       resource :planned_transaction_order, only: :update, controller: "/financial/plans/planned_transaction_orders"
       resource :global_balance_correction, only: :update, controller: "/financial/plans/global_balance_corrections"
+      resource :cancellation, only: %i[create destroy], controller: "/financial/plans/cancellations"
       member do
         post :close
-        post :cancel
       end
       resources :planned_transactions, controller: "/financial/planned_transactions", only: [ :index, :create, :update, :destroy ]
       resources :funding_sources, controller: "/financial/funding_sources", only: [ :create, :update, :destroy ] do
