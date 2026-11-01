@@ -12,6 +12,22 @@ es:
       money: "Transacción"
       task: "Tarea"
       doc: "Nota"
+    task_form:
+      title: "Crear tarea"
+      subtitle: "Esta tarea se crea sin asignar; podrás vincularla más adelante."
+      errors:
+        one: "No se pudo guardar la tarea por %{count} error:"
+        other: "No se pudo guardar la tarea por %{count} errores:"
+      title_label: "Nombre de la tarea"
+      title_placeholder: "Por ejemplo, configurar el acceso"
+      description_label: "Descripción"
+      description_placeholder: "Añade detalles, notas o instrucciones..."
+      status_label: "Estado"
+      priority_label: "Prioridad"
+      due_date_label: "Fecha límite"
+      unassigned_note: "Esta tarea se crea sin asignar. Puedes vincularla a un proyecto más adelante."
+      cancel: "Cancelar"
+      submit: "Crear tarea"
 
   date:
     formats:

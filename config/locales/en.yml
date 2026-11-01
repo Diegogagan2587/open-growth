@@ -12,6 +12,22 @@ en:
       money: "Money"
       task: "Task"
       doc: "Doc"
+    task_form:
+      title: "Create New Task"
+      subtitle: "This task starts unassigned and can be linked later."
+      errors:
+        one: "%{count} error prevented this task from being saved:"
+        other: "%{count} errors prevented this task from being saved:"
+      title_label: "Task title"
+      title_placeholder: "e.g., Set up authentication"
+      description_label: "Description"
+      description_placeholder: "Add details, notes, or instructions..."
+      status_label: "Status"
+      priority_label: "Priority"
+      due_date_label: "Due date"
+      unassigned_note: "This task starts unassigned. You can attach it to a project later."
+      cancel: "Cancel"
+      submit: "Create task"
 
   date:
     formats:
