@@ -31,6 +31,18 @@ class Financial::Plan < IncomeEvent
     update!(global_balance_override: balance.presence)
   end
 
+  def cancel!
+    return false unless lifecycle_status.in?(%w[draft active])
+
+    update!(status_before_cancellation: lifecycle_status, lifecycle_status: "cancelled")
+  end
+
+  def restore!
+    return false unless lifecycle_status == "cancelled"
+
+    update!(lifecycle_status: status_before_cancellation || "draft", status_before_cancellation: nil)
+  end
+
   def reorder_planned_transactions!(ordered_ids)
     ids = Array(ordered_ids).map(&:to_i)
 
