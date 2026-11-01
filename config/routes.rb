@@ -173,7 +173,7 @@ Rails.application.routes.draw do
         patch :mark_done
       end
     end
-    resources :tasks, only: [ :edit, :update ]
+    resources :tasks, only: [ :show, :edit, :update ]
   end
 
   namespace :career do
