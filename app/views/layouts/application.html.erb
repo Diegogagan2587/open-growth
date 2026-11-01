@@ -73,7 +73,17 @@
             <div class="min-w-0 max-w-[70%]">
               <div class="truncate text-sm font-semibold" title="<%= nav_page_title %>"><%= nav_page_title %></div>
               <% if Current.account %>
-                <div class="truncate text-xs text-sidebar-foreground/70" title="Current account: <%= Current.account.name %>">Account: <%= Current.account.name %></div>
+                <% if Current.user&.accounts&.many? %>
+                  <%= form_with url: account_switch_path, method: :post, local: true, class: "-ml-1" do |f| %>
+                    <%= f.label :account_id, "Current account", class: "sr-only" %>
+                    <%= f.select :account_id,
+                        options_from_collection_for_select(Current.user.accounts, :id, :name, Current.account.id),
+                        {},
+                        { onchange: "this.form.submit()", aria: { label: "Switch account" }, class: "max-w-full cursor-pointer border-0 bg-transparent p-1 text-xs text-sidebar-foreground/70 focus:ring-0" } %>
+                  <% end %>
+                <% else %>
+                  <div class="truncate text-xs text-sidebar-foreground/70" title="Current account: <%= Current.account.name %>">Account: <%= Current.account.name %></div>
+                <% end %>
               <% end %>
             </div>
             <div class="flex items-center gap-2">
