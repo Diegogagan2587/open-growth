@@ -1,5 +1,5 @@
 class Financial::PlansController < ApplicationController
-  before_action :set_plan, only: [ :show, :edit, :update, :destroy, :close, :cancel ]
+  before_action :set_plan, only: [ :show, :edit, :update, :destroy, :close ]
   before_action :load_form_collections, only: [ :new, :create, :edit, :update ]
   before_action :load_plan_collections, only: :show
 
@@ -67,14 +67,6 @@ class Financial::PlansController < ApplicationController
     redirect_to finance_plan_path(@plan),
       notice: ("Plan closed" if result.success?),
       alert: (result.error_message unless result.success?)
-  end
-
-  def cancel
-    if @plan.update(lifecycle_status: "cancelled")
-      redirect_to finance_plan_path(@plan), notice: "Plan cancelled"
-    else
-      redirect_to finance_plan_path(@plan), alert: @plan.errors.full_messages.to_sentence
-    end
   end
 
   private

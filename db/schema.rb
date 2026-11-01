@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_31_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_31_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -423,6 +423,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_31_000000) do
     t.bigint "regular_income_destination_asset_id"
     t.bigint "regular_income_destination_liability_id"
     t.string "status", default: "pending", null: false
+    t.string "status_before_cancellation"
     t.datetime "updated_at", null: false
     t.index ["account_id", "expected_date", "id"], name: "index_income_events_on_plan_chronology"
     t.index ["account_id"], name: "index_income_events_on_account_id"
