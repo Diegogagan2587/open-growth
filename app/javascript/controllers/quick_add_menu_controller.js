@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = [ "fabButton", "menuButton" ]
+  static targets = [ "fabButton", "menuButton", "taskTitle", "details" ]
   static values = { modalOpen: Boolean, moneyLabel: String, taskLabel: String, docLabel: String }
 
   connect() {
@@ -11,6 +11,10 @@ export default class extends Controller {
     const container = document.getElementById("quick-add-modal-container")
     if (container) {
       container.addEventListener("turbo:submit-end", this.boundFormSubmitHandler)
+    }
+
+    if (this.hasTaskTitleTarget) {
+      requestAnimationFrame(() => this.taskTitleTarget.focus({ preventScroll: true }))
     }
   }
 
@@ -100,6 +104,12 @@ export default class extends Controller {
   openDocs(event) {
     if (event) event.preventDefault()
     this.loadModal("/quick-add/doc")
+  }
+
+  toggleDetails(event) {
+    const expanded = event.currentTarget.getAttribute("aria-expanded") !== "true"
+    event.currentTarget.setAttribute("aria-expanded", expanded)
+    this.detailsTarget.classList.toggle("hidden", !expanded)
   }
 
   loadModal(url) {
