@@ -1,22 +1,19 @@
 <section class="space-y-7 p-4 sm:p-8">
-  <header class="rounded-2xl border border-border bg-card p-6 shadow-sm">
-    <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-      <div class="space-y-2">
-        <h1 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Your next steps</h1>
-        <p class="max-w-2xl text-sm text-muted-foreground sm:text-base">
-          A quick view of pending tasks, planned transactions, and expected money for this account.
-        </p>
-      </div>
-    </div>
+  <header class="space-y-2">
+    <h1 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl"><%= t("dashboard.next_steps_title") %></h1>
+    <p class="max-w-2xl text-sm text-muted-foreground sm:text-base"><%= t("dashboard.next_steps_description") %></p>
   </header>
 
   <% if @pending_tasks.any? %>
-    <section class="rounded-xl border border-warning-soft bg-warning-soft p-4">
-      <div class="mb-2 flex items-center justify-between gap-3">
-        <h2 class="text-base font-semibold text-foreground"><%= t("task.recurring_tasks.index.title") %></h2>
-        <%= link_to t("task.recurring_tasks.index.title"), task_root_path, class: "text-sm font-medium text-accent hover:text-accent-dark hover:underline" %>
+    <section class="space-y-2">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <h2 class="text-base font-semibold text-foreground"><%= t("dashboard.tasks_to_do") %></h2>
+          <span class="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"><%= @pending_tasks.size %></span>
+        </div>
+        <%= link_to t("dashboard.view_all_tasks"), task_root_path, class: "shrink-0 text-sm font-medium text-accent hover:text-accent-dark hover:underline" %>
       </div>
-      <ul class="space-y-1.5 text-sm">
+      <ul class="divide-y divide-border border-y border-border text-sm">
         <% @pending_tasks.each do |task| %>
           <%= render Dashboard::PendingTaskRowComponent.new(task: task) %>
         <% end %>

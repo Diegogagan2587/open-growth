@@ -182,6 +182,10 @@ es:
 
   dashboard:
     welcome: "Bienvenido a tu app de presupuesto"
+    next_steps_title: "Tus próximos pasos"
+    next_steps_description: "Un vistazo rápido a las tareas pendientes, transacciones planificadas e ingresos esperados de esta cuenta."
+    tasks_to_do: "Tareas pendientes"
+    view_all_tasks: "Ver todas las tareas"
     budget_periods_title: "Periodos presupuestarios"
     budget_periods_description: "Ver, crear y gestionar tus presupuestos mensuales o trimestrales."
     income_events_title: "Ingresos"
