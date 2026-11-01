@@ -31,7 +31,7 @@ class Dashboard::PendingTaskRowComponent < ViewComponent::Base
     if recurring?
       helpers.task_recurring_task_path(task, return_to: "dashboard")
     else
-      helpers.edit_task_task_path(task, return_to: "dashboard")
+      helpers.task_task_path(task, return_to: "dashboard")
     end
   end
 
