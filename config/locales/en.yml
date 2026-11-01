@@ -2,6 +2,17 @@
 en:
   hello: "Hello world"
 
+  quick_add:
+    open_actions: "Open quick actions"
+    mobile_actions:
+      money: "Add entry"
+      task: "Task"
+      doc: "Doc"
+    actions:
+      money: "Money"
+      task: "Task"
+      doc: "Doc"
+
   date:
     formats:
       default: "%Y-%m-%d"

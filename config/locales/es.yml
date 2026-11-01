@@ -2,6 +2,17 @@
 es:
   hello: "Hola mundo"
 
+  quick_add:
+    open_actions: "Abrir acciones rápidas"
+    mobile_actions:
+      money: "Nueva transacción"
+      task: "Tarea"
+      doc: "Nota"
+    actions:
+      money: "Transacción"
+      task: "Tarea"
+      doc: "Nota"
+
   date:
     formats:
       default: "%d/%m/%Y"

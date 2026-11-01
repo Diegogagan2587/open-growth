@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = [ "fabButton", "menuButton" ]
-  static values = { modalOpen: Boolean }
+  static values = { modalOpen: Boolean, moneyLabel: String, taskLabel: String, docLabel: String }
 
   connect() {
     this.modalOpenValue = false
@@ -63,9 +63,9 @@ export default class extends Controller {
       return btn
     }
 
-    menu.appendChild(makeBtn("Add entry", () => this.openFinancial(), "M12 4v16m8-8H4"))
-    menu.appendChild(makeBtn("Task", () => this.openTasks(), "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"))
-    menu.appendChild(makeBtn("Doc", () => this.openDocs(), "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"))
+    menu.appendChild(makeBtn(this.moneyLabelValue, () => this.openFinancial(), "M12 4v16m8-8H4"))
+    menu.appendChild(makeBtn(this.taskLabelValue, () => this.openTasks(), "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"))
+    menu.appendChild(makeBtn(this.docLabelValue, () => this.openDocs(), "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"))
 
     document.body.appendChild(menu)
 
