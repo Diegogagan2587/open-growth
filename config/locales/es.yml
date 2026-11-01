@@ -197,6 +197,8 @@ es:
     next_steps_description: "Un vistazo rápido a las tareas pendientes, transacciones planificadas e ingresos esperados de esta cuenta."
     tasks_to_do: "Tareas pendientes"
     view_all_tasks: "Ver todas las tareas"
+    defer_task: "Posponer"
+    defer_task_aria: "Posponer %{task} en la lista de inicio"
     budget_periods_title: "Periodos presupuestarios"
     budget_periods_description: "Ver, crear y gestionar tus presupuestos mensuales o trimestrales."
     income_events_title: "Ingresos"

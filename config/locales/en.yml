@@ -196,6 +196,8 @@ en:
     next_steps_description: "A quick view of pending tasks, planned transactions, and expected money for this account."
     tasks_to_do: "Tasks to do"
     view_all_tasks: "View all tasks"
+    defer_task: "Later"
+    defer_task_aria: "Move %{task} to later in your Home list"
     budget_periods_title: "Budget Periods"
     budget_periods_description: "View, create, and manage your monthly or quarterly budgets."
     income_events_title: "Income Events"
