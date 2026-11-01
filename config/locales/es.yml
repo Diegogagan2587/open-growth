@@ -38,6 +38,7 @@ es:
 
   time:
     formats:
+      short: "%d %b, %H:%M"
       long: "%d de %B de %Y, %H:%M"
 
   nav:

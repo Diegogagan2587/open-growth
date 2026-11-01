@@ -25,7 +25,7 @@ class Dashboard::PendingTaskRowComponentTest < ViewComponent::TestCase
     assert_text I18n.t("task.recurring_tasks.model_name")
   end
 
-  test "renders a project task with drawer details and done status" do
+  test "renders a project task with sidebar details and done status" do
     project = Projects::Project.create!(
       account: @account,
       user: @user,
@@ -47,7 +47,7 @@ class Dashboard::PendingTaskRowComponentTest < ViewComponent::TestCase
     render_inline(component)
 
     assert_selector "li[data-task-kind='project']"
-    assert_selector "a[href='#{component.detail_path}'][data-dashboard-task-detail='drawer'][onclick*='drawerOpen']"
+    assert_selector "a[href='#{component.detail_path}'][data-turbo-frame='task_detail_panel']"
     assert_selector "form[action='#{component.completion_path}'] input[name='task[status]'][value='done']", visible: :all
     assert_text "Home maintenance"
   end

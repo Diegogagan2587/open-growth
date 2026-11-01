@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_31_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_01_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -174,6 +174,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_31_010000) do
     t.string "name"
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_categories_on_account_id"
+  end
+
+  create_table "dashboard_task_deferrals", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "deferred_at", null: false
+    t.bigint "task_id", null: false
+    t.string "task_type", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["account_id", "user_id", "task_type", "task_id"], name: "index_dashboard_task_deferrals_on_account_user_task", unique: true
+    t.index ["account_id"], name: "index_dashboard_task_deferrals_on_account_id"
+    t.index ["user_id"], name: "index_dashboard_task_deferrals_on_user_id"
   end
 
   create_table "doc_links", force: :cascade do |t|
@@ -751,6 +764,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_31_010000) do
   add_foreign_key "career_profile_links", "career_profiles"
   add_foreign_key "career_profiles", "accounts"
   add_foreign_key "categories", "accounts"
+  add_foreign_key "dashboard_task_deferrals", "accounts"
+  add_foreign_key "dashboard_task_deferrals", "users"
   add_foreign_key "doc_links", "docs"
   add_foreign_key "doc_links", "links"
   add_foreign_key "docs", "accounts"

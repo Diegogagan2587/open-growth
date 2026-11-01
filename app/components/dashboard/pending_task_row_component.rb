@@ -31,7 +31,7 @@ class Dashboard::PendingTaskRowComponent < ViewComponent::Base
     if recurring?
       helpers.task_recurring_task_path(task, return_to: "dashboard")
     else
-      helpers.edit_task_task_path(task, return_to: "dashboard")
+      helpers.task_task_path(task, return_to: "dashboard")
     end
   end
 
@@ -43,11 +43,15 @@ class Dashboard::PendingTaskRowComponent < ViewComponent::Base
     end
   end
 
-  def detail_data
-    recurring? ? { turbo_frame: "task_detail_panel" } : { dashboard_task_detail: "drawer" }
+  def deferral_path
+    helpers.dashboard_task_deferrals_path
   end
 
-  def detail_onclick
-    "event.preventDefault(); window.drawerOpen(this.href)" unless recurring?
+  def task_type
+    recurring? ? "recurring" : "project"
+  end
+
+  def detail_data
+    { turbo_frame: "task_detail_panel" }
   end
 end

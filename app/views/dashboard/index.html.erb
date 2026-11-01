@@ -2,17 +2,10 @@
   <header class="rounded-2xl border border-border bg-card p-6 shadow-sm">
     <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
       <div class="space-y-2">
-        <h1 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl"><%= t("dashboard.welcome")+ " "+@user %></h1>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Your next steps</h1>
         <p class="max-w-2xl text-sm text-muted-foreground sm:text-base">
-          Focus on your next financial move, then navigate to supporting modules.
+          A quick view of pending tasks, planned transactions, and expected money for this account.
         </p>
-      </div>
-
-      <div class="grid w-full max-w-xl grid-cols-1 gap-2 sm:grid-cols-2">
-        <%= render Ui::ButtonComponent.new(href: new_finance_entry_path(entry_type: "expenses"), label: t("dashboard.add_expense"), variant: :default, css_class: "h-10 w-full justify-start") %>
-        <%= render Ui::ButtonComponent.new(href: new_finance_plan_path, label: "New financial plan", variant: :outline, css_class: "h-10 w-full justify-start") %>
-        <%= render Ui::ButtonComponent.new(href: new_budget_period_path, label: t("dashboard.new_budget_period"), variant: :outline, css_class: "h-10 w-full justify-start") %>
-        <%= render Ui::ButtonComponent.new(href: new_shopping_item_path, label: t("dashboard.add_shopping_item"), variant: :ghost, css_class: "h-10 w-full justify-start") %>
       </div>
     </div>
   </header>

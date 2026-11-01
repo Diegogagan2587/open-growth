@@ -13,14 +13,20 @@ class DashboardController < ApplicationController
   private
 
   def combined_pending_tasks
+    deferrals = Dashboard::TaskDeferral.where(account: Current.account, user: Current.user)
+    deferred_recurring_ids = deferrals.where(task_type: "RecurringTask").select(:task_id)
+    deferred_project_ids = deferrals.where(task_type: "Projects::Task").select(:task_id)
+
     recurring_tasks = RecurringTask.for_account(Current.account)
       .pending
+      .where.not(id: deferred_recurring_ids)
       .includes(:task_area)
       .order(next_due_date: :asc, created_at: :desc)
       .limit(MAX_PENDING_TASKS)
 
     project_tasks = Projects::Task.for_account(Current.account)
       .pending
+      .where.not(id: deferred_project_ids)
       .includes(:project)
       .order(Arel.sql(<<~SQL.squish))
         CASE WHEN due_date IS NULL THEN 1 ELSE 0 END,
@@ -30,9 +36,30 @@ class DashboardController < ApplicationController
       SQL
       .limit(MAX_PENDING_TASKS)
 
-    (recurring_tasks.to_a + project_tasks.to_a)
+    available_tasks = (recurring_tasks.to_a + project_tasks.to_a)
       .sort_by { |task| pending_task_sort_key(task) }
       .first(MAX_PENDING_TASKS)
+    return available_tasks if available_tasks.any?
+
+    deferred_records = deferrals.order(:deferred_at, :id).to_a
+    recurring_by_id = RecurringTask.for_account(Current.account)
+      .pending
+      .where(id: deferred_records.select { |record| record.task_type == "RecurringTask" }.map(&:task_id))
+      .includes(:task_area)
+      .index_by(&:id)
+    projects_by_id = Projects::Task.for_account(Current.account)
+      .pending
+      .where(id: deferred_records.select { |record| record.task_type == "Projects::Task" }.map(&:task_id))
+      .includes(:project)
+      .index_by(&:id)
+
+    deferred_records.filter_map do |record|
+      if record.task_type == "RecurringTask"
+        recurring_by_id[record.task_id]
+      elsif record.task_type == "Projects::Task"
+        projects_by_id[record.task_id]
+      end
+    end.first(MAX_PENDING_TASKS)
   end
 
   def load_financial_actions

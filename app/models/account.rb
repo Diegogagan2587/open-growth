@@ -20,6 +20,7 @@ class Account < ApplicationRecord
   has_many :inventory_items, dependent: :destroy
   has_many :task_areas, dependent: :destroy
   has_many :recurring_tasks, dependent: :destroy
+  has_many :dashboard_task_deferrals, class_name: "Dashboard::TaskDeferral", dependent: :destroy
   has_many :career_companies, class_name: "Career::Company", dependent: :destroy
   has_many :career_job_applications, class_name: "Career::JobApplication", dependent: :destroy
   has_many :career_events, class_name: "Career::Event", dependent: :destroy

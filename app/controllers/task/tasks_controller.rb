@@ -2,13 +2,17 @@
 
 module Task
   class TasksController < ApplicationController
-    before_action :set_task, only: [ :edit, :update ]
+    before_action :set_task, only: [ :show, :edit, :update ]
     before_action :set_projects, only: [ :edit, :update ]
 
     def edit
       respond_to do |format|
         format.html { render layout: request.xhr? ? false : "application" }
       end
+    end
+
+    def show
+      @return_to_dashboard = params[:return_to] == "dashboard"
     end
 
     def update
