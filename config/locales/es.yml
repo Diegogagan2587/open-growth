@@ -28,6 +28,24 @@ es:
       close: "Cerrar formulario de tarea"
       cancel: "Cancelar"
       submit: "Crear tarea"
+    doc_form:
+      title: "Crear una nota o documento"
+      subtitle: "Empieza con un título y agrega el contenido."
+      close: "Cerrar formulario de documento"
+      errors:
+        one: "No se pudo guardar el documento por %{count} error:"
+        other: "No se pudo guardar el documento por %{count} errores:"
+      title_label: "Título"
+      title_placeholder: "¿Qué quieres recordar?"
+      type: "Tipo de documento"
+      types:
+        file: "Archivo"
+        link: "Enlace"
+        note: "Nota"
+      content: "Contenido"
+      content_placeholder: "Escribe aquí tu nota o documento… Se admite Markdown."
+      cancel: "Cancelar"
+      submit: "Crear"
     money_form:
       title: "Registrar movimiento"
       subtitle: "Registra un gasto, ingreso o transferencia."

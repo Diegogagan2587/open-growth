@@ -28,6 +28,24 @@ en:
       close: "Close task form"
       cancel: "Cancel"
       submit: "Create task"
+    doc_form:
+      title: "Create a note or document"
+      subtitle: "Start with a title, then add your content."
+      close: "Close document form"
+      errors:
+        one: "%{count} error prevented this document from being saved:"
+        other: "%{count} errors prevented this document from being saved:"
+      title_label: "Title"
+      title_placeholder: "What do you want to remember?"
+      type: "Document type"
+      types:
+        file: "File"
+        link: "Link"
+        note: "Note"
+      content: "Content"
+      content_placeholder: "Write your note or document here… Markdown is supported."
+      cancel: "Cancel"
+      submit: "Create"
     money_form:
       title: "Add money movement"
       subtitle: "Record an expense, income, or transfer."

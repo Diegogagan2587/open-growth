@@ -13,7 +13,8 @@ export default class extends Controller {
       container.addEventListener("turbo:submit-end", this.boundFormSubmitHandler)
     }
 
-    const focusTarget = this.hasTaskTitleTarget ? this.taskTitleTarget : this.hasExpenseAmountTarget ? this.expenseAmountTarget : null
+    const focusTarget = this.element.querySelector("[data-quick-add-autofocus]") ||
+      (this.hasTaskTitleTarget ? this.taskTitleTarget : this.hasExpenseAmountTarget ? this.expenseAmountTarget : null)
     if (focusTarget) requestAnimationFrame(() => focusTarget.focus({ preventScroll: true }))
   }
 
