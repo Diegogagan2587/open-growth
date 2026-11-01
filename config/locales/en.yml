@@ -22,7 +22,6 @@ en:
       title_placeholder: "e.g., Set up authentication"
       description_label: "Description"
       description_placeholder: "Add details, notes, or instructions..."
-      status_label: "Status"
       priority_label: "Priority"
       due_date_label: "Due date"
       unassigned_note: "This task starts unassigned. You can attach it to a project later."

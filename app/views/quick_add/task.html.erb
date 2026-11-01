@@ -37,16 +37,9 @@
           <%= form.text_area :description, class: "min-h-28 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary", rows: 5, placeholder: t("quick_add.task_form.description_placeholder") %>
         </div>
 
-        <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div>
-            <%= form.label :status, t("quick_add.task_form.status_label"), class: "mb-2 block text-sm font-semibold text-foreground" %>
-            <%= form.select :status, Projects::Task::STATUSES.map { |status| [t("tasks.status.#{status}"), status] }, {}, class: "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary" %>
-          </div>
-
-          <div>
-            <%= form.label :priority, t("quick_add.task_form.priority_label"), class: "mb-2 block text-sm font-semibold text-foreground" %>
-            <%= form.select :priority, Projects::Task::PRIORITIES.map { |priority| [t("tasks.priority.#{priority}"), priority] }, {}, class: "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary" %>
-          </div>
+        <div class="mb-6">
+          <%= form.label :priority, t("quick_add.task_form.priority_label"), class: "mb-2 block text-sm font-semibold text-foreground" %>
+          <%= form.select :priority, Projects::Task::PRIORITIES.map { |priority| [t("tasks.priority.#{priority}"), priority] }, {}, class: "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary" %>
         </div>
 
         <div class="mb-6">

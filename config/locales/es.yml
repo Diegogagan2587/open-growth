@@ -22,7 +22,6 @@ es:
       title_placeholder: "Por ejemplo, configurar el acceso"
       description_label: "Descripción"
       description_placeholder: "Añade detalles, notas o instrucciones..."
-      status_label: "Estado"
       priority_label: "Prioridad"
       due_date_label: "Fecha límite"
       unassigned_note: "Esta tarea se crea sin asignar. Puedes vincularla a un proyecto más adelante."
