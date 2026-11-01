@@ -32,4 +32,24 @@ class FinancialPlanExecutionTest < ApplicationSystemTestCase
     click_link "Due-date order"
     assert_selector "section[aria-labelledby='planned-transactions-title'] tbody tr:first-child", text: "First payment"
   end
+
+  test "opens the actual entry from an applied planned transaction" do
+    visit new_session_path
+    fill_in "email_address", with: @user.email_address
+    fill_in "password", with: "password"
+    click_button I18n.t("sessions.submit")
+    assert_no_field "email_address"
+    visit finance_plan_path(@plan)
+
+    within "section[aria-labelledby='planned-transactions-title'] tbody tr", text: "First payment" do
+      click_button "Apply"
+    end
+    assert_text "View actual entry"
+
+    within "section[aria-labelledby='planned-transactions-title'] tbody tr", text: "First payment" do
+      click_link "View actual entry"
+    end
+
+    assert_selector "h1", text: "First payment"
+  end
 end

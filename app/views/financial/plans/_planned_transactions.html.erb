@@ -111,7 +111,7 @@
                   <% end %>
                 </details>
               <% elsif transaction.financial_entry %>
-                <%= link_to "View actual entry", finance_entry_path(transaction.financial_entry), class: "text-primary hover:underline" %>
+                <%= link_to "View actual entry", finance_entry_path(transaction.financial_entry), class: "text-primary hover:underline", data: { turbo_frame: "_top" } %>
                 <% unless plan.lifecycle_status.in?(%w[closed cancelled]) %>
                   <details class="text-sm">
                     <summary class="cursor-pointer text-primary">Edit planned route</summary>
