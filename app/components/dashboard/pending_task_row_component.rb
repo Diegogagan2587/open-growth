@@ -43,6 +43,14 @@ class Dashboard::PendingTaskRowComponent < ViewComponent::Base
     end
   end
 
+  def deferral_path
+    helpers.dashboard_task_deferrals_path
+  end
+
+  def task_type
+    recurring? ? "recurring" : "project"
+  end
+
   def detail_data
     recurring? ? { turbo_frame: "task_detail_panel" } : { dashboard_task_detail: "drawer" }
   end

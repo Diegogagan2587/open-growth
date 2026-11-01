@@ -21,4 +21,17 @@
       css_class: "h-10 sm:h-8"
     ) %>
   <% end %>
+
+  <%= form_with url: deferral_path, method: :post, class: "shrink-0" do %>
+    <%= hidden_field_tag :task_id, task.id %>
+    <%= hidden_field_tag :task_type, task_type %>
+    <%= render Ui::ButtonComponent.new(
+      label: "Later",
+      aria_label: "Move #{title} to later in your Home list",
+      variant: :ghost,
+      size: :sm,
+      type: "submit",
+      css_class: "h-10 px-2 sm:h-8"
+    ) %>
+  <% end %>
 </li>
