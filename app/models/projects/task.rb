@@ -65,6 +65,7 @@ module Projects
     scope :newest_first, -> { order(created_at: :desc) }
 
     before_save :sync_completed_at, if: :will_save_change_to_status?
+    after_update :clear_dashboard_task_deferrals, if: :completed_status_changed?
 
     def status_label
       I18n.t("tasks.status.#{status}", default: status)
@@ -110,6 +111,14 @@ module Projects
       else
         self.completed_at = nil
       end
+    end
+
+    def clear_dashboard_task_deferrals
+      dashboard_task_deferrals.delete_all
+    end
+
+    def completed_status_changed?
+      saved_change_to_status? && %w[done cancelled].include?(status)
     end
 
     def completed_status?(value)
