@@ -21,3 +21,7 @@ Users can correct forecast drift by setting the actual global balance at a plan 
 The correction is exposed as a nested singleton HTTP resource and handled by its own controller. The plan owns the checkpoint-setting behavior, while the overview calculates the resulting running balance. No separate correction table is needed because only the current checkpoint is retained; an audit history can be added if that need emerges.
 
 Keep one numeric correction mechanism: a checkpoint is easier to understand than overlapping adjustment types. If users need more context for corrections, an optional note can be considered later; it is not required for the forecast correction itself.
+
+### Restoring a cancelled plan
+
+Cancellation is reversible. The plan's cancellation resource creates a cancellation and destroys it to restore the plan. The plan stores whether it was a draft or active before cancellation, so restoring returns it to that state. Existing cancelled plans created before this behavior have no saved prior state and restore as drafts.
