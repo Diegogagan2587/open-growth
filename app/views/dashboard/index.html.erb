@@ -31,6 +31,65 @@
     </section>
   <% end %>
 
+  <% if Current.account %>
+    <section class="space-y-3">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-semibold text-foreground">Money to follow up</h2>
+          <p class="text-sm text-muted-foreground">Overdue and upcoming items due in the next 14 days.</p>
+        </div>
+        <%= link_to "All planned transactions", finance_planned_transactions_path, class: "shrink-0 text-sm font-medium text-accent hover:underline" %>
+      </div>
+
+      <div class="grid gap-4 lg:grid-cols-2">
+        <section class="rounded-xl border border-border bg-card p-4">
+          <h3 class="mb-3 text-sm font-semibold text-foreground">Planned transactions</h3>
+          <% if @pending_planned_transactions.any? %>
+            <ul class="space-y-2">
+              <% @pending_planned_transactions.each do |transaction| %>
+                <% due_date = transaction.due_date || transaction.planned_for %>
+                <li class="flex items-start justify-between gap-3 border-b border-border pb-2 last:border-0 last:pb-0">
+                  <div class="min-w-0">
+                    <div class="truncate text-sm font-medium text-foreground"><%= transaction.description %></div>
+                    <div class="text-xs text-muted-foreground"><%= due_date < Date.current ? "Overdue" : "Due" %> <%= l(due_date, format: :long) %></div>
+                  </div>
+                  <div class="shrink-0 text-right">
+                    <div class="text-sm font-semibold text-foreground"><%= number_to_currency(transaction.amount) %></div>
+                    <%= link_to "Review", transaction.plan ? finance_plan_path(transaction.plan) : finance_planned_transactions_path, class: "text-xs text-accent hover:underline" %>
+                  </div>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-sm text-muted-foreground">No planned transactions due soon.</p>
+          <% end %>
+        </section>
+
+        <section class="rounded-xl border border-border bg-card p-4">
+          <h3 class="mb-3 text-sm font-semibold text-foreground">Expected money</h3>
+          <% if @expected_funding.any? %>
+            <ul class="space-y-2">
+              <% @expected_funding.each do |source| %>
+                <li class="flex items-start justify-between gap-3 border-b border-border pb-2 last:border-0 last:pb-0">
+                  <div class="min-w-0">
+                    <div class="truncate text-sm font-medium text-foreground"><%= source.description %></div>
+                    <div class="text-xs text-muted-foreground"><%= source.expected_date < Date.current ? "Overdue" : "Expected" %> <%= l(source.expected_date, format: :long) %></div>
+                  </div>
+                  <div class="shrink-0 text-right">
+                    <div class="text-sm font-semibold text-foreground"><%= number_to_currency(source.expected_amount) %></div>
+                    <%= link_to "Review", finance_plan_path(source.financial_plan), class: "text-xs text-accent hover:underline" %>
+                  </div>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-sm text-muted-foreground">No expected income due soon.</p>
+          <% end %>
+        </section>
+      </div>
+    </section>
+  <% end %>
+
   <section class="space-y-3">
     <h2 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Core Workspace</h2>
     <nav class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
