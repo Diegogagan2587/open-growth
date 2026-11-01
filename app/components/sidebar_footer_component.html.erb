@@ -1,4 +1,13 @@
 <div data-slot="sidebar-footer" data-sidebar="footer" class="mt-auto border-t border-sidebar-border bg-[color-mix(in_oklab,hsl(var(--sidebar-accent))_20%,hsl(var(--sidebar-background))_80%)] p-2">
+  <% if Current.account %>
+    <div class="mb-2 flex min-w-0 items-center gap-2 rounded-md border border-sidebar-border bg-sidebar px-2 py-1.5 text-sidebar-foreground" title="Current account: <%= Current.account.name %>" aria-label="Current account: <%= Current.account.name %>">
+      <span class="flex size-7 shrink-0 items-center justify-center rounded-md bg-sidebar-accent text-xs font-semibold" aria-hidden="true"><%= Current.account.name.first.upcase %></span>
+      <div data-sidebar-collapse="hide" class="min-w-0">
+        <div class="text-[10px] uppercase tracking-wide text-sidebar-foreground/60">Current account</div>
+        <div class="truncate text-sm font-medium"><%= Current.account.name %></div>
+      </div>
+    </div>
+  <% end %>
   <div class="mb-2 flex items-center justify-between rounded-md border border-sidebar-border bg-sidebar px-2 py-1.5 text-sm text-sidebar-foreground">
     <span data-sidebar-collapse="hide" data-theme-target="label">Dark mode</span>
     <%= render Ui::SwitchComponent.new(
