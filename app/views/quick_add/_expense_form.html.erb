@@ -57,7 +57,7 @@
           <path stroke-linecap="round" d="M16 3v4M8 3v4M3 10h18" />
         </svg>
         <span class="sr-only"><%= t("quick_add.expense_form.date") %></span>
-        <%= f.date_field :date, id: "expense_date", value: @expense&.date || Date.current, required: true, class: "w-32 border-0 bg-transparent p-0 text-sm text-foreground focus:ring-0" %>
+        <%= date_field_tag "expense[date]", @expense&.date || Date.current, id: "expense_date", required: true, class: "w-32 border-0 bg-transparent p-0 text-sm text-foreground focus:ring-0" %>
       </label>
 
       <button type="button" data-action="quick-add-menu#toggleDetails" aria-expanded="false" aria-controls="quick-add-expense-details" class="inline-flex h-10 items-center gap-2 rounded-lg border border-input bg-background px-3 text-sm font-medium text-foreground hover:bg-muted md:hidden">
