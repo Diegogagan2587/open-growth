@@ -93,9 +93,9 @@ class DashboardIntegrationTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "li[data-task-kind='project']", count: 3
-    assert_select "a[href='#{edit_task_task_path(project_task, return_to: "dashboard")}']", text: /Project task/
-    assert_select "a[href='#{edit_task_task_path(unassigned_task, return_to: "dashboard")}']", text: /Unassigned task/
-    assert_select "a[href='#{edit_task_task_path(career_task, return_to: "dashboard")}']", text: /Career task/
+    assert_select "a[href='#{task_task_path(project_task, return_to: "dashboard")}'][data-turbo-frame='task_detail_panel']", text: /Project task/
+    assert_select "a[href='#{task_task_path(unassigned_task, return_to: "dashboard")}'][data-turbo-frame='task_detail_panel']", text: /Unassigned task/
+    assert_select "a[href='#{task_task_path(career_task, return_to: "dashboard")}'][data-turbo-frame='task_detail_panel']", text: /Career task/
     assert_select "li", text: /Dashboard project/
     assert_select "li", text: /Job Application/
     assert_select "li", text: /Completed task/, count: 0
