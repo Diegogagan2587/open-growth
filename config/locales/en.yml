@@ -36,6 +36,10 @@ en:
       - November
       - December
 
+  time:
+    formats:
+      short: "%b %d, %H:%M"
+
   nav:
     dashboard: "Dashboard"
     budgets: "Budgets"
