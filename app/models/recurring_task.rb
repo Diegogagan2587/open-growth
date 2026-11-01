@@ -5,6 +5,10 @@ class RecurringTask < ApplicationRecord
 
   belongs_to :account
   belongs_to :task_area, optional: true
+  has_many :dashboard_task_deferrals,
+    as: :task,
+    class_name: "Dashboard::TaskDeferral",
+    dependent: :destroy
 
   validates :name, presence: true
   validates :recurrence, presence: true, inclusion: { in: RECURRENCE_VALUES }

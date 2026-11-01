@@ -7,6 +7,10 @@ module Projects
     belongs_to :taskable, polymorphic: true, optional: true
     belongs_to :account
     belongs_to :user, foreign_key: :owner_id
+    has_many :dashboard_task_deferrals,
+      as: :task,
+      class_name: "Dashboard::TaskDeferral",
+      dependent: :destroy
     has_many :project_docs, through: :project
     has_many :project_links, through: :project
     has_many :project_meetings, through: :project
