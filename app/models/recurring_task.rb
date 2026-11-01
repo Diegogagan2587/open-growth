@@ -24,7 +24,10 @@ class RecurringTask < ApplicationRecord
   def mark_done!
     now = Time.current
     new_next_due = recurring? ? next_due_after(now) : nil
-    update!(last_done_at: now, next_due_date: new_next_due)
+    with_lock do
+      update!(last_done_at: now, next_due_date: new_next_due)
+      dashboard_task_deferrals.delete_all
+    end
   end
 
   def recurring?
