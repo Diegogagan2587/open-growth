@@ -46,8 +46,4 @@ class Dashboard::PendingTaskRowComponent < ViewComponent::Base
   def detail_data
     recurring? ? { turbo_frame: "task_detail_panel" } : { dashboard_task_detail: "drawer" }
   end
-
-  def detail_onclick
-    "event.preventDefault(); window.drawerOpen(this.href)" unless recurring?
-  end
 end
