@@ -52,6 +52,6 @@ class Dashboard::PendingTaskRowComponent < ViewComponent::Base
   end
 
   def detail_data
-    recurring? ? { turbo_frame: "task_detail_panel" } : { dashboard_task_detail: "drawer" }
+    { turbo_frame: "task_detail_panel" }
   end
 end
