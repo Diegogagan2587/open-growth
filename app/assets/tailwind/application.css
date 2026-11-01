@@ -49,28 +49,31 @@ select option[value=""]:not(:checked) {
   animation: slide-in-right 0.25s ease-out forwards;
 }
 
-@keyframes quick-add-task-sheet-enter {
+@keyframes quick-add-sheet-enter {
   from { opacity: 0.8; transform: translateY(100%); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes quick-add-task-dialog-enter {
+@keyframes quick-add-dialog-enter {
   from { opacity: 0; transform: translateY(0.5rem) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-[data-quick-add-task-panel] {
-  animation: quick-add-task-sheet-enter 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+[data-quick-add-task-panel],
+[data-quick-add-financial-panel] {
+  animation: quick-add-sheet-enter 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (min-width: 48rem) {
-  [data-quick-add-task-panel] {
-    animation-name: quick-add-task-dialog-enter;
+  [data-quick-add-task-panel],
+  [data-quick-add-financial-panel] {
+    animation-name: quick-add-dialog-enter;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-quick-add-task-panel] {
+  [data-quick-add-task-panel],
+  [data-quick-add-financial-panel] {
     animation: none;
   }
 }

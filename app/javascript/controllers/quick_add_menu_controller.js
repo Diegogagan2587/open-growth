@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = [ "fabButton", "menuButton", "taskTitle", "details" ]
+  static targets = [ "fabButton", "menuButton", "taskTitle", "expenseAmount", "details" ]
   static values = { modalOpen: Boolean, moneyLabel: String, taskLabel: String, docLabel: String }
 
   connect() {
@@ -13,9 +13,8 @@ export default class extends Controller {
       container.addEventListener("turbo:submit-end", this.boundFormSubmitHandler)
     }
 
-    if (this.hasTaskTitleTarget) {
-      requestAnimationFrame(() => this.taskTitleTarget.focus({ preventScroll: true }))
-    }
+    const focusTarget = this.hasTaskTitleTarget ? this.taskTitleTarget : this.hasExpenseAmountTarget ? this.expenseAmountTarget : null
+    if (focusTarget) requestAnimationFrame(() => focusTarget.focus({ preventScroll: true }))
   }
 
   disconnect() {
@@ -108,8 +107,12 @@ export default class extends Controller {
 
   toggleDetails(event) {
     const expanded = event.currentTarget.getAttribute("aria-expanded") !== "true"
+    const targetId = event.currentTarget.getAttribute("aria-controls")
+    const details = this.detailsTargets.find(target => target.id === targetId)
+    if (!details) return
+
     event.currentTarget.setAttribute("aria-expanded", expanded)
-    this.detailsTarget.classList.toggle("hidden", !expanded)
+    details.classList.toggle("hidden", !expanded)
   }
 
   loadModal(url) {

@@ -6,6 +6,7 @@
       placeholder="<%= search_placeholder %>"
       autocomplete="off"
       role="combobox"
+      <% if @aria_label.present? %>aria-label="<%= @aria_label %>"<% end %>
       aria-autocomplete="list"
       aria-expanded="false"
       aria-controls="<%= listbox_id %>"

@@ -24,17 +24,20 @@ export default class extends Controller {
     this.tabTargets.forEach((t) => {
       t.classList.remove(...this.constructor.ACTIVE_TAB_CLASSES)
       t.classList.add(...this.constructor.INACTIVE_TAB_CLASSES)
+      t.setAttribute("aria-selected", "false")
     })
 
     // Activate clicked tab
     tabElement.classList.remove(...this.constructor.INACTIVE_TAB_CLASSES)
     tabElement.classList.add(...this.constructor.ACTIVE_TAB_CLASSES)
+    tabElement.setAttribute("aria-selected", "true")
 
     // Show corresponding panel
     const panelId = tabElement.dataset.panel
     const panel = this.panelTargets.find((p) => p.id === panelId)
     if (panel) {
       panel.classList.remove("hidden")
+      panel.querySelector("[data-quick-add-autofocus]")?.focus({ preventScroll: true })
     }
   }
 }
