@@ -40,7 +40,7 @@
               <%= form.select :frequency, Financial::CategoryBudget::FREQUENCIES.map { |frequency| [t("category_budgets.frequencies.#{frequency}"), frequency] }, {}, class: "rounded border-border bg-card px-2 py-1 text-sm" %>
               <%= form.number_field :custom_days, min: 1, placeholder: t("category_budgets.custom_days"), class: "w-20 rounded border-border bg-card px-2 py-1 text-sm" %>
               <%= form.date_field :starts_on, class: "rounded border-border bg-card px-2 py-1 text-sm", aria: { label: t("category_budgets.starts_on") } %>
-              <%= form.submit t("category_budgets.save"), class: "rounded bg-primary px-3 py-1 text-sm text-white" %>
+              <%= link_to t("category_budgets.edit"), edit_finance_category_budget_path(budget, period: @period, start_date: @range_start, end_date: @range_end), class: "text-sm text-primary hover:underline" %>
               <%= link_to t("category_budgets.remove"), finance_category_budget_path(budget), data: { turbo_method: :delete, turbo_confirm: t("category_budgets.confirm_remove") }, class: "text-sm text-danger" %>
             <% end %>
           </div>
