@@ -62,12 +62,12 @@ class Financial::CategoryBudgetsController < ApplicationController
 
     finish = Date.current
     case params[:period]
-    when "week" then [ finish.beginning_of_week, finish ]
+    when "week" then [ finish.beginning_of_week, finish.end_of_week ]
     when "two_weeks" then [ finish - 13.days, finish ]
-    else [ finish.beginning_of_month, finish ]
+    else [ finish.beginning_of_month, finish.end_of_month ]
     end
   rescue Date::Error
     finish = Date.current
-    [ finish.beginning_of_month, finish ]
+    [ finish.beginning_of_month, finish.end_of_month ]
   end
 end
