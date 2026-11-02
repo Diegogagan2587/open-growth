@@ -1,0 +1,49 @@
+<section class="mx-auto max-w-3xl space-y-6 p-6 sm:p-8">
+  <header>
+    <h1 class="text-2xl font-bold"><%= t("category_budgets.edit_title") %></h1>
+    <p class="mt-1 text-sm text-muted-foreground"><%= @budget.category.name %></p>
+  </header>
+
+  <% if @budget.errors.any? %>
+    <div class="rounded-lg border border-danger-soft bg-danger-soft p-4 text-danger" role="alert">
+      <p class="font-medium"><%= t("category_budgets.flash.save_failed") %></p>
+      <ul class="mt-2 list-inside list-disc text-sm">
+        <% @budget.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with model: @budget, url: finance_category_budget_path(@budget, @period_params), method: :patch, class: "space-y-5 rounded-xl border border-border bg-card p-5" do |form| %>
+    <label class="block space-y-1 text-sm font-medium">
+      <%= t("category_budgets.category") %>
+      <%= form.collection_select :category_id, @categories, :id, :name, {}, required: true, class: "block w-full rounded border-border bg-card" %>
+    </label>
+
+    <label class="block space-y-1 text-sm font-medium">
+      <%= t("category_budgets.amount") %>
+      <%= form.number_field :amount, min: "0.01", step: "0.01", required: true, class: "block w-full rounded border-border bg-card" %>
+    </label>
+
+    <label class="block space-y-1 text-sm font-medium">
+      <%= t("category_budgets.frequency") %>
+      <%= form.select :frequency, Financial::CategoryBudget::FREQUENCIES.map { |frequency| [t("category_budgets.frequencies.#{frequency}"), frequency] }, {}, class: "block w-full rounded border-border bg-card" %>
+    </label>
+
+    <label class="block space-y-1 text-sm font-medium">
+      <%= t("category_budgets.custom_days") %>
+      <%= form.number_field :custom_days, min: 1, class: "block w-full rounded border-border bg-card" %>
+    </label>
+
+    <label class="block space-y-1 text-sm font-medium">
+      <%= t("category_budgets.starts_on") %>
+      <%= form.date_field :starts_on, required: true, class: "block w-full rounded border-border bg-card" %>
+    </label>
+
+    <div class="flex flex-wrap gap-3">
+      <%= render Ui::ButtonComponent.new(label: t("category_budgets.save"), type: :submit) %>
+      <%= render Ui::ButtonComponent.new(href: finance_category_budgets_path(@period_params), label: t("shared.cancel"), variant: :outline) %>
+    </div>
+  <% end %>
+</section>

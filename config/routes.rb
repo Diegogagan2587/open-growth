@@ -73,7 +73,7 @@ Rails.application.routes.draw do
       end
     end
     resources :categories, controller: "/financial/categories"
-    resources :category_budgets, controller: "/financial/category_budgets", only: [ :index, :create, :update, :destroy ]
+    resources :category_budgets, controller: "/financial/category_budgets", only: [ :index, :create, :edit, :update, :destroy ]
     resources :financial_accounts, controller: "/financial/accounts"
     resources :financial_liabilities, controller: "/financial/liabilities" do
       member do

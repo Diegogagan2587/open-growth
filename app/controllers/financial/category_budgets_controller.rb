@@ -1,5 +1,5 @@
 class Financial::CategoryBudgetsController < ApplicationController
-  before_action :set_budget, only: [ :update, :destroy ]
+  before_action :set_budget, only: [ :edit, :update, :destroy ]
 
   def index
     @period = params[:period].to_s.in?(%w[week two_weeks month custom]) ? params[:period] : "month"
@@ -19,11 +19,18 @@ class Financial::CategoryBudgetsController < ApplicationController
     end
   end
 
+  def edit
+    @period_params = period_params
+    assigned_ids = Financial::CategoryBudget.where(account: Current.account).where.not(id: @budget.id).select(:category_id)
+    @categories = Category.for_account(Current.account).where.not(id: assigned_ids).or(Category.for_account(Current.account).where(id: @budget.category_id)).order(:name)
+  end
+
   def update
     if @budget.update(budget_params)
-      redirect_to finance_category_budgets_path, notice: t("category_budgets.flash.updated")
+      redirect_to finance_category_budgets_path(period_params), notice: t("category_budgets.flash.updated")
     else
-      redirect_to finance_category_budgets_path, alert: t("category_budgets.flash.save_failed")
+      edit
+      render :edit, status: :unprocessable_entity
     end
   end
 
@@ -40,6 +47,10 @@ class Financial::CategoryBudgetsController < ApplicationController
 
   def budget_params
     params.expect(financial_category_budget: [ :category_id, :amount, :frequency, :custom_days, :starts_on ])
+  end
+
+  def period_params
+    params.slice(:period, :start_date, :end_date).permit(:period, :start_date, :end_date)
   end
 
   def selected_range
