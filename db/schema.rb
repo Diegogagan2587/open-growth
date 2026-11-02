@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_01_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_02_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -273,6 +273,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000000) do
     t.index ["account_id"], name: "index_financial_accounts_on_account_id"
     t.index ["legacy_liability_id"], name: "index_financial_accounts_on_legacy_liability_id", unique: true, where: "(legacy_liability_id IS NOT NULL)"
     t.index ["status"], name: "index_financial_accounts_on_status"
+  end
+
+  create_table "financial_category_budgets", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.decimal "amount", precision: 12, scale: 2, null: false
+    t.bigint "category_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "custom_days"
+    t.string "frequency", null: false
+    t.date "starts_on", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "category_id"], name: "index_category_budgets_on_account_and_category", unique: true
+    t.index ["account_id"], name: "index_financial_category_budgets_on_account_id"
+    t.index ["category_id"], name: "index_financial_category_budgets_on_category_id"
   end
 
   create_table "financial_entries", force: :cascade do |t|
@@ -782,6 +796,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000000) do
   add_foreign_key "expenses", "income_events", column: "loan_id"
   add_foreign_key "expenses", "planned_expenses"
   add_foreign_key "financial_accounts", "accounts"
+  add_foreign_key "financial_category_budgets", "accounts"
+  add_foreign_key "financial_category_budgets", "categories"
   add_foreign_key "financial_entries", "accounts"
   add_foreign_key "financial_entries", "budget_periods"
   add_foreign_key "financial_entries", "categories"
