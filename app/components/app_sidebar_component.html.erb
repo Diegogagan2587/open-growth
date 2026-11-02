@@ -39,7 +39,7 @@
         <%= render SidebarMenuItemComponent.new do %>
           <%= render SidebarMenuButtonComponent.new(href: finance_category_budgets_path, active: active_controller?("financial/category_budgets")) do %>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-sidebar-foreground/90" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 19V5m0 14h16M7 15v-4m5 4V8m5 7V5"/></svg>
-            <span data-sidebar-collapse="hide" class="<%= nav_label_classes %>">Category budget</span>
+            <span data-sidebar-collapse="hide" class="<%= nav_label_classes %>"><%= t("nav.category_budget") %></span>
           <% end %>
         <% end %>
 

@@ -13,23 +13,23 @@ class Financial::CategoryBudgetsController < ApplicationController
   def create
     @budget = Financial::CategoryBudget.new(budget_params.merge(account: Current.account))
     if @budget.save
-      redirect_to finance_category_budgets_path, notice: "Category budget created"
+      redirect_to finance_category_budgets_path, notice: t("category_budgets.flash.created")
     else
-      redirect_to finance_category_budgets_path, alert: @budget.errors.full_messages.to_sentence
+      redirect_to finance_category_budgets_path, alert: t("category_budgets.flash.save_failed")
     end
   end
 
   def update
     if @budget.update(budget_params)
-      redirect_to finance_category_budgets_path, notice: "Category budget updated"
+      redirect_to finance_category_budgets_path, notice: t("category_budgets.flash.updated")
     else
-      redirect_to finance_category_budgets_path, alert: @budget.errors.full_messages.to_sentence
+      redirect_to finance_category_budgets_path, alert: t("category_budgets.flash.save_failed")
     end
   end
 
   def destroy
     @budget.destroy!
-    redirect_to finance_category_budgets_path, status: :see_other, notice: "Category budget removed"
+    redirect_to finance_category_budgets_path, status: :see_other, notice: t("category_budgets.flash.removed")
   end
 
   private
