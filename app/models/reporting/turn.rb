@@ -20,6 +20,7 @@ class Reporting::Turn < ApplicationRecord
   private
 
   def broadcast_update
+    association(:proposal).reset
     broadcast_replace_to conversation, target: ActionView::RecordIdentifier.dom_id(self),
       partial: "reports/analysis_turns/turn", locals: { turn: self }
   end
