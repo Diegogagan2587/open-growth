@@ -1,4 +1,6 @@
 class Category < ApplicationRecord
+  ICONS = %w[💰 🏠 🍽️ 🚗 🛍️ 💊 🎓 🎉 🐾 📱 ✈️ 📦].freeze
+
   belongs_to :account
   has_many :financial_entries, class_name: "Financial::Entry", dependent: :restrict_with_error
   has_many :expense_templates, dependent: :destroy
