@@ -13,6 +13,7 @@ class Account < ApplicationRecord
   has_many :financial_accounts, class_name: "Financial::Account", dependent: :destroy
   has_many :financial_liabilities, class_name: "Financial::Liability", dependent: :destroy
   has_many :financial_entries, class_name: "Financial::Entry", dependent: :destroy
+  has_many :ai_agent_proposals, class_name: "Ai::Agents::Proposal", dependent: :destroy
   has_many :planned_expenses, dependent: :destroy
   has_many :financial_planned_transactions, class_name: "Financial::PlannedTransaction"
   has_many :budget_line_items, dependent: :destroy
