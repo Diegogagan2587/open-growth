@@ -16,6 +16,8 @@ class Financial::Entry < ApplicationRecord
   belongs_to :income_event, optional: true
   belongs_to :funding_source, class_name: "Financial::FundingSource", optional: true, inverse_of: :receipt_entry
   belongs_to :financial_loan, class_name: "Financial::Loan", optional: true, inverse_of: :entries
+  has_many :transaction_proposals, class_name: "Ai::Agents::Financial::TransactionProposal",
+    foreign_key: :financial_entry_id, dependent: :nullify, inverse_of: :financial_entry
 
   before_validation :set_account, on: :create
 
