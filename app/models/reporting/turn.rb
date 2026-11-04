@@ -9,7 +9,7 @@ class Reporting::Turn < ApplicationRecord
   has_one :usage_event, class_name: "Reporting::UsageEvent", dependent: :nullify
   has_one :proposal, class_name: "Ai::Agents::Proposal", foreign_key: :reporting_turn_id, dependent: :destroy
 
-  validates :question, presence: true, length: { maximum: 4_000 }
+  validates :question, presence: true, length: { maximum: 40_000 }
   validates :status, inclusion: { in: STATUSES }
 
   scope :completed, -> { where(status: "completed") }
