@@ -42,7 +42,7 @@ class Ai::Agents::FinancialAnalyst
     { error: error.record.errors.full_messages.to_sentence }
   rescue ActiveRecord::RecordNotFound => error
     { error: error.message }
-  rescue Financial::EntryProposal::Conflict, ArgumentError, JSON::ParserError => error
+  rescue Ai::Agents::Proposal::Conflict, Ai::Agents::Financial::TransactionProposal::Conflict, ArgumentError, JSON::ParserError => error
     { error: error.message }
   end
 
@@ -62,14 +62,14 @@ class Ai::Agents::FinancialAnalyst
   end
 
   def propose(action, args)
-    proposal = Financial::EntryProposal.propose!(
+    transaction_proposal = Ai::Agents::Financial::TransactionProposal.propose!(
       reporting_turn: turn,
       action:,
       attributes: args.except(:id),
       financial_entry_id: args[:id]
     )
-    { proposal_created: true, proposal_id: proposal.id, action: proposal.action,
-      financial_entry_id: proposal.financial_entry_id,
-      attributes: proposal.proposed_attributes, message: "A preview is awaiting user approval. It has not been saved." }
+    { proposal_created: true, proposal_id: transaction_proposal.proposal_id, action: transaction_proposal.action,
+      financial_entry_id: transaction_proposal.financial_entry_id,
+      attributes: transaction_proposal.proposed_attributes, message: "A preview is awaiting user approval. It has not been saved." }
   end
 end
