@@ -64,7 +64,7 @@ group :test do
   gem "selenium-webdriver"
 end
 
-gem "tailwindcss-rails", "~> 4.6"
+gem "tailwindcss-rails", "~> 4.7"
 
 gem "view_component", "~> 4.15"
 # redcarpet for parsing markdown format
