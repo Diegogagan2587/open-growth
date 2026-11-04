@@ -23,6 +23,12 @@ class Financial::Plan < IncomeEvent
 
   scope :chronological, -> { order(:expected_date, :id) }
 
+  def self.advice_summaries(account:, status: nil)
+    plans = account.financial_plans.includes(:planned_transactions).order(:expected_date)
+    plans = plans.where(lifecycle_status: status) if status.present?
+    { total_count: plans.count, truncated: plans.count > 100, plans: plans.limit(100).map(&:advice_summary) }
+  end
+
   def default_transaction_order
     custom_ordered? ? :custom : :due_date
   end
