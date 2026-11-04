@@ -38,7 +38,7 @@
         <%= f.label :category_id, t("quick_add.expense_form.category"), class: "mb-1 block truncate text-xs font-medium text-muted-foreground" %>
         <%= render Ui::SelectComponent.new(
           name: "expense[category_id]",
-          options: Current.account&.categories&.pluck(:name, :id) || [],
+          options: Current.account&.categories&.map { |category| [category.selection_label, category.id] } || [],
           selected: @expense&.category_id,
           include_blank: t("quick_add.expense_form.select_category"),
           required: true,
