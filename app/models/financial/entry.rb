@@ -78,6 +78,12 @@ class Financial::Entry < ApplicationRecord
     entry_date
   end
 
+  def reconciliation_summary
+    { id: id, date: entry_date, type: entry_type, amount: amount.to_d.to_s("F"), description: description,
+      category: category&.name, financial_account: financial_account&.name,
+      counterparty_account: counterparty_financial_account&.name, liability: financial_liability&.name, notes: notes }
+  end
+
   def date=(value)
     self.entry_date = value
   end
