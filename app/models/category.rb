@@ -18,6 +18,10 @@ class Category < ApplicationRecord
 
   scope :for_account, ->(account) { where(account: account) }
 
+  def selection_label
+    [icon, name, description].compact_blank.join(" — ")
+  end
+
   private
 
   def set_account
