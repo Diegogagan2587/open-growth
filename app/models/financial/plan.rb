@@ -33,6 +33,11 @@ class Financial::Plan < IncomeEvent
     custom_ordered? ? :custom : :due_date
   end
 
+  def advice_summary
+    { id: id, name: description, expected_date: expected_date, expected_amount: expected_amount.to_d.to_s("F"),
+      status: lifecycle_status, planned_transactions: planned_transactions.order(:position, :id).map(&:advice_summary) }
+  end
+
   def set_global_balance_checkpoint!(balance)
     update!(global_balance_override: balance.presence)
   end
