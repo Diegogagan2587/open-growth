@@ -44,6 +44,14 @@ class Financial::Account < ApplicationRecord
     end
   end
 
+  def balance_at(date)
+    balance = opening_balance.to_d
+    Financial::Entry.for_account(account).where("entry_date <= ?", date).find_each do |entry|
+      balance += liability? ? entry.liability_delta_for(id) : entry.account_delta_for(id)
+    end
+    balance
+  end
+
   def archived?
     status == "archived"
   end
