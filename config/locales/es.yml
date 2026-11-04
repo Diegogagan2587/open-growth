@@ -543,6 +543,9 @@ es:
       back: "Volver a categorías"
     form:
       name: "Nombre"
+      description: "Descripción"
+      icon: "Icono"
+      no_icon: "Sin icono"
     new_category: "Nueva categoría"
     flash:
       created: "Categoría creada correctamente."

@@ -542,6 +542,9 @@ en:
       back: "Back to Categories"
     form:
       name: "Name"
+      description: "Description"
+      icon: "Icon"
+      no_icon: "No icon"
     new_category: "New Category"
     flash:
       created: "Category was successfully created."
