@@ -12,6 +12,7 @@ class Category < ApplicationRecord
 
   validates :name, presence: true
   validates :name, uniqueness: { scope: :account_id }
+  validates :icon, inclusion: { in: ICONS, allow_blank: true }
 
   before_validation :set_account, on: :create
 
