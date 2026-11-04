@@ -6,8 +6,6 @@ class Reports::Ai::ConversationsController < ApplicationController
 
   def index
     @conversations = @membership.reporting_conversations.recent_first
-    @date_from = parsed_date(params[:from]) || Date.current.beginning_of_year
-    @date_to = parsed_date(params[:to]) || Date.current
   end
 
   def create
@@ -21,8 +19,6 @@ class Reports::Ai::ConversationsController < ApplicationController
       redirect_to reports_ai_conversation_path(@conversation), notice: "Analysis conversation created."
     else
       @conversations = @membership.reporting_conversations.recent_first
-      @date_from = @conversation.date_from
-      @date_to = @conversation.date_to
       render :index, status: :unprocessable_entity
     end
   end
@@ -46,12 +42,7 @@ class Reports::Ai::ConversationsController < ApplicationController
   end
 
   def conversation_params
-    params.expect(reporting_conversation: [ :title, :date_from, :date_to ])
+    params.expect(reporting_conversation: [ :title ])
   end
 
-  def parsed_date(value)
-    Date.iso8601(value) if value.present?
-  rescue Date::Error
-    nil
-  end
 end

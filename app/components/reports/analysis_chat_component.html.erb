@@ -6,7 +6,7 @@
       <div>
         <h2 class="text-lg font-semibold text-card-foreground"><%= @conversation.title %></h2>
         <p class="mt-1 text-sm text-muted-foreground">
-          <%= l(@conversation.date_from) %> – <%= l(@conversation.date_to) %> · Read-only analysis
+          Date range chosen for each question · Transaction changes require your approval
         </p>
       </div>
       <%= render Ui::BadgeComponent.new(label: "#{remaining} requests remaining", variant: remaining.positive? ? :secondary : :destructive) %>
@@ -16,7 +16,7 @@
   <div id="analysis_turns" class="max-h-[60vh] space-y-5 overflow-y-auto px-4 py-6 sm:px-6" data-controller="scroll-bottom">
     <% if @conversation.turns.empty? %>
       <div class="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-        Ask about unusual transactions, missing records, category trends, or reconciliation gaps in this period.
+        Ask about a date range, paste statement lines to reconcile, or ask about your plans.
       </div>
     <% else %>
       <%= render partial: "reports/analysis_turns/turn", collection: @conversation.turns.order(:created_at), as: :turn %>
@@ -29,8 +29,8 @@
         <%= render Ui::TextareaComponent.new(
               name: "question",
               id: "analysis-question",
-              placeholder: "What looks inconsistent in these records?",
-              rows: 3,
+              placeholder: "Paste statement lines and ask what is missing, or ask about a date range or plan.",
+              rows: 6,
               required: true,
               data: { controller: "autosubmit" }
             ) %>
