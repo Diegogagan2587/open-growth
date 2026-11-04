@@ -23,6 +23,11 @@ class Financial::PlannedTransaction < PlannedExpense
     financial_entry&.entry_date
   end
 
+  def advice_summary
+    { id: id, date: due_date, description: description, amount: amount.to_d.to_s("F"),
+      status: execution_status, kind: kind, source: route_source_label, destination: route_destination_label }
+  end
+
   def payment_timing
     return if due_date.blank? || actual_payment_date.blank?
     return :early if actual_payment_date < due_date
