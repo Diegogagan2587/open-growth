@@ -24,6 +24,23 @@ class Financial::Entry < ApplicationRecord
   scope :for_account, ->(account) { where(account: account) }
   scope :by_date, -> { order(entry_date: :desc, entry_time: :desc, created_at: :desc) }
 
+  def self.transaction_options(account:)
+    {
+      categories: Category.for_account(account).order(:name).map { |category| { id: category.id, name: category.name } },
+      expense_sources: account.financial_accounts.active.order(:name).map do |source|
+        {
+          id: source.id,
+          name: source.name,
+          account_group: source.account_group,
+          entry_type: source.liability? ? "liability_charge" : "outflow",
+          financial_account_id: (source.id unless source.liability?),
+          financial_liability_id: (source.id if source.liability?)
+        }
+      end
+    }
+  end
+
+
   validates :entry_type, presence: true, inclusion: { in: ENTRY_TYPES }
   validates :entry_date, presence: true
   validates :amount, presence: true, numericality: { greater_than: 0 }
