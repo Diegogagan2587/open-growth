@@ -40,6 +40,28 @@ class Financial::Entry < ApplicationRecord
     }
   end
 
+  def self.reconciliation_snapshot(account:, from:, to:, financial_account_id: nil)
+    entries = account.financial_entries.where(entry_date: from..to)
+    if financial_account_id.present?
+      account.financial_accounts.find(financial_account_id)
+      entries = entries.where(
+        "financial_account_id = :id OR counterparty_financial_account_id = :id OR financial_liability_id = :id OR counterparty_financial_liability_id = :id",
+        id: financial_account_id
+      )
+    end
+    selected = entries.includes(:category, :financial_account, :counterparty_financial_account,
+      :financial_liability, :counterparty_financial_liability).order(:entry_date, :id).limit(100)
+    {
+      period: { from:, to: }, total_count: entries.count, truncated: entries.count > 100,
+      account_balances: account.financial_accounts.order(:name).map { |financial_account|
+        { id: financial_account.id, name: financial_account.name, group: financial_account.account_group,
+          opening_balance: financial_account.opening_balance.to_d.to_s("F"),
+          computed_balance_at_period_end: financial_account.balance_at(to).to_s("F"),
+          current_balance: financial_account.current_balance.to_s("F") }
+      },
+      transactions: selected.map(&:reconciliation_summary)
+    }
+  end
 
   validates :entry_type, presence: true, inclusion: { in: ENTRY_TYPES }
   validates :entry_date, presence: true
