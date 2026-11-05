@@ -72,26 +72,6 @@ class Financial::Loan < ApplicationRecord
     installments.where.not(resolution: "paid").sum(:expected_interest)
   end
 
-  def undo_disbursement
-    with_lock do
-      paid_installments = installments.where("resolution = 'paid' OR payment_entry_id IS NOT NULL OR interest_entry_id IS NOT NULL")
-      if entries.where.not(entry_type: "loan_disbursement").exists? || paid_installments.exists?
-        errors.add(:base, "undo installment payments before undoing the disbursement")
-        return false
-      end
-
-      transaction do
-        entries.where(entry_type: "loan_disbursement").each(&:destroy!)
-        funding_sources.each(&:destroy!)
-        update!(lifecycle_status: "simulated")
-      end
-    end
-    true
-  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotDestroyed => error
-    errors.add(:base, error.message)
-    false
-  end
-
   def regenerate_schedule!(start_date: nil, first_payment_date: nil, reset_manual_installment_ids: [])
     start_date = start_date&.to_date
     first_payment_date = first_payment_date&.to_date || self.first_payment_date
@@ -117,6 +97,14 @@ class Financial::Loan < ApplicationRecord
         paid + reconciled
       end
     end
+  end
+
+  def disburse(plan:)
+    Financial::Loan::Disbursement.create(loan: self, plan: plan)
+  end
+
+  def reverse_disbursement
+    Financial::Loan::Disbursement.destroy(loan: self)
   end
 
   private

@@ -71,16 +71,13 @@ class Financial::LoansController < ApplicationController
 
   def activate
     plan = Financial::Plan.for_account(Current.account).find(params[:plan_id])
-    result = Financial::Loans::ActivateService.call(loan: @loan, plan: plan)
+    result = @loan.disburse(plan: plan)
     redirect_to finance_loan_path(@loan), notice: ("Loan activated and disbursed" if result.success?), alert: (result.error_message unless result.success?)
   end
 
   def undo_disbursement
-    if @loan.undo_disbursement
-      redirect_to finance_loan_path(@loan), notice: "Loan disbursement undone"
-    else
-      redirect_to finance_loan_path(@loan), alert: @loan.errors.full_messages.to_sentence
-    end
+    result = @loan.reverse_disbursement
+    redirect_to finance_loan_path(@loan), notice: ("Loan disbursement undone" if result.success?), alert: (result.error_message unless result.success?)
   end
 
   private
