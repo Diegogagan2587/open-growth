@@ -5,7 +5,7 @@
     <button type="button" class="reader-icon-button" aria-label="Reading options" data-action="document-reader#toggleChrome">Aa</button>
   </header>
 
-  <div class="reader-pages" data-document-reader-target="pages" data-action="touchstart->document-reader#startTap touchend->document-reader#tap click->document-reader#tap">
+  <div class="reader-pages" data-document-reader-target="pages" data-action="touchstart->document-reader#startTouch touchmove->document-reader#moveTouch touchend->document-reader#endTouch touchcancel->document-reader#cancelTouch click->document-reader#tap">
     <article class="reader-page markdown-content">
       <h1 class="reader-cover-title"><%= @title %></h1>
       <% if @markdown.present? %>

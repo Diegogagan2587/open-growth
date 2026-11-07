@@ -64,8 +64,8 @@ export default class extends Controller {
       showCover: false,
       drawShadow: true,
       maxShadowOpacity: 0.5,
-      flippingTime: 650,
-      mobileScrollSupport: true,
+      flippingTime: 450,
+      useMouseEvents: false,
       disableFlipByClick: true
     })
     this.pageFlip.on("flip", (event) => this.updatePage(event.data))
@@ -84,22 +84,87 @@ export default class extends Controller {
   previous() { this.pageFlip?.flipPrev() }
   next() { this.pageFlip?.flipNext() }
 
-  startTap(event) {
-    if (event.touches.length !== 1) return
-    this.touchStartX = event.touches[0].clientX
-    this.touchStartY = event.touches[0].clientY
+  startTouch(event) {
+    if (event.touches.length !== 1 || event.target.closest("a, button")) return
+    const touch = event.touches[0]
+    this.touchStartX = touch.clientX
+    this.touchStartY = touch.clientY
+    this.touchStartTime = Date.now()
+    this.touchOffsetX = 0
+    this.turning = false
+    this.touchSurface = this.bookTarget.querySelector(".stf__block")
+  }
+
+  moveTouch(event) {
+    if (this.touchStartX == null || !this.pageFlip || !this.touchSurface || event.touches.length !== 1) return
+    const touch = event.touches[0]
+    const dx = touch.clientX - this.touchStartX
+    const dy = touch.clientY - this.touchStartY
+    if (!this.turning) {
+      if (Math.abs(dx) < 6 || Math.abs(dx) <= Math.abs(dy)) return
+      const index = this.pageFlip.getCurrentPageIndex()
+      if ((dx < 0 && index >= this.pageFlip.getPageCount() - 1) || (dx > 0 && index === 0)) return
+      if (this.pageFlip.getState() !== "read") return
+
+      const position = this.touchPosition(touch)
+      this.turnDirection = dx < 0 ? 1 : -1
+      const edge = dx < 0 ? this.pageWidth * 0.25 : this.pageWidth * 0.15
+      this.touchOffsetX = dx < 0 ? Math.max(0, edge - position.x) : Math.min(0, edge - position.x)
+      this.pageFlip.startUserTouch(this.touchPosition({ clientX: this.touchStartX, clientY: this.touchStartY }))
+      this.turning = true
+    }
+
+    event.preventDefault()
+    this.pageFlip.userMove(this.touchPosition(touch), true)
+  }
+
+  endTouch(event) {
+    const touch = event.changedTouches[0]
+    if (!touch || this.touchStartX == null) return
+    this.lastTouchTap = Date.now()
+    if (this.turning) {
+      const distance = (touch.clientX - this.touchStartX) * -this.turnDirection
+      const quickSwipe = Date.now() - this.touchStartTime < 280 && distance > 28
+      this.finishTurn(distance > this.pageWidth * 0.14 || quickSwipe, touch)
+    } else if (Math.hypot(touch.clientX - this.touchStartX, touch.clientY - this.touchStartY) < 10) {
+      this.toggleAt(touch.clientX)
+    }
+    this.touchStartX = null
+    this.touchSurface = null
+    this.turning = false
+  }
+
+  cancelTouch() {
+    if (this.turning) this.finishTurn(false, { clientX: this.touchStartX, clientY: this.touchStartY })
+    this.touchStartX = null
+    this.touchSurface = null
+    this.turning = false
+  }
+
+  touchPosition(touch) {
+    const rect = this.touchSurface.getBoundingClientRect()
+    return { x: touch.clientX - rect.left + this.touchOffsetX, y: touch.clientY - rect.top }
+  }
+
+  finishTurn(complete, touch) {
+    this.pageFlip.userStop(this.touchPosition(touch), true)
+    const controller = this.pageFlip.getFlipController()
+    const calc = controller.calc
+    if (!calc) return
+    const bounds = this.pageFlip.getBoundsRect()
+    const cornerY = calc.getCorner() === "bottom" ? bounds.height : 0
+    controller.animateFlippingTo(calc.getPosition(), {
+      x: complete ? -bounds.pageWidth : bounds.pageWidth,
+      y: cornerY
+    }, complete)
   }
 
   tap(event) {
-    if (event.target.closest("a, button")) return
-    let x = event.clientX
-    if (event.type === "touchend") {
-      const touch = event.changedTouches[0]
-      if (!touch || Math.hypot(touch.clientX - this.touchStartX, touch.clientY - this.touchStartY) > 10) return
-      x = touch.clientX
-      this.lastTouchTap = Date.now()
-    } else if (Date.now() - this.lastTouchTap < 500) return
+    if (event.target.closest("a, button") || Date.now() - this.lastTouchTap < 500) return
+    this.toggleAt(event.clientX)
+  }
 
+  toggleAt(x) {
     if (Math.abs(x - window.innerWidth / 2) < window.innerWidth * 0.18) this.toggleChrome()
   }
 
