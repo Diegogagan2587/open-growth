@@ -79,6 +79,34 @@ select option[value=""]:not(:checked) {
 }
 
 /* Markdown content styles */
+.mobile-reader { position: fixed; inset: 0; z-index: 60; display: flex; width: auto; height: 100dvh; flex-direction: column; overflow: hidden; background: #080808; color: #f5f5f5; }
+@media (min-width: 48rem) { .mobile-reader { display: none; } }
+.reader-chrome { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 3.75rem; padding: 0.5rem 1rem; background: #080808; transition: opacity 180ms ease, transform 180ms ease; }
+.reader-chrome.is-hidden { opacity: 0; pointer-events: none; }
+.reader-title { overflow: hidden; color: #aaa; font-size: 0.8rem; text-overflow: ellipsis; white-space: nowrap; }
+.reader-icon-button { min-width: 2.75rem; min-height: 2.75rem; border-radius: 9999px; color: #f5f5f5; font-size: 1.35rem; }
+.reader-icon-button:focus-visible { outline: 2px solid white; outline-offset: 2px; }
+.reader-pages { position: relative; flex: 1; width: 100%; min-height: 0; overflow: hidden; }
+.reader-page { box-sizing: border-box; position: absolute; inset: 0 auto 0 0; width: 100vw; height: 100%; padding: 1.5rem 0 2rem; color: #f5f5f5; font-size: 1.08rem; line-height: 1.85; column-width: 100vw; column-gap: 0; column-fill: auto; }
+.reader-pages.is-ready > .reader-page { visibility: hidden; }
+.reader-page > * { margin-inline: 1.25rem; }
+.reader-book { position: absolute; inset: 0; visibility: hidden; }
+.reader-pages.is-ready .reader-book { visibility: visible; }
+.reader-book-page { box-sizing: border-box; width: 100%; height: 100%; overflow: hidden; background: #080808; }
+.reader-book-page .reader-page { visibility: visible; }
+.reader-page h1, .reader-page h2, .reader-page h3, .reader-page h4, .reader-page h5, .reader-page h6 { break-after: avoid; color: #fff; }
+.reader-page pre, .reader-page table { break-inside: avoid; }
+.reader-page a { color: #b8d7ff; }
+.reader-cover-title { margin-top: 0; font-size: 1.8rem !important; }
+.reader-progress { color: #aaa; font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.reader-footer { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+@media (prefers-reduced-motion: reduce) { .reader-chrome { transition: none; } }
+.desktop-document-content { font-size: 1.0625rem; }
+.desktop-document-content p, .desktop-document-content ul, .desktop-document-content ol { line-height: 1.85; }
+.desktop-document-content h1 { margin-top: 0; }
+.desktop-document-content h2 { margin-top: 1.75em; }
+.desktop-document-content h3 { margin-top: 1.5em; }
+
 .markdown-content h1 {
   font-size: 2em;
   font-weight: 700;
