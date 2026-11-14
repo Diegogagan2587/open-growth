@@ -270,6 +270,27 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action='#{finance_plan_global_balance_correction_path(first, month: "2026-07", status: "active")}']"
   end
 
+  test "global balance includes earlier plans and checkpoints hidden by filters" do
+    @plan.update!(lifecycle_status: "cancelled")
+    first = Financial::Plan.find(income_events(:forecast_first).id)
+    second = Financial::Plan.find(income_events(:forecast_second).id)
+    [ first, second ].each { |plan| plan.update!(lifecycle_status: "active") }
+    earlier = Financial::Plan.create!(account: @account, name: "Earlier plan", planned_for: Date.new(2026, 6, 1), expected_amount: 1, lifecycle_status: "closed")
+    earlier.funding_sources.create!(account: @account, description: "Earlier funding", expected_amount: 200, expected_date: earlier.planned_for)
+
+    get finance_plans_path, params: { month: "2026-07", status: "active" }
+
+    assert_plan_metrics(first, funding: "$1,000.00", consumption: "$300.00", balance: "$700.00", global_balance: "$900.00")
+    assert_plan_metrics(second, funding: "$500.00", consumption: "$800.00", balance: "-$300.00", global_balance: "$600.00")
+    assert_select "a", text: "Earlier plan", count: 0
+
+    earlier.set_global_balance_checkpoint!(125)
+    get finance_plans_path, params: { month: "2026-07", status: "active" }
+
+    assert_plan_metrics(first, funding: "$1,000.00", consumption: "$300.00", balance: "$700.00", global_balance: "$825.00")
+    assert_plan_metrics(second, funding: "$500.00", consumption: "$800.00", balance: "-$300.00", global_balance: "$525.00")
+  end
+
   test "global balance correction resets later plans and can be cleared" do
     @plan.update!(lifecycle_status: "cancelled")
     first = Financial::Plan.find(income_events(:forecast_first).id)

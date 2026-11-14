@@ -12,7 +12,7 @@ This reflects that a planned expense may be paid from cash or debit, or charged 
 
 ### Plan forecast and balance corrections
 
-The plans list shows expected funding, planned consumption, each plan's net balance, and the global balance through each plan. Planned consumption includes balance-reducing planned transactions; a plan's net balance is its expected funding minus that consumption. The global balance is a running total of plan net balances ordered by plan date, and it includes only plans currently shown after filters. This lets users inspect how each plan changes the forecast in the current view.
+The plans list shows expected funding, planned consumption, each plan's net balance, and the global balance through each plan. Planned consumption includes balance-reducing planned transactions; a plan's net balance is its expected funding minus that consumption. The overview totals describe only plans currently shown after filters. Each plan's global balance is a running total of all plans in the account, ordered by plan date and ID, regardless of month, status, or budget-period filters. Hidden plans and their correction checkpoints still affect the balance shown on a visible plan, so filtering the list never changes that plan's global balance.
 
 On a plan's transaction table, each row shows cumulative consumption through that transaction and the remaining plan balance. This makes it easier to see when planned spending uses up expected funding. The move-up and move-down controls are stacked and aligned with the position number to save horizontal space. Reordering refreshes only the planned-transactions section so the updated order and balances appear without reloading the whole page.
 

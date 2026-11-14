@@ -1,12 +1,13 @@
 class Financial::Plans::Overview
   PlanMetrics = Data.define(:expected_funding, :planned_consumption, :planned_balance, :global_balance)
 
-  def self.for(plans)
-    new(plans)
+  def self.for(plans, global_plans: plans)
+    new(plans, global_plans:)
   end
 
-  def initialize(plans)
+  def initialize(plans, global_plans:)
     @plans = plans
+    @global_plans = global_plans
   end
 
   def plan_count
@@ -27,7 +28,7 @@ class Financial::Plans::Overview
 
   def plan_metrics
     @plan_metrics ||= begin
-      plan_rows = plans.to_a
+      plan_rows = global_plans.to_a
       plan_ids = plan_rows.map(&:id)
       funding_by_plan = Financial::FundingSource.where(financial_plan_id: plan_ids).group(:financial_plan_id).sum(:expected_amount)
       consumption_by_plan = Financial::PlannedTransaction.balance_reducing.where(income_event_id: plan_ids).group(:income_event_id).sum(:amount)
@@ -46,7 +47,7 @@ class Financial::Plans::Overview
 
   private
 
-  attr_reader :plans
+  attr_reader :plans, :global_plans
 
   def funding_sources
     @funding_sources ||= Financial::FundingSource.where(financial_plan_id: plans.select(:id))

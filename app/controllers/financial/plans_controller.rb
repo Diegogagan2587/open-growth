@@ -8,11 +8,12 @@ class Financial::PlansController < ApplicationController
     @month = params[:month].to_s if params[:month].to_s.match?(/\A\d{4}-(0[1-9]|1[0-2])\z/)
     @status = params[:status].to_s if params[:status].to_s.in?(Financial::Plan::LIFECYCLE_STATUSES)
     @plans = Financial::Plan.for_account(Current.account)
-    @plans = @plans.where(budget_period: @budget_period) if @budget_period
-    @plans = @plans.where(expected_date: Date.strptime(@month, "%Y-%m").all_month) if @month
-    @plans = @plans.where(lifecycle_status: @status) if @status
-    @plans = @plans.chronological.reverse_order
-    @overview = Financial::Plans::Overview.for(@plans)
+    @filtered_plans = @plans
+    @filtered_plans = @filtered_plans.where(budget_period: @budget_period) if @budget_period
+    @filtered_plans = @filtered_plans.where(expected_date: Date.strptime(@month, "%Y-%m").all_month) if @month
+    @filtered_plans = @filtered_plans.where(lifecycle_status: @status) if @status
+    @filtered_plans = @filtered_plans.chronological.reverse_order
+    @overview = Financial::Plans::Overview.for(@filtered_plans, global_plans: @plans)
   end
 
   def show
