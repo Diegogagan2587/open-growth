@@ -1,5 +1,5 @@
 class Financial::LoansController < ApplicationController
-  before_action :set_loan, only: [ :show, :edit, :update, :destroy, :activate, :undo_disbursement ]
+  before_action :set_loan, only: [ :show, :edit, :update, :destroy, :activate, :status, :undo_disbursement ]
   before_action :load_collections, only: [ :new, :create, :edit, :update, :show ]
 
   def index
@@ -73,6 +73,19 @@ class Financial::LoansController < ApplicationController
     plan = Financial::Plan.for_account(Current.account).find(params[:plan_id])
     result = Financial::Loans::ActivateService.call(loan: @loan, plan: plan)
     redirect_to finance_loan_path(@loan), notice: ("Loan activated and disbursed" if result.success?), alert: (result.error_message unless result.success?)
+  end
+
+  def status
+    target = params.expect(:lifecycle_status)
+    unless (@loan.lifecycle_status == "active" && target == "paid") || (@loan.lifecycle_status == "paid" && target == "active")
+      return redirect_to finance_loan_path(@loan), alert: "This loan status cannot be changed"
+    end
+
+    if @loan.update(lifecycle_status: target)
+      redirect_to finance_loan_path(@loan), notice: target == "paid" ? "Loan marked as paid" : "Loan reopened"
+    else
+      redirect_to finance_loan_path(@loan), alert: @loan.errors.full_messages.to_sentence
+    end
   end
 
   def undo_disbursement

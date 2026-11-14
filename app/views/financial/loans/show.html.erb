@@ -11,6 +11,11 @@
     </div>
     <div class="flex gap-2">
       <%= render Ui::ButtonComponent.new(href: edit_finance_loan_path(@loan), label: "Edit terms", variant: :outline) %>
+      <% if @loan.lifecycle_status == "active" %>
+        <%= button_to "Mark as paid", status_finance_loan_path(@loan), method: :patch, params: { lifecycle_status: "paid" }, class: "rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground", form: { data: { turbo_confirm: "Mark this loan as paid? This only changes its status; the schedule and accounting records stay unchanged." } } %>
+      <% elsif @loan.lifecycle_status == "paid" %>
+        <%= button_to "Reopen loan", status_finance_loan_path(@loan), method: :patch, params: { lifecycle_status: "active" }, class: "rounded-md border border-border px-3 py-2 text-sm font-medium", form: { data: { turbo_confirm: "Reopen this loan? Its existing schedule and accounting records stay unchanged." } } %>
+      <% end %>
       <% if @loan.lifecycle_status == "active" && (@loan.entries.where(entry_type: "loan_disbursement").exists? || @loan.funding_sources.exists?) %>
         <%= render Ui::ButtonComponent.new(href: disbursement_finance_loan_path(@loan), label: "Undo disbursement", variant: :destructive, method: :delete, data: { turbo_confirm: "Undo this disbursement? The actual loan transaction and borrowed funding source will be deleted. Installment payments must be undone first." }) %>
       <% elsif @loan.entries.empty? && @loan.funding_sources.empty? %>
