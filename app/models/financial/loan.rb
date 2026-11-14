@@ -20,6 +20,7 @@ class Financial::Loan < ApplicationRecord
   validates :different_payment_position, inclusion: { in: %w[beginning final] }
   validates :lifecycle_status, inclusion: { in: LIFECYCLE_STATUSES }
   validate :repayment_terms_are_valid
+  validate :disbursement_fee_is_less_than_principal
   validate :active_routing_is_complete
   validate :associations_belong_to_same_account
 
@@ -182,6 +183,12 @@ class Financial::Loan < ApplicationRecord
     repayment_terms
   rescue ArgumentError => error
     errors.add(:base, error.message)
+  end
+
+  def disbursement_fee_is_less_than_principal
+    return if disbursement_fee_amount.blank? || principal_amount.blank? || disbursement_fee_amount < principal_amount
+
+    errors.add(:disbursement_fee_amount, "must be less than the principal")
   end
 
   def active_routing_is_complete
