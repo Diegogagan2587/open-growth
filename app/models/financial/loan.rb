@@ -21,6 +21,7 @@ class Financial::Loan < ApplicationRecord
   validates :lifecycle_status, inclusion: { in: LIFECYCLE_STATUSES }
   validate :repayment_terms_are_valid
   validate :disbursement_fee_is_less_than_principal
+  validate :disbursement_fee_is_immutable_after_activation
   validate :active_routing_is_complete
   validate :associations_belong_to_same_account
 
@@ -189,6 +190,12 @@ class Financial::Loan < ApplicationRecord
     return if disbursement_fee_amount.blank? || principal_amount.blank? || disbursement_fee_amount < principal_amount
 
     errors.add(:disbursement_fee_amount, "must be less than the principal")
+  end
+
+  def disbursement_fee_is_immutable_after_activation
+    return unless will_save_change_to_disbursement_fee_amount? && lifecycle_status.in?(%w[active paid])
+
+    errors.add(:disbursement_fee_amount, "cannot change after activation")
   end
 
   def active_routing_is_complete
