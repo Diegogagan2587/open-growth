@@ -93,7 +93,10 @@ class Financial::Loan < ApplicationRecord
   def undo_disbursement
     with_lock do
       paid_installments = installments.where("resolution = 'paid' OR payment_entry_id IS NOT NULL OR interest_entry_id IS NOT NULL")
-      if entries.where.not(entry_type: "loan_disbursement").exists? || paid_installments.exists?
+      fee_entry = disbursement_fee_entry
+      other_entries = entries.where.not(entry_type: "loan_disbursement")
+      other_entries = other_entries.where.not(id: fee_entry.id) if fee_entry
+      if other_entries.exists? || paid_installments.exists?
         errors.add(:base, "undo installment payments before undoing the disbursement")
         return false
       end
