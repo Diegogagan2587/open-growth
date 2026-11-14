@@ -102,6 +102,8 @@ class Financial::Loan < ApplicationRecord
       end
 
       transaction do
+        update!(disbursement_fee_entry: nil)
+        fee_entry&.destroy!
         entries.where(entry_type: "loan_disbursement").each(&:destroy!)
         funding_sources.each(&:destroy!)
         update!(lifecycle_status: "simulated")
