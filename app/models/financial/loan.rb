@@ -14,6 +14,7 @@ class Financial::Loan < ApplicationRecord
 
   validates :name, presence: true
   validates :principal_amount, numericality: { greater_than: 0 }
+  validates :disbursement_fee_amount, numericality: { greater_than_or_equal_to: 0 }
   validates :interest_rate, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :repayment_basis, inclusion: { in: Financial::Loans::RepaymentTerms::BASES }, allow_nil: true
   validates :payment_amount, :different_payment_amount, numericality: { greater_than: 0 }, allow_nil: true
