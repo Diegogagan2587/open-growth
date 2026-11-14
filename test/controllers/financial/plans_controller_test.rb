@@ -251,7 +251,7 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     assert_select "h2", text: "Plans overview"
     assert_select "dt", text: "Plans shown"
     assert_select "dd", text: "1"
-    assert_select "p", text: /Forecast for the plans shown/
+    assert_select "p", text: /Forecast totals for the plans shown/
   end
 
   test "lists per-plan funding, consumption, net balance, and running balance for shown plans" do
@@ -275,11 +275,14 @@ class Financial::PlansControllerTest < ActionDispatch::IntegrationTest
     first = Financial::Plan.find(income_events(:forecast_first).id)
     second = Financial::Plan.find(income_events(:forecast_second).id)
     [ first, second ].each { |plan| plan.update!(lifecycle_status: "active") }
-    earlier = Financial::Plan.create!(account: @account, name: "Earlier plan", planned_for: Date.new(2026, 6, 1), expected_amount: 1, lifecycle_status: "closed")
+    earlier = Financial::Plan.create!(account: @account, name: "Earlier plan", planned_for: Date.new(2026, 6, 1), expected_amount: 1, lifecycle_status: "active")
     earlier.funding_sources.create!(account: @account, description: "Earlier funding", expected_amount: 200, expected_date: earlier.planned_for)
+    earlier.update!(lifecycle_status: "closed")
 
     get finance_plans_path, params: { month: "2026-07", status: "active" }
 
+    assert_select "dt", text: "Plans shown"
+    assert_select "dd", text: "2"
     assert_plan_metrics(first, funding: "$1,000.00", consumption: "$300.00", balance: "$700.00", global_balance: "$900.00")
     assert_plan_metrics(second, funding: "$500.00", consumption: "$800.00", balance: "-$300.00", global_balance: "$600.00")
     assert_select "a", text: "Earlier plan", count: 0
