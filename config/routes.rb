@@ -69,6 +69,7 @@ Rails.application.routes.draw do
       end
       member do
         post :activate
+        patch :status
         delete :disbursement, action: :undo_disbursement
       end
     end
