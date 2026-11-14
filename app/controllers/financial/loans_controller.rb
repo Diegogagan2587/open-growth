@@ -14,7 +14,7 @@ class Financial::LoansController < ApplicationController
         "COUNT(CASE WHEN financial_loan_installments.resolution = 'paid' THEN 1 END) AS paid_installments_count"
       )
       .group("financial_loans.id")
-      .includes(:liability)
+      .includes(:liability, :installments)
     @loans = filter_loans(@loans).order(loan_order)
   end
 
