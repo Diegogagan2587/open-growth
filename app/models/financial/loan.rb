@@ -64,6 +64,20 @@ class Financial::Loan < ApplicationRecord
     installments.sum(:expected_amount)
   end
 
+  def comparison_totals
+    rows = installments.to_a
+    if rows.empty?
+      rows = Financial::Loans::AmortizationSchedule.build(terms: repayment_terms, start_date: Date.current)
+    end
+    return if rows.empty?
+
+    total = rows.sum(0.to_d) { |row| row.respond_to?(:amount) ? row.amount : row.expected_amount.to_d }
+    interest = rows.sum(0.to_d) { |row| row.respond_to?(:interest) ? row.interest : row.expected_interest.to_d }
+    { repayment: total, interest: interest }
+  rescue ArgumentError
+    nil
+  end
+
   def projected_interest
     installments.sum(:expected_interest)
   end
