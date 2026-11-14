@@ -12,7 +12,7 @@ module Financial
             account: loan.account,
             financial_plan: plan,
             description: loan.name,
-            expected_amount: loan.principal_amount,
+            expected_amount: loan.net_disbursement_amount,
             expected_date: plan.planned_for,
             expected_destination_asset: loan.destination_asset,
             expected_destination_liability: loan.destination_liability,

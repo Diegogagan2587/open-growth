@@ -31,6 +31,10 @@ class Financial::Loan < ApplicationRecord
     entries.sum(0.to_d) { |entry| entry.liability_delta_for(liability_id) }
   end
 
+  def net_disbursement_amount
+    principal_amount.to_d - disbursement_fee_amount.to_d
+  end
+
   def configure_repayment(terms)
     self.repayment_basis = terms.repayment_basis
     self.number_of_payments = terms.number_of_payments
