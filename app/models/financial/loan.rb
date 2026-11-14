@@ -77,7 +77,7 @@ class Financial::Loan < ApplicationRecord
 
     total = rows.sum(0.to_d) { |row| row.respond_to?(:amount) ? row.amount : row.expected_amount.to_d }
     interest = rows.sum(0.to_d) { |row| row.respond_to?(:interest) ? row.interest : row.expected_interest.to_d }
-    { repayment: total, interest: interest }
+    { repayment: total, financing_cost: interest + disbursement_fee_amount.to_d }
   rescue ArgumentError
     nil
   end
