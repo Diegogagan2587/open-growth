@@ -41,7 +41,7 @@
         <dl class="mt-4 grid grid-cols-3 gap-3">
           <div><dt class="text-xs text-muted-foreground">Principal</dt><dd class="mt-1 font-semibold"><%= number_to_currency(loan.principal_amount) %></dd></div>
           <div><dt class="text-xs text-muted-foreground">Total repayment</dt><dd class="mt-1 font-semibold"><%= comparison ? number_to_currency(comparison[:repayment]) : "—" %></dd></div>
-          <div><dt class="text-xs text-muted-foreground">Interest cost</dt><dd class="mt-1 font-semibold"><%= comparison ? number_to_currency(comparison[:interest]) : "—" %></dd></div>
+          <div><dt class="text-xs text-muted-foreground">Financing cost</dt><dd class="mt-1 font-semibold"><%= comparison ? number_to_currency(comparison[:financing_cost]) : "—" %></dd></div>
         </dl>
         <p class="mt-2 text-sm text-muted-foreground"><%= loan.number_of_payments || "No" %> <%= loan.payment_frequency.presence&.humanize || "" %> payments · <%= loan.interest_rate ? "#{loan.interest_rate}%#{loan.interest_rate_estimated? ? ' estimated' : ''} rate · " : "" %><%= loan.liability&.name || "No real liability yet" %></p>
         <div class="mt-4">

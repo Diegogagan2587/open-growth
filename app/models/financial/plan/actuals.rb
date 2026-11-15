@@ -12,7 +12,9 @@ class Financial::Plan::Actuals
   end
 
   def actual_consumption
-    entries.where(entry_type: Financial::Entry::EXPENSE_ENTRY_TYPES).sum(:amount)
+    entries.where(entry_type: Financial::Entry::EXPENSE_ENTRY_TYPES)
+      .where.not(id: Financial::Loan.where.not(disbursement_fee_entry_id: nil).select(:disbursement_fee_entry_id))
+      .sum(:amount)
   end
 
   def opening_balance
