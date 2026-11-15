@@ -17,7 +17,7 @@
         <%= button_to "Reopen loan", status_finance_loan_path(@loan), method: :patch, params: { lifecycle_status: "active" }, class: "rounded-md border border-border px-3 py-2 text-sm font-medium", form: { data: { turbo_confirm: "Reopen this loan? Its existing schedule and accounting records stay unchanged." } } %>
       <% end %>
       <% if @loan.lifecycle_status == "active" && (@loan.entries.where(entry_type: "loan_disbursement").exists? || @loan.funding_sources.exists?) %>
-        <%= render Ui::ButtonComponent.new(href: disbursement_finance_loan_path(@loan), label: "Undo disbursement", variant: :destructive, method: :delete, data: { turbo_confirm: "Undo this disbursement? The actual loan transaction and borrowed funding source will be deleted. Installment payments must be undone first." }) %>
+        <%= render Ui::ButtonComponent.new(href: disbursement_finance_loan_path(@loan), label: "Undo disbursement", variant: :destructive, method: :delete, data: { turbo_confirm: "Undo this disbursement? The actual payout, fee charge, and borrowed funding source will be deleted. Installment payments must be undone first." }) %>
       <% elsif @loan.entries.empty? && @loan.funding_sources.empty? %>
         <%= render Ui::ButtonComponent.new(href: finance_loan_path(@loan), label: "Delete loan", variant: :destructive, method: :delete, data: { turbo_confirm: "Delete this loan and its unused schedule? Planned installments must be deleted first." }) %>
       <% end %>
