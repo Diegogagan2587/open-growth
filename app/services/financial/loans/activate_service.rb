@@ -36,6 +36,20 @@ module Financial
             financial_account: loan.destination_asset,
             counterparty_financial_liability: loan.destination_liability
           )
+          if loan.disbursement_fee_amount.positive? && loan.disbursement_fee_entry.blank?
+            fee_entry = Financial::Entry.create!(
+              account: loan.account,
+              income_event: plan,
+              financial_loan: loan,
+              entry_type: "liability_charge",
+              entry_date: source.expected_date,
+              amount: loan.disbursement_fee_amount,
+              description: "#{loan.name} withdrawal / transfer fee",
+              financial_liability: loan.liability,
+              category: loan.interest_category
+            )
+            loan.update!(disbursement_fee_entry: fee_entry)
+          end
           source.update!(resolution: "received")
         end
         Result.new(success?: true, entry: entry)
