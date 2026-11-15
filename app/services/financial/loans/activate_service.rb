@@ -6,6 +6,11 @@ module Financial
       def self.call(loan:, plan:)
         entry = nil
         loan.with_lock do
+          if loan.disbursement_fee_amount.positive? && loan.interest_category.blank?
+            loan.errors.add(:interest_category, "must be selected to record the disbursement fee")
+            raise ActiveRecord::RecordInvalid, loan
+          end
+
           loan.lifecycle_status = "active"
           loan.save!
           source = loan.funding_sources.first_or_create!(
