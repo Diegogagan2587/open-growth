@@ -33,7 +33,7 @@
       <p class="text-sm text-muted-foreground">Annual interest</p>
       <div class="mt-2 flex items-center gap-2"><p class="text-xl font-bold"><%= @loan.interest_rate ? "#{@loan.interest_rate}%" : "—" %></p><% if @loan.interest_rate_estimated? %><%= render Ui::BadgeComponent.new(label: "Estimated", variant: :secondary) %><% end %></div>
     </div>
-    <div class="rounded-xl border border-border bg-card p-4"><p class="text-sm text-muted-foreground">Projected repayment</p><p class="mt-2 text-xl font-bold"><%= @installments.any? ? number_to_currency(@loan.projected_repayment) : "—" %></p></div>
+    <div class="rounded-xl border border-border bg-card p-4"><p class="text-sm text-muted-foreground">Projected repayment</p><p class="mt-2 text-xl font-bold"><%= @installments.any? ? number_to_currency(@loan.projected_repayment + @loan.disbursement_fee_amount) : "—" %></p></div>
     <div class="rounded-xl border border-border bg-card p-4"><p class="text-sm text-muted-foreground">Projected interest</p><p class="mt-2 text-xl font-bold"><%= @installments.any? ? number_to_currency(@loan.projected_interest) : "—" %></p></div>
     <div class="rounded-xl border border-border bg-card p-4"><p class="text-sm text-muted-foreground">Remaining projected interest</p><p class="mt-2 text-xl font-bold"><%= @installments.any? ? number_to_currency(@loan.remaining_projected_interest) : "—" %></p></div>
   </div>
