@@ -26,6 +26,7 @@
 
   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     <div class="rounded-xl border border-border bg-card p-4"><p class="text-sm text-muted-foreground">Principal</p><p class="mt-2 text-xl font-bold"><%= number_to_currency(@loan.principal_amount) %></p></div>
+    <div class="rounded-xl border border-border bg-card p-4"><p class="text-sm text-muted-foreground">Withdrawal / transfer fee</p><p class="mt-2 text-xl font-bold"><%= number_to_currency(@loan.disbursement_fee_amount) %></p></div>
     <div class="rounded-xl border border-border bg-card p-4"><p class="text-sm text-muted-foreground">Net payout</p><p class="mt-2 text-xl font-bold"><%= number_to_currency(@loan.net_disbursement_amount) %></p></div>
     <div class="rounded-xl border border-border bg-card p-4"><p class="text-sm text-muted-foreground">Actual debt</p><p class="mt-2 text-xl font-bold"><%= number_to_currency(@loan.actual_balance) %></p></div>
     <div class="rounded-xl border border-border bg-card p-4">
