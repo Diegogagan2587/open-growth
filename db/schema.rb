@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_03_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_14_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -415,9 +415,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_000000) do
     t.decimal "principal_amount", precision: 12, scale: 2, null: false
     t.string "repayment_basis"
     t.datetime "updated_at", null: false
+    t.bigint "disbursement_fee_entry_id"
+    t.decimal "disbursement_fee_amount", precision: 12, scale: 2, default: "0.0", null: false
     t.index ["account_id"], name: "index_financial_loans_on_account_id"
     t.index ["destination_asset_id"], name: "index_financial_loans_on_destination_asset_id"
     t.index ["destination_liability_id"], name: "index_financial_loans_on_destination_liability_id"
+    t.index ["disbursement_fee_entry_id"], name: "index_financial_loans_on_disbursement_fee_entry_id"
     t.index ["interest_category_id"], name: "index_financial_loans_on_interest_category_id"
     t.index ["legacy_income_event_id"], name: "index_financial_loans_on_legacy_income_event_id", unique: true
     t.index ["liability_id"], name: "index_financial_loans_on_liability_id"
@@ -828,6 +831,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_000000) do
   add_foreign_key "financial_loans", "financial_accounts", column: "destination_asset_id"
   add_foreign_key "financial_loans", "financial_accounts", column: "destination_liability_id"
   add_foreign_key "financial_loans", "financial_accounts", column: "liability_id"
+  add_foreign_key "financial_loans", "financial_entries", column: "disbursement_fee_entry_id"
   add_foreign_key "income_events", "accounts"
   add_foreign_key "income_events", "budget_periods"
   add_foreign_key "income_events", "financial_accounts", column: "loan_disbursement_destination_asset_id"
