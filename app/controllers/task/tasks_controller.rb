@@ -22,6 +22,7 @@ module Task
 
         respond_to do |format|
           format.html { redirect_to task_root_path(task_filter_params), notice: t("tasks.flash.updated") }
+          format.json { render json: { id: @task.id, status: @task.status }, status: :ok }
           format.turbo_stream do
             if tabs_differ?(old_status, @task.status)
               # Task moved between Pending and Completed tabs
@@ -49,6 +50,7 @@ module Task
       else
         respond_to do |format|
           format.html { render :edit, status: :unprocessable_entity }
+          format.json { render json: { errors: @task.errors.full_messages }, status: :unprocessable_entity }
           format.turbo_stream { head :unprocessable_entity }
         end
       end
