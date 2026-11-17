@@ -24,11 +24,11 @@
   <% end %>
 
   <section class="mb-6">
-    <div class="overflow-x-auto touch-pan-x" data-controller="kanban" aria-label="Task board columns">
-      <div class="flex w-max snap-x snap-proximity gap-2 pb-2">
+    <div class="overflow-x-auto scroll-smooth snap-x snap-mandatory touch-pan-x px-[3vw] sm:snap-none sm:px-0" data-controller="kanban" data-action="scroll->kanban#rememberCenteredColumn" aria-label="Task board columns">
+      <div class="flex w-max gap-2 pb-2">
         <% Projects::Task::STATUSES.each do |status| %>
           <% status_tasks = @tasks.select { |task| task.status == status } %>
-          <div class="flex min-h-48 w-[88vw] max-w-[420px] shrink-0 snap-start flex-col rounded-lg border border-border bg-muted/40 sm:w-[280px] sm:max-w-none" data-kanban-target="column" data-status="<%= status %>" data-action="dragover->kanban#dragOver drop->kanban#drop">
+          <div class="flex min-h-48 w-[88vw] max-w-[420px] shrink-0 snap-center flex-col rounded-lg border border-border bg-muted/40 sm:w-[280px] sm:max-w-none" data-kanban-target="column" data-status="<%= status %>" data-action="dragover->kanban#dragOver drop->kanban#drop">
             <div class="flex items-center justify-between border-b border-border px-3 py-2">
               <h3 class="text-sm font-semibold text-foreground"><%= t("tasks.status.#{status}") %></h3>
               <span class="rounded-full bg-background px-2 py-0.5 text-xs text-muted-foreground" data-kanban-target="count" data-status="<%= status %>"><%= status_tasks.size %></span>

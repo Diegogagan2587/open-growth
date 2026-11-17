@@ -5,10 +5,23 @@ export default class extends Controller {
 
   connect() {
     this.draggedCard = null
+    this.mobileQuery = window.matchMedia("(max-width: 639px)")
+    this.handleMobileChange = () => {
+      if (this.mobileQuery.matches) requestAnimationFrame(() => this.centerColumn(this.focusedColumn || this.mostPopulatedColumn()))
+    }
+    this.mobileQuery.addEventListener("change", this.handleMobileChange)
+    if (this.mobileQuery.matches) requestAnimationFrame(this.handleMobileChange)
+  }
+
+  disconnect() {
+    this.mobileQuery.removeEventListener("change", this.handleMobileChange)
+    clearTimeout(this.focusTimer)
   }
 
   dragStart(event) {
     this.draggedCard = event.currentTarget
+    this.previousScrollBehavior = this.element.style.scrollBehavior
+    this.element.style.scrollBehavior = "auto"
     this.originalContainer = this.draggedCard.parentElement
     this.originalNextSibling = this.draggedCard.nextSibling
     this.pointerX = event.clientX
@@ -27,6 +40,7 @@ export default class extends Controller {
   dragEnd() {
     cancelAnimationFrame(this.scrollFrame)
     this.scrollFrame = null
+    this.element.style.scrollBehavior = this.previousScrollBehavior
     this.placeholder?.remove()
     this.placeholder = null
     this.draggedCard = null
@@ -39,6 +53,7 @@ export default class extends Controller {
     if (!this.draggedCard) return
 
     const container = event.currentTarget.querySelector("[data-kanban-cards]")
+    this.focusedColumn = event.currentTarget
     const target = event.target.closest('[data-kanban-target="card"]')
     if (!container) return
 
@@ -57,10 +72,35 @@ export default class extends Controller {
     }
   }
 
+  rememberCenteredColumn() {
+    if (!this.mobileQuery.matches) return
+    clearTimeout(this.focusTimer)
+    this.focusTimer = setTimeout(() => {
+      const center = this.element.getBoundingClientRect().left + this.element.clientWidth / 2
+      this.focusedColumn = this.columnTargets.reduce((closest, column) => {
+        const bounds = column.getBoundingClientRect()
+        const distance = Math.abs(bounds.left + bounds.width / 2 - center)
+        const closestBounds = closest.getBoundingClientRect()
+        return distance < Math.abs(closestBounds.left + closestBounds.width / 2 - center) ? column : closest
+      })
+    }, 120)
+  }
+
+  mostPopulatedColumn() {
+    return this.columnTargets.reduce((most, column) => column.querySelectorAll('[data-kanban-target="card"]').length > most.querySelectorAll('[data-kanban-target="card"]').length ? column : most)
+  }
+
+  centerColumn(column) {
+    if (!column) return
+    const boardBounds = this.element.getBoundingClientRect()
+    const columnBounds = column.getBoundingClientRect()
+    this.element.scrollTo({ left: this.element.scrollLeft + columnBounds.left + columnBounds.width / 2 - (boardBounds.left + this.element.clientWidth / 2), behavior: "smooth" })
+  }
+
   autoScroll = (time) => {
     if (!this.draggedCard) return
     const bounds = this.element.getBoundingClientRect()
-    const edgeSize = 72
+    const edgeSize = Math.min(240, this.element.clientWidth * 0.2)
     const leftDistance = this.pointerX - bounds.left
     const rightDistance = bounds.right - this.pointerX
     const direction = leftDistance < edgeSize ? -1 : rightDistance < edgeSize ? 1 : 0
