@@ -54,6 +54,11 @@ module Task
       end
     end
 
+
+    def close_panel
+      render layout: false
+    end
+
     private
 
     def set_task
