@@ -1,5 +1,5 @@
 <div class="container mx-auto max-w-6xl px-4 py-4 sm:py-8">
-  <% selected_ids = selected_project_ids.map(&:to_s) if local_assigns[:selected_project_ids] %>
+  <% selected_ids = Array(local_assigns[:selected_project_ids]).map(&:to_s) %>
   <h1 class="mb-6 text-2xl font-bold text-foreground sm:text-3xl"><%= title %></h1>
 
   <div class="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
