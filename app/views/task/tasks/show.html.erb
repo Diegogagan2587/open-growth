@@ -46,7 +46,7 @@
           task_task_path(@task, return_to: ("dashboard" if @return_to_dashboard)),
           method: :patch,
           params: { task: { status: "done" } },
-          form: { data: { turbo_frame: "_top" } },
+          form: { data: { turbo_frame: "_top", turbo: false } },
           class: "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90" %>
         <button type="button" onclick="window.drawerOpen('<%= j(edit_path) %>')" class="inline-flex items-center justify-center rounded-lg bg-muted px-4 py-2 text-sm text-foreground hover:bg-muted/80">Edit</button>
         <%= link_to t("task.recurring_tasks.show.close_panel"), task_close_panel_path, data: { turbo_frame: "task_detail_panel" }, class: "inline-flex items-center justify-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground" %>
