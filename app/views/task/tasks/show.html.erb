@@ -1,5 +1,4 @@
 <%
-  return_path = @return_to_dashboard ? root_path : task_root_path
   edit_path = edit_task_task_path(@task, return_to: ("dashboard" if @return_to_dashboard))
 %>
 <%= turbo_frame_tag "task_detail_panel" do %>
