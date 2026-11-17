@@ -55,6 +55,20 @@ class DocsEditorIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal "## Updated", @doc.reload.content
   end
 
+  test "standalone documents can be linked to account projects" do
+    other_account_project = Projects::Project.create!(
+      account: accounts(:two), user: @user, name: "Other account project", status: "active", priority: "medium"
+    )
+
+    patch doc_path(@doc), params: {
+      doc: { title: @doc.title, doc_type: @doc.doc_type, content: @doc.content,
+             project_ids: [ @project.id, other_account_project.id ] }
+    }
+
+    assert_redirected_to doc_path(@doc)
+    assert_equal [ @project.id ], @doc.reload.project_ids
+  end
+
   test "validation errors keep the markdown editor and submitted content" do
     post docs_path, params: { doc: { title: "", doc_type: "note", content: "# Unsaved draft" } }
 

@@ -13,6 +13,7 @@ module Projects
 
     def new
       @doc = Doc.new
+      load_projects
     end
 
     def preview
@@ -22,8 +23,11 @@ module Projects
     def create
       @doc = Doc.new(doc_params)
       @doc.account = Current.account
+      load_projects
+      @selected_project_ids = selected_project_ids
 
       if @doc.save
+        @doc.projects = @projects.where(id: @selected_project_ids)
         redirect_to doc_path(@doc), notice: t("docs.flash.created")
       else
         render :new
@@ -31,10 +35,15 @@ module Projects
     end
 
     def edit
+      load_projects
+      @selected_project_ids = @doc.project_ids
     end
 
     def update
+      load_projects
+      @selected_project_ids = selected_project_ids
       if @doc.update(doc_params)
+        @doc.projects = @projects.where(id: @selected_project_ids)
         respond_to do |format|
           format.html { redirect_to doc_path(@doc), notice: t("docs.flash.updated") }
           format.json { render json: { id: @doc.id }, status: :ok }
@@ -68,6 +77,14 @@ module Projects
 
     def doc_params
       params.require(:doc).permit(:title, :content, :doc_type)
+    end
+
+    def load_projects
+      @projects = Project.for_account(Current.account).order(:name)
+    end
+
+    def selected_project_ids
+      Array(params.dig(:doc, :project_ids)).reject(&:blank?)
     end
   end
 end

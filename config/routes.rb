@@ -169,6 +169,7 @@ Rails.application.routes.draw do
 
   namespace :task do
     root to: "recurring_tasks#index"
+    get "close_panel", to: "tasks#close_panel"
     resources :areas, controller: "areas", path: "areas"
     resources :recurring_tasks do
       member do

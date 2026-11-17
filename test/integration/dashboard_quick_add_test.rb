@@ -56,7 +56,7 @@ class DashboardIntegrationTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "turbo-frame#task_detail_panel"
-    assert_select "a[href='#{root_path}'][data-turbo-frame='task_detail_panel']"
+    assert_select "a[href='#{task_close_panel_path}'][data-turbo-frame='task_detail_panel']"
     assert_select "form[action='#{mark_done_task_recurring_task_path(task, return_to: "dashboard")}'][data-turbo-frame='_top']"
   end
 
@@ -149,9 +149,12 @@ class DashboardIntegrationTest < ActionDispatch::IntegrationTest
     assert_empty drawer.ancestors("main")
     assert_empty detail_frame.ancestors("main")
     assert_includes main["class"], "px-0"
-    assert_includes main["class"], "sm:px-4"
+    assert_includes main["class"], "max-w-none"
+    assert_includes main["class"], "pt-0"
+    assert_not_includes main["class"], "sm:px-4"
     assert_includes surface["class"], "p-0"
-    assert_includes surface["class"], "sm:p-6"
+    assert_includes surface["class"], "bg-transparent"
+    assert_not_includes surface["class"], "sm:p-6"
   end
 
   private
