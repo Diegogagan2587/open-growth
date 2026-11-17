@@ -176,7 +176,9 @@ Rails.application.routes.draw do
         patch :mark_done
       end
     end
-    resources :tasks, only: [ :show, :edit, :update ]
+    resources :tasks, only: [ :show, :edit, :update ] do
+      resources :comments, only: :create, controller: "task_comments"
+    end
   end
 
   namespace :career do

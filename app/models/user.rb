@@ -25,6 +25,7 @@ class User < ApplicationRecord
   validates :password, length: { minimum: 8 }, if: -> { new_record? || !password.nil? }
   validates :locale, inclusion: { in: %w[en es] }, allow_nil: true
   validates :theme_palette, inclusion: { in: THEME_PALETTES }, allow_nil: true
+  validates :time_zone, inclusion: { in: ActiveSupport::TimeZone.all.map(&:name) }
 
   before_validation :normalize_legacy_theme_palette
 

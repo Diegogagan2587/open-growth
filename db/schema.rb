@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_14_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_16_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -728,6 +728,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_000000) do
     t.datetime "updated_at", null: false
     t.index ["account_id", "name"], name: "index_task_areas_on_account_id_and_name", unique: true
     t.index ["account_id"], name: "index_task_areas_on_account_id"
+  end
+
+  create_table "task_comments", force: :cascade do |t|
+    t.bigint "task_id", null: false
+    t.bigint "user_id", null: false
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["task_id"], name: "index_task_comments_on_task_id"
+    t.index ["user_id"], name: "index_task_comments_on_user_id"
   end
 
   create_table "tasks", force: :cascade do |t|

@@ -348,7 +348,7 @@ es:
       finance: "Finanzas"
     general:
       title: "Ajustes generales"
-      description: "Gestiona preferencias de la cuenta, como el idioma."
+      description: "Gestiona tu idioma, zona horaria y otras preferencias."
     finance:
       title: "Ajustes financieros"
       description: "Configura el dominio financiero base para planificación, presupuestos y seguimiento de gastos."
@@ -359,6 +359,7 @@ es:
         other: "%{count} categorías"
       manage_categories: "Gestionar categorías"
     language: "Idioma"
+    time_zone: "Zona horaria"
     theme_palette: "Paleta de color"
     theme_palette_description: "Elige una paleta inspirada en iOS para esta cuenta. Los cambios se aplican en modo claro y oscuro."
     update: "Guardar cambios"
