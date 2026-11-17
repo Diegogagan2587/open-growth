@@ -347,7 +347,7 @@ en:
       finance: "Finance"
     general:
       title: "General settings"
-      description: "Manage account-wide preferences like language."
+      description: "Manage your language, time zone, and other preferences."
     finance:
       title: "Finance settings"
       description: "Configure the core finance domain used for planning, budgeting, and expense tracking."
@@ -358,6 +358,7 @@ en:
         other: "%{count} categories"
       manage_categories: "Manage categories"
     language: "Language"
+    time_zone: "Time zone"
     theme_palette: "Color palette"
     theme_palette_description: "Choose a curated iOS-inspired palette for this account. Changes apply across light and dark mode."
     update: "Save changes"

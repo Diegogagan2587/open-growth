@@ -13,6 +13,7 @@ module Task
 
     def show
       @return_to_dashboard = params[:return_to] == "dashboard"
+      @comments = @task.comments.includes(:user).order(:created_at)
     end
 
     def update

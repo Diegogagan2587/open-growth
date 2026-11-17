@@ -11,6 +11,7 @@ module Projects
       as: :task,
       class_name: "Dashboard::TaskDeferral",
       dependent: :destroy
+    has_many :comments, class_name: "Projects::TaskComment", dependent: :destroy
     has_many :project_docs, through: :project
     has_many :project_links, through: :project
     has_many :project_meetings, through: :project

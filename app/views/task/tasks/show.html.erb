@@ -41,6 +41,23 @@
         <% end %>
       </dl>
 
+      <section class="mt-6 border-t border-border pt-4">
+        <h3 class="mb-3 font-semibold text-foreground">Comments</h3>
+        <div class="mb-4 space-y-3">
+          <% @comments.each do |comment| %>
+            <article class="rounded-lg bg-muted/40 p-3">
+              <p class="whitespace-pre-wrap break-words text-sm text-foreground"><%= comment.body %></p>
+              <p class="mt-2 text-xs text-muted-foreground"><%= comment.user.name %> · <%= l(comment.created_at.in_time_zone(Current.user.time_zone), format: :short) %></p>
+            </article>
+          <% end %>
+        </div>
+        <%= form_with model: Projects::TaskComment.new, scope: :task_comment, url: task_task_comments_path(@task, return_to: ("dashboard" if @return_to_dashboard)), class: "space-y-2" do |form| %>
+          <%= form.label :body, "Add a comment", class: "sr-only" %>
+          <%= form.text_area :body, required: true, rows: 3, class: "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground", placeholder: "Write a comment…" %>
+          <%= form.submit "Comment", class: "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90" %>
+        <% end %>
+      </section>
+
       <div class="mt-6 flex flex-wrap gap-2 border-t border-border pt-4">
         <%= button_to "Mark done",
           task_task_path(@task, return_to: ("dashboard" if @return_to_dashboard)),
