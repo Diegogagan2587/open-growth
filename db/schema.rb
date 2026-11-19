@@ -775,6 +775,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000002) do
     t.boolean "system_admin", default: false, null: false
     t.string "theme_palette", default: "executive-calm", null: false
     t.datetime "updated_at", null: false
+    t.string "time_zone", default: "UTC", null: false
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
