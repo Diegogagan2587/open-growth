@@ -51,7 +51,7 @@
             </article>
           <% end %>
         </div>
-        <%= form_with model: Projects::TaskComment.new, scope: :task_comment, url: task_task_comments_path(@task, return_to: ("dashboard" if @return_to_dashboard)), class: "space-y-2" do |form| %>
+        <%= form_with model: Projects::Task::Comment.new, scope: :task_comment, url: task_task_comments_path(@task, return_to: ("dashboard" if @return_to_dashboard)), class: "space-y-2" do |form| %>
           <%= form.label :body, "Add a comment", class: "sr-only" %>
           <%= form.text_area :body, required: true, rows: 3, class: "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground", placeholder: "Write a comment…" %>
           <%= form.submit "Comment", class: "inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90" %>
