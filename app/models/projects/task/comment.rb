@@ -1,8 +1,8 @@
-module Projects
-  class TaskComment < ApplicationRecord
-    belongs_to :task, class_name: "Projects::Task"
-    belongs_to :user
+class Projects::Task::Comment < ApplicationRecord
+  self.table_name = "task_comments"
 
-    validates :body, presence: true
-  end
+  belongs_to :task, class_name: "Projects::Task"
+  belongs_to :user
+
+  validates :body, presence: true
 end
