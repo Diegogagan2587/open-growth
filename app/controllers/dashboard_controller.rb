@@ -14,10 +14,10 @@ class DashboardController < ApplicationController
 
   def combined_pending_tasks
     deferrals = Dashboard::TaskDeferral.where(account: Current.account, user: Current.user)
-    deferred_recurring_ids = deferrals.where(task_type: "RecurringTask").select(:task_id)
+    deferred_recurring_ids = deferrals.where(task_type: Projects::Task::Recurring.polymorphic_name).select(:task_id)
     deferred_project_ids = deferrals.where(task_type: "Projects::Task").select(:task_id)
 
-    recurring_tasks = RecurringTask.for_account(Current.account)
+    recurring_tasks = Projects::Task::Recurring.for_account(Current.account)
       .pending
       .where.not(id: deferred_recurring_ids)
       .includes(:task_area)
@@ -42,9 +42,9 @@ class DashboardController < ApplicationController
     return available_tasks if available_tasks.any?
 
     deferred_records = deferrals.order(:deferred_at, :id).to_a
-    recurring_by_id = RecurringTask.for_account(Current.account)
+    recurring_by_id = Projects::Task::Recurring.for_account(Current.account)
       .pending
-      .where(id: deferred_records.select { |record| record.task_type == "RecurringTask" }.map(&:task_id))
+      .where(id: deferred_records.select { |record| record.task_type == Projects::Task::Recurring.polymorphic_name }.map(&:task_id))
       .includes(:task_area)
       .index_by(&:id)
     projects_by_id = Projects::Task.for_account(Current.account)
@@ -54,7 +54,7 @@ class DashboardController < ApplicationController
       .index_by(&:id)
 
     deferred_records.filter_map do |record|
-      if record.task_type == "RecurringTask"
+      if record.task_type == Projects::Task::Recurring.polymorphic_name
         recurring_by_id[record.task_id]
       elsif record.task_type == "Projects::Task"
         projects_by_id[record.task_id]
@@ -85,7 +85,7 @@ class DashboardController < ApplicationController
   end
 
   def pending_task_sort_key(task)
-    due_date = task.is_a?(RecurringTask) ? task.next_due_date : task.due_date
+    due_date = task.is_a?(Projects::Task::Recurring) ? task.next_due_date : task.due_date
     priority = task.is_a?(Projects::Task) ? PRIORITY_ORDER.fetch(task.priority, PRIORITY_ORDER["medium"]) : PRIORITY_ORDER["medium"]
 
     [ due_date.nil? ? 1 : 0, due_date || Date.current, priority, -task.created_at.to_i ]

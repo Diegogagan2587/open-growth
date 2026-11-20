@@ -9,7 +9,7 @@ class Dashboard::PendingTaskRowComponentTest < ViewComponent::TestCase
   end
 
   test "renders a recurring task with Turbo details and its completion action" do
-    task = RecurringTask.create!(
+    task = Projects::Task::Recurring.create!(
       account: @account,
       name: "Review subscriptions",
       recurrence: "monthly",

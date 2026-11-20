@@ -8,7 +8,7 @@ class Dashboard::PendingTaskRowComponent < ViewComponent::Base
   attr_reader :task
 
   def recurring?
-    task.is_a?(RecurringTask)
+    task.is_a?(Projects::Task::Recurring)
   end
 
   def title
