@@ -11,7 +11,7 @@ class Dashboard::TaskDeferralsController < ApplicationController
       raise ActiveRecord::RecordNotFound
     end
 
-    Dashboard::TaskDeferral.defer!(task:, account: Current.account, user: Current.user)
+    Projects::Task::Deferral.defer!(task:, account: Current.account, user: Current.user)
     redirect_to root_path
   end
 end

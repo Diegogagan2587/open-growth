@@ -13,7 +13,7 @@ class DashboardController < ApplicationController
   private
 
   def combined_pending_tasks
-    deferrals = Dashboard::TaskDeferral.where(account: Current.account, user: Current.user)
+    deferrals = Projects::Task::Deferral.where(account: Current.account, user: Current.user)
     deferred_recurring_ids = deferrals.where(task_type: Projects::Task::Recurring.polymorphic_name).select(:task_id)
     deferred_project_ids = deferrals.where(task_type: "Projects::Task").select(:task_id)
 
