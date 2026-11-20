@@ -91,7 +91,7 @@ module Career
     end
 
     def create_suggested_task
-      template = Career::TaskTemplates.find(status: @job_application.status, key: params[:template_key])
+      template = Career::JobApplication::TaskTemplates.find(status: @job_application.status, key: params[:template_key])
       return redirect_to career_job_application_path(@job_application), alert: "Invalid suggested action" if template.nil?
 
       duplicate_exists = @job_application.tasks.pending.where("metadata ->> 'source' = ? AND metadata ->> 'template_key' = ?", "career_template", template.key).exists?
