@@ -2,7 +2,7 @@
   <div class="flex flex-wrap items-end justify-between gap-3">
     <div>
       <h2 id="actual-entries-title" class="text-xl font-semibold">Actual entries</h2>
-      <p class="text-sm text-muted-foreground">These ledger records determine actual results. They are never rewritten by planning changes.</p>
+      <p class="text-sm text-muted-foreground">Planned and unplanned expenses count toward Actual consumption. These ledger records are never rewritten by planning changes.</p>
     </div>
     <% unless plan.lifecycle_status == "closed" %>
       <%= render Ui::ButtonComponent.new(href: new_finance_entry_path(income_event_id: plan.id), label: "Add unplanned actual", variant: :outline, size: :sm) %>

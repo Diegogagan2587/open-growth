@@ -5,25 +5,115 @@ export default class extends Controller {
 
   connect() {
     this.draggedCard = null
+    this.mobileQuery = window.matchMedia("(max-width: 639px)")
+    this.handleMobileChange = () => {
+      if (this.mobileQuery.matches) requestAnimationFrame(() => this.centerColumn(this.focusedColumn || this.mostPopulatedColumn()))
+    }
+    this.mobileQuery.addEventListener("change", this.handleMobileChange)
+    if (this.mobileQuery.matches) requestAnimationFrame(this.handleMobileChange)
+  }
+
+  disconnect() {
+    this.mobileQuery.removeEventListener("change", this.handleMobileChange)
+    clearTimeout(this.focusTimer)
   }
 
   dragStart(event) {
     this.draggedCard = event.currentTarget
+    this.previousScrollBehavior = this.element.style.scrollBehavior
+    this.element.style.scrollBehavior = "auto"
+    this.originalContainer = this.draggedCard.parentElement
+    this.originalNextSibling = this.draggedCard.nextSibling
+    this.pointerX = event.clientX
     event.dataTransfer.effectAllowed = "move"
     event.dataTransfer.setData("text/plain", this.draggedCard.dataset.taskId)
-    this.draggedCard.classList.add("opacity-60")
+    const rect = this.draggedCard.getBoundingClientRect()
+    const preview = this.draggedCard.cloneNode(true)
+    Object.assign(preview.style, { position: "fixed", top: "-1000px", left: "-1000px", width: `${rect.width}px`, transform: "rotate(2deg)", boxShadow: "0 12px 28px rgb(0 0 0 / 20%)", pointerEvents: "none" })
+    document.body.appendChild(preview)
+    event.dataTransfer.setDragImage(preview, event.clientX - rect.left, event.clientY - rect.top)
+    requestAnimationFrame(() => preview.remove())
+    this.lastScrollTime = null
+    this.scrollFrame = requestAnimationFrame(this.autoScroll)
   }
 
   dragEnd() {
-    if (this.draggedCard) {
-      this.draggedCard.classList.remove("opacity-60")
-    }
+    cancelAnimationFrame(this.scrollFrame)
+    this.scrollFrame = null
+    this.element.style.scrollBehavior = this.previousScrollBehavior
+    this.placeholder?.remove()
+    this.placeholder = null
     this.draggedCard = null
   }
 
   dragOver(event) {
     event.preventDefault()
     event.dataTransfer.dropEffect = "move"
+    this.pointerX = event.clientX
+    if (!this.draggedCard) return
+
+    const container = event.currentTarget.querySelector("[data-kanban-cards]")
+    this.focusedColumn = event.currentTarget
+    const target = event.target.closest('[data-kanban-target="card"]')
+    if (!container) return
+
+    if (!this.placeholder) {
+      this.placeholder = document.createElement("div")
+      this.placeholder.className = "h-1 rounded-full bg-primary shadow-[0_0_0_2px_hsl(var(--primary)/.15)] transition-all duration-150"
+      this.placeholder.setAttribute("aria-hidden", "true")
+    }
+
+    if (target && target !== this.draggedCard && target.parentElement === container) {
+      const before = event.clientY < target.getBoundingClientRect().top + target.offsetHeight / 2
+      const anchor = before ? target : target.nextElementSibling
+      if (anchor !== this.placeholder) container.insertBefore(this.placeholder, anchor)
+    } else if (!target && (this.placeholder.parentElement !== container || this.placeholder.nextElementSibling)) {
+      container.appendChild(this.placeholder)
+    }
+  }
+
+  rememberCenteredColumn() {
+    if (!this.mobileQuery.matches) return
+    clearTimeout(this.focusTimer)
+    this.focusTimer = setTimeout(() => {
+      const center = this.element.getBoundingClientRect().left + this.element.clientWidth / 2
+      this.focusedColumn = this.columnTargets.reduce((closest, column) => {
+        const bounds = column.getBoundingClientRect()
+        const distance = Math.abs(bounds.left + bounds.width / 2 - center)
+        const closestBounds = closest.getBoundingClientRect()
+        return distance < Math.abs(closestBounds.left + closestBounds.width / 2 - center) ? column : closest
+      })
+    }, 120)
+  }
+
+  mostPopulatedColumn() {
+    return this.columnTargets.reduce((most, column) => column.querySelectorAll('[data-kanban-target="card"]').length > most.querySelectorAll('[data-kanban-target="card"]').length ? column : most)
+  }
+
+  centerColumn(column) {
+    if (!column) return
+    const boardBounds = this.element.getBoundingClientRect()
+    const columnBounds = column.getBoundingClientRect()
+    this.element.scrollTo({ left: this.element.scrollLeft + columnBounds.left + columnBounds.width / 2 - (boardBounds.left + this.element.clientWidth / 2), behavior: "smooth" })
+  }
+
+  autoScroll = (time) => {
+    if (!this.draggedCard) return
+    const bounds = this.element.getBoundingClientRect()
+    const edgeSize = Math.min(240, this.element.clientWidth * 0.2)
+    const leftDistance = this.pointerX - bounds.left
+    const rightDistance = bounds.right - this.pointerX
+    const direction = leftDistance < edgeSize ? -1 : rightDistance < edgeSize ? 1 : 0
+
+    if (direction) {
+      const distance = direction < 0 ? leftDistance : rightDistance
+      const speed = 220 + 880 * (1 - Math.max(0, distance) / edgeSize)
+      const elapsed = this.lastScrollTime ? time - this.lastScrollTime : 16
+      this.element.scrollLeft += direction * speed * elapsed / 1000
+    }
+
+    this.lastScrollTime = time
+    this.scrollFrame = requestAnimationFrame(this.autoScroll)
   }
 
   drop(event) {
@@ -32,13 +122,20 @@ export default class extends Controller {
     const status = column.dataset.status
     if (!this.draggedCard || !status) return
 
-    const cardsContainer = column.querySelector(".p-3")
-    if (cardsContainer) {
-      cardsContainer.appendChild(this.draggedCard)
-    }
+    const cardsContainer = column.querySelector("[data-kanban-cards]")
+    const previousContainer = this.draggedCard.parentElement
+    if (!cardsContainer) return
+
+    const previousStatus = previousContainer.closest("[data-kanban-target='column']")?.dataset.status
+    const originalContainer = this.originalContainer
+    const originalNextSibling = this.originalNextSibling
+    if (this.placeholder?.parentElement === cardsContainer) cardsContainer.insertBefore(this.draggedCard, this.placeholder)
+    else if (cardsContainer !== previousContainer) cardsContainer.appendChild(this.draggedCard)
+    this.placeholder?.remove()
+    this.placeholder = null
 
     this.updateCounts()
-    this.persistStatus(this.draggedCard, status)
+    if (previousStatus !== status) this.persistStatus(this.draggedCard, status, originalContainer, originalNextSibling)
   }
 
   updateCounts() {
@@ -51,22 +148,25 @@ export default class extends Controller {
     })
   }
 
-  persistStatus(card, status) {
+  async persistStatus(card, status, previousContainer, nextSibling) {
     const url = card.dataset.taskUrl
     if (!url) return
 
-    fetch(url, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "X-CSRF-Token": this.csrfToken()
-      },
-      body: JSON.stringify({ task: { status } })
-    }).catch(() => {
-      // If request fails, counts will still be correct but server state won't update.
-      // A full refresh will show the previous state.
-    })
+    try {
+      const response = await fetch(url, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "X-CSRF-Token": this.csrfToken()
+        },
+        body: JSON.stringify({ task: { status } })
+      })
+      if (!response.ok) throw new Error("Task status update failed")
+    } catch {
+      previousContainer.insertBefore(card, nextSibling)
+      this.updateCounts()
+    }
   }
 
   csrfToken() {

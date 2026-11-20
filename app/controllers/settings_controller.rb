@@ -16,7 +16,7 @@ class SettingsController < ApplicationController
   private
 
   def settings_params
-    params.require(:user).permit(:locale, :theme_palette)
+    params.require(:user).permit(:locale, :theme_palette, :time_zone)
   end
 
   def settings_section

@@ -14,6 +14,7 @@ module Financial
             planned_for: installment.due_date,
             due_date: installment.due_date,
             kind: "liability_payment",
+            commits_plan_funds: true,
             importance: "essential",
             execution_status: "pending",
             status: "pending_to_pay",

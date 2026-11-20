@@ -33,8 +33,8 @@ class IncomeEventsController < ApplicationController
   end
 
   def show
-    @projection = Financial::PlanProjection.for(@income_event)
-    @actuals = Financial::PlanActuals.for(@income_event)
+    @projection = Financial::Plan::Projection.for(@income_event)
+    @actuals = Financial::Plan::Actuals.for(@income_event)
     @planned_transactions = @income_event.planned_expenses
       .includes(:financial_account, :counterparty_financial_account, :financial_liability)
       .order(Arel.sql("COALESCE(planned_expenses.loan_installment_number, 2147483647) ASC"), :due_date, :created_at)

@@ -2,6 +2,95 @@
 en:
   hello: "Hello world"
 
+  quick_add:
+    open_actions: "Open quick actions"
+    mobile_actions:
+      money: "Add entry"
+      task: "Task"
+      doc: "Doc"
+    actions:
+      money: "Money"
+      task: "Task"
+      doc: "Doc"
+    task_form:
+      title: "Create New Task"
+      subtitle: "This task starts unassigned and can be linked later."
+      errors:
+        one: "%{count} error prevented this task from being saved:"
+        other: "%{count} errors prevented this task from being saved:"
+      title_label: "Task title"
+      title_placeholder: "What needs to be done?"
+      description_label: "Description"
+      description_placeholder: "Add details, notes, or instructions..."
+      priority_label: "Priority"
+      due_date_label: "Due date"
+      details: "Details"
+      close: "Close task form"
+      cancel: "Cancel"
+      submit: "Create task"
+    doc_form:
+      title: "Create a note or document"
+      subtitle: "Start with a title, then add your content."
+      close: "Close document form"
+      errors:
+        one: "%{count} error prevented this document from being saved:"
+        other: "%{count} errors prevented this document from being saved:"
+      title_label: "Title"
+      title_placeholder: "What do you want to remember?"
+      type: "Document type"
+      types:
+        file: "File"
+        link: "Link"
+        note: "Note"
+      content: "Content"
+      content_placeholder: "Write your note or document here… Markdown is supported."
+      cancel: "Cancel"
+      submit: "Create"
+    money_form:
+      title: "Add money movement"
+      subtitle: "Record an expense, income, or transfer."
+      close: "Close money form"
+      tabs_label: "Money movement type"
+      expense: "Expense"
+      income: "Income"
+      transfer: "Transfer"
+    expense_form:
+      amount: "Amount"
+      description: "Description"
+      description_placeholder: "What was it for?"
+      account: "From account"
+      select_account: "Choose account"
+      category: "Category"
+      select_category: "Choose category"
+      date: "Date"
+      more_details: "More details"
+      income_event: "Income event (optional)"
+      none: "None"
+      time: "Time (optional)"
+      submit: "Add expense"
+    income_form:
+      amount: "Amount"
+      description: "Description"
+      description_placeholder: "Where did the money come from?"
+      destination: "To account"
+      select_destination: "Choose account"
+      date: "Date"
+      more_details: "More details"
+      time: "Time (optional)"
+      submit: "Add income"
+    transfer_form:
+      amount: "Amount"
+      from_account: "From account"
+      select_from: "Choose account"
+      to_account: "To account"
+      select_to: "Choose account"
+      date: "Date"
+      more_details: "More details"
+      description: "Description (optional)"
+      description_placeholder: "Add a note"
+      time: "Time (optional)"
+      submit: "Make transfer"
+
   date:
     formats:
       default: "%Y-%m-%d"
@@ -36,6 +125,10 @@ en:
       - November
       - December
 
+  time:
+    formats:
+      short: "%b %d, %H:%M"
+
   nav:
     dashboard: "Dashboard"
     budgets: "Budgets"
@@ -49,6 +142,49 @@ en:
     menu_open: "Open menu"
     menu_close: "Close menu"
     incomes: "Income Planing"
+    category_budget: "Category budget"
+
+  category_budgets:
+    title: "Category budget"
+    subtitle: "Compare spending across all accounts with your category limits."
+    view_period: "View period"
+    from: "From"
+    to: "To"
+    periods:
+      week: "This week"
+      two_weeks: "Two weeks"
+      month: "This month"
+      custom: "Custom dates"
+    show: "Show"
+    showing_range: "Showing %{start_date} – %{end_date}. Budgets are adjusted to these dates."
+    spent_of: "%{spent} of %{allowance}"
+    over_by: "Over by %{amount}"
+    left: "%{amount} left"
+    used: "budget used"
+    frequencies:
+      weekly: "Weekly"
+      biweekly: "Every two weeks"
+      monthly: "Monthly"
+      custom: "Custom"
+    frequency: "Frequency"
+    custom_days_count: "%{count} days"
+    custom_days: "Custom days"
+    limit: "Limit"
+    save: "Save"
+    remove: "Remove"
+    confirm_remove: "Remove this category budget?"
+    empty: "No category budgets yet. Add one below to start tracking spending."
+    add_title: "Add category limit"
+    category: "Category"
+    choose_category: "Choose category"
+    amount: "Amount"
+    starts_on: "Starts on"
+    add: "Add budget"
+    flash:
+      created: "Category budget created."
+      updated: "Category budget updated."
+      removed: "Category budget removed."
+      save_failed: "Could not save the category budget. Check the selected category and values."
 
   finance:
     pending_transactions: "Pending transactions"
@@ -177,6 +313,12 @@ en:
 
   dashboard:
     welcome: "Welcome to Your Budget App"
+    next_steps_title: "Your next steps"
+    next_steps_description: "A quick view of pending tasks, planned transactions, and expected money for this account."
+    tasks_to_do: "Tasks to do"
+    view_all_tasks: "View all tasks"
+    defer_task: "Later"
+    defer_task_aria: "Move %{task} to later in your Home list"
     budget_periods_title: "Budget Periods"
     budget_periods_description: "View, create, and manage your monthly or quarterly budgets."
     income_events_title: "Income Events"
@@ -205,7 +347,7 @@ en:
       finance: "Finance"
     general:
       title: "General settings"
-      description: "Manage account-wide preferences like language."
+      description: "Manage your language, time zone, and other preferences."
     finance:
       title: "Finance settings"
       description: "Configure the core finance domain used for planning, budgeting, and expense tracking."
@@ -216,6 +358,7 @@ en:
         other: "%{count} categories"
       manage_categories: "Manage categories"
     language: "Language"
+    time_zone: "Time zone"
     theme_palette: "Color palette"
     theme_palette_description: "Choose a curated iOS-inspired palette for this account. Changes apply across light and dark mode."
     update: "Save changes"
@@ -400,6 +543,9 @@ en:
       back: "Back to Categories"
     form:
       name: "Name"
+      description: "Description"
+      icon: "Icon"
+      no_icon: "No icon"
     new_category: "New Category"
     flash:
       created: "Category was successfully created."

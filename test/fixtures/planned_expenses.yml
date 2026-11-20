@@ -1,0 +1,25 @@
+forecast_first_expense:
+  account_id: <%= ActiveRecord::FixtureSet.identify(:one) %>
+  income_event_id: <%= ActiveRecord::FixtureSet.identify(:forecast_first) %>
+  category_id: <%= ActiveRecord::FixtureSet.identify(:one) %>
+  description: First forecast expense
+  amount: 300.00
+  kind: outflow
+  status: pending_to_pay
+  execution_status: pending
+  position: 1
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+forecast_second_expense:
+  account_id: <%= ActiveRecord::FixtureSet.identify(:one) %>
+  income_event_id: <%= ActiveRecord::FixtureSet.identify(:forecast_second) %>
+  category_id: <%= ActiveRecord::FixtureSet.identify(:one) %>
+  description: Second forecast expense
+  amount: 800.00
+  kind: outflow
+  status: pending_to_pay
+  execution_status: pending
+  position: 1
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

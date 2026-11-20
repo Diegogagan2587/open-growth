@@ -116,14 +116,14 @@ class QuickAddController < ApplicationController
   end
 
   def task
-    @task = Projects::Task.new(status: "backlog", priority: "medium")
+    @task = Projects::Task.new(priority: "medium")
     render :task, layout: false
   end
 
   def create_task
     return render plain: "Not authenticated", status: :unauthorized unless Current.account
 
-    @task = Projects::Task.new(task_params)
+    @task = Projects::Task.new(task_params.merge(status: "backlog"))
     @task.user = Current.user
     @task.account = Current.account
 
@@ -163,7 +163,7 @@ class QuickAddController < ApplicationController
   end
 
   def task_params
-    params.require(:task).permit(:title, :description, :status, :priority, :due_date)
+    params.require(:task).permit(:title, :description, :priority, :due_date)
   end
 
   def doc_params

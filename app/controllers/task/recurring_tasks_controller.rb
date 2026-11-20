@@ -31,9 +31,7 @@ module Task
         all_tasks = all_tasks.by_urgency
       end
 
-      # Split into pending and completed
-      @pending_tasks = all_tasks.where(status: %w[blocked backlog in_progress in_review])
-      @completed_tasks = all_tasks.where(status: %w[done cancelled])
+      @tasks = all_tasks
 
       # Pass sort state to view
       @current_sort = sort_option

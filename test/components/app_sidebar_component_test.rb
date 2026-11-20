@@ -9,7 +9,7 @@ class AppSidebarComponentTest < ViewComponent::TestCase
     assert rendered.css("aside[data-slot='sidebar']").any?
     assert rendered.css("div[data-slot='sidebar-mobile']").any?
     assert_includes rendered.text, I18n.t("nav.dashboard")
-    assert_includes rendered.text, I18n.t("nav.budgets")
+    assert_includes rendered.text, I18n.t("nav.category_budget")
     assert_includes rendered.text, "Finance"
     assert rendered.css("a[href='/finance/entries']").any?
     assert_equal 2, rendered.css("a[href='/finance'][data-active='true']").count

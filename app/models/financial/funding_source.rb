@@ -33,6 +33,15 @@ class Financial::FundingSource < ApplicationRecord
     receipt_entry&.entry_date
   end
 
+  def move_to(target_plan)
+    unless financial_plan.lifecycle_status.in?(%w[draft active]) && target_plan&.lifecycle_status.in?(%w[draft active])
+      errors.add(:financial_plan, "must be draft or active to move funding")
+      return false
+    end
+
+    update(financial_plan: target_plan)
+  end
+
   private
 
   def set_account

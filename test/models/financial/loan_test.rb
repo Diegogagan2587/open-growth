@@ -61,6 +61,75 @@ class Financial::LoanTest < ActiveSupport::TestCase
     Current.account = nil
   end
 
+  test "treats a withdrawal or transfer fee as a separate liability charge and nets it from the payout" do
+    account = Account.create!(name: "Loan fee household")
+    Current.account = account
+    liability = Financial::Liability.create!(account: account, name: "Credit advance", liability_type: "credit_card", status: "active", opening_balance: 0)
+    asset = Financial::Asset.create!(account: account, name: "BBVA", account_type: "checking", status: "active", opening_balance: 0)
+    category = Category.create!(account: account, name: "Commissions and Interest")
+    plan = Financial::Plan.create!(account: account, name: "Advance proceeds", planned_for: Date.current, expected_amount: 1)
+    loan = Financial::Loan.create!(
+      account: account,
+      name: "Card advance",
+      principal_amount: 6_101,
+      disbursement_fee_amount: 252,
+      interest_category: category,
+      liability: liability,
+      destination_asset: asset,
+      lifecycle_status: "simulated"
+    )
+
+    result = Financial::Loans::ActivateService.call(loan: loan, plan: plan)
+    payout = result.entry
+    fee = loan.reload.disbursement_fee_entry
+
+    assert result.success?
+    assert_equal 5_849.to_d, payout.amount
+    assert_equal asset, payout.financial_account
+    assert_equal 252.to_d, fee.amount
+    assert_equal "liability_charge", fee.entry_type
+    assert_equal liability, fee.financial_liability
+    assert_equal category, fee.category
+    assert_equal 6_101.to_d, loan.actual_balance
+    assert_equal 5_849.to_d, asset.current_balance
+    assert_equal 6_101.to_d, liability.current_balance
+    assert_equal 5_849.to_d, loan.funding_sources.first.expected_amount
+    assert_equal 5_849.to_d, Financial::Plan::Actuals.for(plan).actual_funding
+    assert_equal 0.to_d, Financial::Plan::Actuals.for(plan).actual_consumption
+
+    Financial::Loans::ActivateService.call(loan: loan, plan: plan)
+    assert_equal 1, loan.reload.entries.where(entry_type: "liability_charge").count
+    assert_equal 1, loan.entries.where(entry_type: "loan_disbursement").count
+  ensure
+    Current.account = nil
+  end
+
+  test "does not count a withheld disbursement fee again in scheduled repayment" do
+    account = Account.create!(name: "Comparison fee household")
+    loan = Financial::Loan.create!(
+      account: account,
+      name: "Small fee loan",
+      principal_amount: 100,
+      disbursement_fee_amount: 10
+    )
+    2.times do |index|
+      Financial::Loan::Installment.create!(
+        account: account,
+        financial_loan: loan,
+        installment_number: index + 1,
+        due_date: Date.current + (index + 1).months,
+        expected_amount: 55,
+        expected_principal: 50,
+        expected_interest: 5
+      )
+    end
+
+    comparison = loan.comparison_totals
+
+    assert_equal 110.to_d, comparison[:repayment] # 100 principal + 10 interest
+    assert_equal 20.to_d, comparison[:financing_cost] # 10 interest + 10 withheld fee
+  end
+
   test "owns schedule regeneration and preserves manual dates" do
     account = Account.create!(name: "Regeneration domain tenant")
     loan = Financial::Loan.create!(

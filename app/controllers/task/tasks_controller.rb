@@ -2,13 +2,18 @@
 
 module Task
   class TasksController < ApplicationController
-    before_action :set_task, only: [ :edit, :update ]
+    before_action :set_task, only: [ :show, :edit, :update ]
     before_action :set_projects, only: [ :edit, :update ]
 
     def edit
       respond_to do |format|
         format.html { render layout: request.xhr? ? false : "application" }
       end
+    end
+
+    def show
+      @return_to_dashboard = params[:return_to] == "dashboard"
+      @comments = @task.comments.includes(:user).order(:created_at)
     end
 
     def update
@@ -18,6 +23,7 @@ module Task
 
         respond_to do |format|
           format.html { redirect_to task_root_path(task_filter_params), notice: t("tasks.flash.updated") }
+          format.json { render json: { id: @task.id, status: @task.status }, status: :ok }
           format.turbo_stream do
             if tabs_differ?(old_status, @task.status)
               # Task moved between Pending and Completed tabs
@@ -45,9 +51,15 @@ module Task
       else
         respond_to do |format|
           format.html { render :edit, status: :unprocessable_entity }
+          format.json { render json: { errors: @task.errors.full_messages }, status: :unprocessable_entity }
           format.turbo_stream { head :unprocessable_entity }
         end
       end
+    end
+
+
+    def close_panel
+      render layout: false
     end
 
     private

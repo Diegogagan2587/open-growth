@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_24_011000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_16_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -171,9 +171,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_011000) do
   create_table "categories", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
+    t.text "description"
+    t.string "icon"
     t.string "name"
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_categories_on_account_id"
+  end
+
+  create_table "dashboard_task_deferrals", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "deferred_at", null: false
+    t.bigint "task_id", null: false
+    t.string "task_type", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["account_id", "user_id", "task_type", "task_id"], name: "index_dashboard_task_deferrals_on_account_user_task", unique: true
+    t.index ["account_id"], name: "index_dashboard_task_deferrals_on_account_id"
+    t.index ["user_id"], name: "index_dashboard_task_deferrals_on_user_id"
   end
 
   create_table "doc_links", force: :cascade do |t|
@@ -260,6 +275,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_011000) do
     t.index ["account_id"], name: "index_financial_accounts_on_account_id"
     t.index ["legacy_liability_id"], name: "index_financial_accounts_on_legacy_liability_id", unique: true, where: "(legacy_liability_id IS NOT NULL)"
     t.index ["status"], name: "index_financial_accounts_on_status"
+  end
+
+  create_table "financial_category_budgets", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.decimal "amount", precision: 12, scale: 2, null: false
+    t.bigint "category_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "custom_days"
+    t.string "frequency", null: false
+    t.date "starts_on", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "category_id"], name: "index_category_budgets_on_account_and_category", unique: true
+    t.index ["account_id"], name: "index_financial_category_budgets_on_account_id"
+    t.index ["category_id"], name: "index_financial_category_budgets_on_category_id"
   end
 
   create_table "financial_entries", force: :cascade do |t|
@@ -386,9 +415,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_011000) do
     t.decimal "principal_amount", precision: 12, scale: 2, null: false
     t.string "repayment_basis"
     t.datetime "updated_at", null: false
+    t.bigint "disbursement_fee_entry_id"
+    t.decimal "disbursement_fee_amount", precision: 12, scale: 2, default: "0.0", null: false
     t.index ["account_id"], name: "index_financial_loans_on_account_id"
     t.index ["destination_asset_id"], name: "index_financial_loans_on_destination_asset_id"
     t.index ["destination_liability_id"], name: "index_financial_loans_on_destination_liability_id"
+    t.index ["disbursement_fee_entry_id"], name: "index_financial_loans_on_disbursement_fee_entry_id"
     t.index ["interest_category_id"], name: "index_financial_loans_on_interest_category_id"
     t.index ["legacy_income_event_id"], name: "index_financial_loans_on_legacy_income_event_id", unique: true
     t.index ["liability_id"], name: "index_financial_loans_on_liability_id"
@@ -400,9 +432,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_011000) do
     t.bigint "budget_period_id"
     t.datetime "closed_at"
     t.datetime "created_at", null: false
+    t.boolean "custom_ordered", default: false, null: false
     t.string "description", null: false
     t.decimal "expected_amount", precision: 10, scale: 2, null: false
     t.date "expected_date", null: false
+    t.decimal "global_balance_override", precision: 12, scale: 2
     t.string "income_type", default: "regular", null: false
     t.decimal "interest_rate", precision: 6, scale: 3
     t.boolean "interest_rate_estimated", default: false, null: false
@@ -421,6 +455,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_011000) do
     t.bigint "regular_income_destination_asset_id"
     t.bigint "regular_income_destination_liability_id"
     t.string "status", default: "pending", null: false
+    t.string "status_before_cancellation"
     t.datetime "updated_at", null: false
     t.index ["account_id", "expected_date", "id"], name: "index_income_events_on_plan_chronology"
     t.index ["account_id"], name: "index_income_events_on_account_id"
@@ -695,6 +730,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_011000) do
     t.index ["account_id"], name: "index_task_areas_on_account_id"
   end
 
+  create_table "task_comments", force: :cascade do |t|
+    t.bigint "task_id", null: false
+    t.bigint "user_id", null: false
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["task_id"], name: "index_task_comments_on_task_id"
+    t.index ["user_id"], name: "index_task_comments_on_user_id"
+  end
+
   create_table "tasks", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "completed_at"
@@ -730,6 +775,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_011000) do
     t.boolean "system_admin", default: false, null: false
     t.string "theme_palette", default: "executive-calm", null: false
     t.datetime "updated_at", null: false
+    t.string "time_zone", default: "UTC", null: false
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
@@ -748,6 +794,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_011000) do
   add_foreign_key "career_profile_links", "career_profiles"
   add_foreign_key "career_profiles", "accounts"
   add_foreign_key "categories", "accounts"
+  add_foreign_key "dashboard_task_deferrals", "accounts"
+  add_foreign_key "dashboard_task_deferrals", "users"
   add_foreign_key "doc_links", "docs"
   add_foreign_key "doc_links", "links"
   add_foreign_key "docs", "accounts"
@@ -764,6 +812,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_011000) do
   add_foreign_key "expenses", "income_events", column: "loan_id"
   add_foreign_key "expenses", "planned_expenses"
   add_foreign_key "financial_accounts", "accounts"
+  add_foreign_key "financial_category_budgets", "accounts"
+  add_foreign_key "financial_category_budgets", "categories"
   add_foreign_key "financial_entries", "accounts"
   add_foreign_key "financial_entries", "budget_periods"
   add_foreign_key "financial_entries", "categories"
@@ -792,6 +842,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_011000) do
   add_foreign_key "financial_loans", "financial_accounts", column: "destination_asset_id"
   add_foreign_key "financial_loans", "financial_accounts", column: "destination_liability_id"
   add_foreign_key "financial_loans", "financial_accounts", column: "liability_id"
+  add_foreign_key "financial_loans", "financial_entries", column: "disbursement_fee_entry_id"
   add_foreign_key "income_events", "accounts"
   add_foreign_key "income_events", "budget_periods"
   add_foreign_key "income_events", "financial_accounts", column: "loan_disbursement_destination_asset_id"

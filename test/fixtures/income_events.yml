@@ -12,3 +12,26 @@ two:
   status: pending
   account: one
 
+forecast_first:
+  description: First forecast
+  expected_date: 2026-07-10
+  expected_amount: 1.00
+  lifecycle_status: cancelled
+  status: pending
+  account: one
+
+forecast_second:
+  description: Second forecast
+  expected_date: 2026-07-20
+  expected_amount: 1.00
+  lifecycle_status: cancelled
+  status: pending
+  account: one
+
+forecast_filtered:
+  description: Filtered forecast
+  expected_date: 2026-08-01
+  expected_amount: 1.00
+  lifecycle_status: cancelled
+  status: pending
+  account: one

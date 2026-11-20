@@ -11,6 +11,7 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_many :account_memberships, dependent: :destroy
   has_many :accounts, through: :account_memberships
+  has_many :dashboard_task_deferrals, class_name: "Dashboard::TaskDeferral", dependent: :destroy
   has_many :reporting_usage_events, class_name: "Reporting::UsageEvent", dependent: :restrict_with_error
 
   def system_admin?
@@ -24,6 +25,7 @@ class User < ApplicationRecord
   validates :password, length: { minimum: 8 }, if: -> { new_record? || !password.nil? }
   validates :locale, inclusion: { in: %w[en es] }, allow_nil: true
   validates :theme_palette, inclusion: { in: THEME_PALETTES }, allow_nil: true
+  validates :time_zone, inclusion: { in: ActiveSupport::TimeZone.all.map(&:name) }
 
   before_validation :normalize_legacy_theme_palette
 

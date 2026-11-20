@@ -17,10 +17,57 @@ class Financial::Plan < IncomeEvent
     dependent: :destroy
 
   validates :lifecycle_status, inclusion: { in: LIFECYCLE_STATUSES }
+  validates :global_balance_override, numericality: true, allow_nil: true
   validate :closed_chronology_is_immutable, on: :update
   before_destroy :allow_safe_draft_deletion
 
   scope :chronological, -> { order(:expected_date, :id) }
+
+  def default_transaction_order
+    custom_ordered? ? :custom : :due_date
+  end
+
+  def set_global_balance_checkpoint!(balance)
+    update!(global_balance_override: balance.presence)
+  end
+
+  def cancel!
+    return false unless lifecycle_status.in?(%w[draft active])
+
+    update!(status_before_cancellation: lifecycle_status, lifecycle_status: "cancelled")
+  end
+
+  def restore!
+    return false unless lifecycle_status == "cancelled"
+
+    update!(lifecycle_status: status_before_cancellation || "draft", status_before_cancellation: nil)
+  end
+
+  def reorder_planned_transactions!(ordered_ids)
+    ids = Array(ordered_ids).map(&:to_i)
+
+    with_lock do
+      current_ids = planned_transactions.order(:id).ids
+      unless ids.length == ids.uniq.length && ids.sort == current_ids.sort
+        errors.add(:planned_transactions, "must include every plan movement exactly once")
+        raise ActiveRecord::RecordInvalid, self
+      end
+      if lifecycle_status.in?(%w[closed cancelled])
+        errors.add(:planned_transactions, "cannot be reordered after the plan is finalized")
+        raise ActiveRecord::RecordInvalid, self
+      end
+
+      planned_transactions.order(:position, :id).each_with_index do |transaction, index|
+        transaction.update_columns(position: -(index + 1))
+      end
+      planned_transactions.index_by(&:id).then do |transactions_by_id|
+        ids.each_with_index do |id, index|
+          transactions_by_id.fetch(id).update_columns(position: index + 1)
+        end
+      end
+      update!(custom_ordered: true)
+    end
+  end
 
   # Loan terms and routing belong to Financial::Loan. Treating a plan row as a
   # legacy IncomeEvent loan would re-run obsolete validations and callbacks.

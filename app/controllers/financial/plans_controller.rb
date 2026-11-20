@@ -1,5 +1,5 @@
 class Financial::PlansController < ApplicationController
-  before_action :set_plan, only: [ :show, :edit, :update, :destroy, :close, :cancel ]
+  before_action :set_plan, only: [ :show, :edit, :update, :destroy, :close ]
   before_action :load_form_collections, only: [ :new, :create, :edit, :update ]
   before_action :load_plan_collections, only: :show
 
@@ -8,20 +8,20 @@ class Financial::PlansController < ApplicationController
     @month = params[:month].to_s if params[:month].to_s.match?(/\A\d{4}-(0[1-9]|1[0-2])\z/)
     @status = params[:status].to_s if params[:status].to_s.in?(Financial::Plan::LIFECYCLE_STATUSES)
     @plans = Financial::Plan.for_account(Current.account)
-    @plans = @plans.where(budget_period: @budget_period) if @budget_period
-    @plans = @plans.where(expected_date: Date.strptime(@month, "%Y-%m").all_month) if @month
-    @plans = @plans.where(lifecycle_status: @status) if @status
-    @plans = @plans
-      .includes(:funding_sources)
-      .chronological
-      .reverse_order
+    @filtered_plans = @plans
+    @filtered_plans = @filtered_plans.where(budget_period: @budget_period) if @budget_period
+    @filtered_plans = @filtered_plans.where(expected_date: Date.strptime(@month, "%Y-%m").all_month) if @month
+    @filtered_plans = @filtered_plans.where(lifecycle_status: @status) if @status
+    @filtered_plans = @filtered_plans.chronological.reverse_order
+    @overview = Financial::Plans::Overview.for(@filtered_plans, global_plans: @plans)
   end
 
   def show
-    @projection = Financial::PlanProjection.for(@plan)
-    @actuals = Financial::PlanActuals.for(@plan)
-    @funding_sources = @plan.funding_sources.includes(:receipt_entry).order(:expected_date, :id)
-    @planned_transactions = @plan.planned_transactions.by_position.to_a
+    @order = params[:order].to_s.in?(%w[custom due_date]) ? params[:order].to_sym : @plan.default_transaction_order
+    @projection = Financial::Plan::Projection.for(@plan, order: @order)
+    @actuals = Financial::Plan::Actuals.for(@plan)
+    @funding_sources = @plan.funding_sources.includes(:financial_loan, :receipt_entry).order(:expected_date, :id)
+    @planned_transactions = @projection.transactions
     applied_transactions = @planned_transactions.reject { |transaction| transaction.execution_status == "pending" }
     ActiveRecord::Associations::Preloader.new(records: applied_transactions, associations: :financial_entry).call if applied_transactions.any?
     @actual_entries = @plan.financial_entries.includes(:category).by_date
@@ -70,14 +70,6 @@ class Financial::PlansController < ApplicationController
       alert: (result.error_message unless result.success?)
   end
 
-  def cancel
-    if @plan.update(lifecycle_status: "cancelled")
-      redirect_to finance_plan_path(@plan), notice: "Plan cancelled"
-    else
-      redirect_to finance_plan_path(@plan), alert: @plan.errors.full_messages.to_sentence
-    end
-  end
-
   private
 
   def set_plan
@@ -124,6 +116,6 @@ class Financial::PlansController < ApplicationController
     @assets = Financial::Asset.for_account(Current.account).active.order(:name)
     @liabilities = Financial::Liability.for_account(Current.account).active.order(:name)
     @categories = Category.for_account(Current.account).order(:name)
-    @other_plans = Financial::Plan.for_account(Current.account).where.not(id: @plan.id).chronological
+    @other_plans = Financial::Plan.for_account(Current.account).where(lifecycle_status: %w[draft active]).where.not(id: @plan.id).chronological
   end
 end

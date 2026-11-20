@@ -58,6 +58,6 @@ class Financial::CategoriesController < ApplicationController
   end
 
   def category_params
-    params.expect(category: [ :name ])
+    params.expect(category: [ :name, :description, :icon ])
   end
 end

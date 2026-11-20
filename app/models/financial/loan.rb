@@ -8,18 +8,22 @@ class Financial::Loan < ApplicationRecord
   belongs_to :destination_asset, class_name: "Financial::Asset", optional: true
   belongs_to :destination_liability, class_name: "Financial::Liability", optional: true
   belongs_to :interest_category, class_name: "Category", optional: true
+  belongs_to :disbursement_fee_entry, class_name: "Financial::Entry", optional: true
   has_many :funding_sources, class_name: "Financial::FundingSource", foreign_key: :financial_loan_id, dependent: :restrict_with_error
   has_many :entries, class_name: "Financial::Entry", foreign_key: :financial_loan_id, dependent: :restrict_with_error
   has_many :installments, class_name: "Financial::Loan::Installment", foreign_key: :financial_loan_id, inverse_of: :financial_loan, dependent: :restrict_with_error
 
   validates :name, presence: true
   validates :principal_amount, numericality: { greater_than: 0 }
+  validates :disbursement_fee_amount, numericality: { greater_than_or_equal_to: 0 }
   validates :interest_rate, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :repayment_basis, inclusion: { in: Financial::Loans::RepaymentTerms::BASES }, allow_nil: true
   validates :payment_amount, :different_payment_amount, numericality: { greater_than: 0 }, allow_nil: true
   validates :different_payment_position, inclusion: { in: %w[beginning final] }
   validates :lifecycle_status, inclusion: { in: LIFECYCLE_STATUSES }
   validate :repayment_terms_are_valid
+  validate :disbursement_fee_is_less_than_principal
+  validate :disbursement_fee_is_immutable_after_activation
   validate :active_routing_is_complete
   validate :associations_belong_to_same_account
 
@@ -29,6 +33,10 @@ class Financial::Loan < ApplicationRecord
     return 0.to_d unless liability
 
     entries.sum(0.to_d) { |entry| entry.liability_delta_for(liability_id) }
+  end
+
+  def net_disbursement_amount
+    principal_amount.to_d - disbursement_fee_amount.to_d
   end
 
   def configure_repayment(terms)
@@ -64,12 +72,51 @@ class Financial::Loan < ApplicationRecord
     installments.sum(:expected_amount)
   end
 
+  def comparison_totals
+    rows = installments.to_a
+    if rows.empty?
+      rows = Financial::Loans::AmortizationSchedule.build(terms: repayment_terms, start_date: Date.current)
+    end
+    return if rows.empty?
+
+    total = rows.sum(0.to_d) { |row| row.respond_to?(:amount) ? row.amount : row.expected_amount.to_d }
+    interest = rows.sum(0.to_d) { |row| row.respond_to?(:interest) ? row.interest : row.expected_interest.to_d }
+    { repayment: total, financing_cost: interest + disbursement_fee_amount.to_d }
+  rescue ArgumentError
+    nil
+  end
+
   def projected_interest
     installments.sum(:expected_interest)
   end
 
   def remaining_projected_interest
     installments.where.not(resolution: "paid").sum(:expected_interest)
+  end
+
+  def undo_disbursement
+    with_lock do
+      paid_installments = installments.where("resolution = 'paid' OR payment_entry_id IS NOT NULL OR interest_entry_id IS NOT NULL")
+      fee_entry = disbursement_fee_entry
+      other_entries = entries.where.not(entry_type: "loan_disbursement")
+      other_entries = other_entries.where.not(id: fee_entry.id) if fee_entry
+      if other_entries.exists? || paid_installments.exists?
+        errors.add(:base, "undo installment payments before undoing the disbursement")
+        return false
+      end
+
+      transaction do
+        update!(disbursement_fee_entry: nil)
+        fee_entry&.destroy!
+        entries.where(entry_type: "loan_disbursement").each(&:destroy!)
+        funding_sources.each(&:destroy!)
+        update!(lifecycle_status: "simulated")
+      end
+    end
+    true
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotDestroyed => error
+    errors.add(:base, error.message)
+    false
   end
 
   def regenerate_schedule!(start_date: nil, first_payment_date: nil, reset_manual_installment_ids: [])
@@ -139,6 +186,18 @@ class Financial::Loan < ApplicationRecord
     repayment_terms
   rescue ArgumentError => error
     errors.add(:base, error.message)
+  end
+
+  def disbursement_fee_is_less_than_principal
+    return if disbursement_fee_amount.blank? || principal_amount.blank? || disbursement_fee_amount < principal_amount
+
+    errors.add(:disbursement_fee_amount, "must be less than the principal")
+  end
+
+  def disbursement_fee_is_immutable_after_activation
+    return unless will_save_change_to_disbursement_fee_amount? && lifecycle_status.in?(%w[active paid])
+
+    errors.add(:disbursement_fee_amount, "cannot change after activation")
   end
 
   def active_routing_is_complete

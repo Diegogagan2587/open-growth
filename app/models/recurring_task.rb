@@ -5,6 +5,10 @@ class RecurringTask < ApplicationRecord
 
   belongs_to :account
   belongs_to :task_area, optional: true
+  has_many :dashboard_task_deferrals,
+    as: :task,
+    class_name: "Dashboard::TaskDeferral",
+    dependent: :destroy
 
   validates :name, presence: true
   validates :recurrence, presence: true, inclusion: { in: RECURRENCE_VALUES }
@@ -20,7 +24,10 @@ class RecurringTask < ApplicationRecord
   def mark_done!
     now = Time.current
     new_next_due = recurring? ? next_due_after(now) : nil
-    update!(last_done_at: now, next_due_date: new_next_due)
+    with_lock do
+      update!(last_done_at: now, next_due_date: new_next_due)
+      dashboard_task_deferrals.delete_all
+    end
   end
 
   def recurring?

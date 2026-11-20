@@ -1,0 +1,26 @@
+forecast_first_funding:
+  account_id: <%= ActiveRecord::FixtureSet.identify(:one) %>
+  financial_plan_id: <%= ActiveRecord::FixtureSet.identify(:forecast_first) %>
+  description: First forecast funding
+  expected_amount: 1000.00
+  expected_date: 2026-07-10
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+forecast_second_funding:
+  account_id: <%= ActiveRecord::FixtureSet.identify(:one) %>
+  financial_plan_id: <%= ActiveRecord::FixtureSet.identify(:forecast_second) %>
+  description: Second forecast funding
+  expected_amount: 500.00
+  expected_date: 2026-07-20
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+forecast_filtered_funding:
+  account_id: <%= ActiveRecord::FixtureSet.identify(:one) %>
+  financial_plan_id: <%= ActiveRecord::FixtureSet.identify(:forecast_filtered) %>
+  description: Filtered forecast funding
+  expected_amount: 10000.00
+  expected_date: 2026-08-01
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
