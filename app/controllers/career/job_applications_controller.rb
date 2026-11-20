@@ -27,7 +27,7 @@ module Career
       @documents = @job_application.documents.order(created_at: :desc)
       @meetings = @job_application.meetings.order(start_time: :desc)
       @events = @job_application.events.recent_first
-      @suggested_actions = Career::JobApplications::NextActionsService.call(job_application: @job_application)
+      @suggested_actions = @job_application.suggested_actions
     end
 
     def new
