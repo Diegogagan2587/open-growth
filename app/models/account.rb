@@ -18,7 +18,7 @@ class Account < ApplicationRecord
   has_many :budget_line_items, dependent: :destroy
   has_many :shopping_items, dependent: :destroy
   has_many :inventory_items, dependent: :destroy
-  has_many :task_areas, dependent: :destroy
+  has_many :task_areas, class_name: "Projects::Task::Area", dependent: :destroy
   has_many :recurring_tasks, class_name: "Projects::Task::Recurring", dependent: :destroy
   has_many :dashboard_task_deferrals, class_name: "Projects::Task::Deferral", dependent: :destroy
   has_many :career_companies, class_name: "Career::Company", dependent: :destroy

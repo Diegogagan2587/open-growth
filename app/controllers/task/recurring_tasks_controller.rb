@@ -87,7 +87,7 @@ module Task
     end
 
     def set_task_areas
-      @task_areas = TaskArea.for_account(Current.account).order(:name)
+      @task_areas = Projects::Task::Area.for_account(Current.account).order(:name)
     end
 
     def recurring_task_params
