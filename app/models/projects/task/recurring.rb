@@ -19,6 +19,7 @@ class Projects::Task::Recurring < ApplicationRecord
 
   scope :for_account, ->(account) { where(account: account) }
   scope :pending, -> { where.not(next_due_date: nil) }
+  scope :visible_on_dashboard, -> { pending.where("last_done_at IS NULL OR next_due_date <= ?", Date.current) }
   scope :overdue, -> { where("next_due_date < ?", Date.current) }
   scope :due_on_or_before, ->(date) { where("next_due_date <= ?", date) }
   scope :by_next_due, -> { order(Arel.sql("next_due_date IS NULL"), :next_due_date, :position, :created_at) }

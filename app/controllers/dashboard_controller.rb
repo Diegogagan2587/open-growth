@@ -17,8 +17,10 @@ class DashboardController < ApplicationController
     deferred_recurring_ids = deferrals.where(task_type: Projects::Task::Recurring.polymorphic_name).select(:task_id)
     deferred_project_ids = deferrals.where(task_type: "Projects::Task").select(:task_id)
 
-    recurring_tasks = Projects::Task::Recurring.for_account(Current.account)
-      .pending
+    pending_recurring_tasks = Projects::Task::Recurring.for_account(Current.account)
+      .visible_on_dashboard
+
+    recurring_tasks = pending_recurring_tasks
       .where.not(id: deferred_recurring_ids)
       .includes(:task_area)
       .order(next_due_date: :asc, created_at: :desc)
@@ -42,8 +44,7 @@ class DashboardController < ApplicationController
     return available_tasks if available_tasks.any?
 
     deferred_records = deferrals.order(:deferred_at, :id).to_a
-    recurring_by_id = Projects::Task::Recurring.for_account(Current.account)
-      .pending
+    recurring_by_id = pending_recurring_tasks
       .where(id: deferred_records.select { |record| record.task_type == Projects::Task::Recurring.polymorphic_name }.map(&:task_id))
       .includes(:task_area)
       .index_by(&:id)
