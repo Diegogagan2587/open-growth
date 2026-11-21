@@ -35,7 +35,7 @@ class Habit < ApplicationRecord
     else
       skill_assignments.where(effective_on: ..date).order(effective_on: :desc).first
     end
-    assignment&.habit_skill
+    assignment&.skill
   end
 
   def completed_on?(date)

@@ -1,6 +1,6 @@
 class Habit::LevelGoal < ApplicationRecord
   METRICS = %w[amount reps weight].freeze
-  belongs_to :habit_skill, class_name: "Habit::Skill"
+  belongs_to :skill
   belongs_to :habit, optional: true
   validates :description, presence: true
   validates :level, numericality: { only_integer: true, greater_than: 0 }
@@ -41,8 +41,8 @@ class Habit::LevelGoal < ApplicationRecord
   private
 
   def valid_link
-    return unless habit && habit_skill
-    errors.add(:habit, :invalid) unless habit.account_id == habit_skill.account_id && habit.user_id == habit_skill.user_id
+    return unless habit && skill
+    errors.add(:habit, :invalid) unless habit.account_id == skill.account_id && habit.user_id == skill.user_id
     errors.add(:metric, :invalid) if metric == "amount" && habit.kind != "measured"
     errors.add(:metric, :invalid) if %w[reps weight].include?(metric) && habit.kind != "exercise"
   end

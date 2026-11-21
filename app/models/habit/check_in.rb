@@ -1,6 +1,6 @@
 class Habit::CheckIn < ApplicationRecord
   belongs_to :habit
-  has_many :sets, class_name: "Habit::Set", dependent: :destroy
+  has_many :sets, class_name: "Habit::Set", foreign_key: :habit_check_in_id, dependent: :destroy
   accepts_nested_attributes_for :sets, allow_destroy: true
 
   validates :on_date, presence: true, uniqueness: { scope: :habit_id }

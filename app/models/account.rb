@@ -21,7 +21,7 @@ class Account < ApplicationRecord
   has_many :task_areas, class_name: "Projects::Task::Area", dependent: :destroy
   has_many :recurring_tasks, class_name: "Projects::Task::Recurring", dependent: :destroy
   has_many :habits, dependent: :destroy
-  has_many :habit_skills, class_name: "Habit::Skill", foreign_key: :account_id, dependent: :destroy
+  has_many :habit_skills, class_name: "Habit::Skill", dependent: :destroy
   has_many :dashboard_task_deferrals, class_name: "Projects::Task::Deferral", dependent: :destroy
   has_many :career_companies, class_name: "Career::Company", dependent: :destroy
   has_many :career_job_applications, class_name: "Career::JobApplication", dependent: :destroy
