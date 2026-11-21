@@ -7,6 +7,10 @@ class DashboardController < ApplicationController
   def index
     @user = Current.user.name
     @pending_tasks = Current.account ? combined_pending_tasks : []
+    today = Time.find_zone!(Current.user.time_zone).today
+    @due_habits = Current.account ? Habit.for_current.active.includes(:schedule_versions, :check_ins).select { |habit| habit.scheduled_on?(today) && !habit.completed_on?(today) }.sort_by { |habit| [ habit.scheduled_time ? 0 : 1, habit.scheduled_time || Time.zone.parse("23:59"), habit.name ] } : []
+    ActiveRecord::Associations::Preloader.new(records: @due_habits, associations: { skill_assignments: :skill }).call if @due_habits.any?
+    @habit_today = today
     load_financial_actions if Current.account
   end
 
