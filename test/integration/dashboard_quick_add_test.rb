@@ -44,6 +44,35 @@ class DashboardIntegrationTest < ActionDispatch::IntegrationTest
     assert_not_nil task.last_done_at
   end
 
+  test "dashboard hides a completed repeating task until its next due date" do
+    travel_to Time.current.noon
+    task = Projects::Task::Recurring.create!(
+      account: @account,
+      name: "Dust the beds",
+      recurrence: "daily",
+      next_due_date: Date.current
+    )
+    detail_link = "li[data-task-kind='recurring'] a[href='#{task_recurring_task_path(task, return_to: "dashboard")}']"
+
+    get root_path
+    assert_select detail_link, count: 1
+
+    next_due_date = Date.tomorrow
+    patch mark_done_task_recurring_task_path(task, return_to: "dashboard")
+    assert_redirected_to root_path
+    assert_equal next_due_date, task.reload.next_due_date
+
+    follow_redirect!
+    assert_response :success
+    assert_select detail_link, count: 0
+
+    travel_to next_due_date.in_time_zone.noon do
+      get root_path
+      assert_response :success
+      assert_select detail_link, count: 1
+    end
+  end
+
   test "dashboard task details keep navigation on the dashboard" do
     task = Projects::Task::Recurring.create!(
       account: @account,
