@@ -21,7 +21,7 @@ class DashboardIntegrationTest < ActionDispatch::IntegrationTest
   end
 
   test "dashboard recurring tasks open details and can be marked done" do
-    task = RecurringTask.create!(
+    task = Projects::Task::Recurring.create!(
       account: @account,
       name: "Review subscriptions",
       recurrence: "once",
@@ -45,7 +45,7 @@ class DashboardIntegrationTest < ActionDispatch::IntegrationTest
   end
 
   test "dashboard task details keep navigation on the dashboard" do
-    task = RecurringTask.create!(
+    task = Projects::Task::Recurring.create!(
       account: @account,
       name: "Check the budget",
       recurrence: "weekly",
@@ -61,7 +61,7 @@ class DashboardIntegrationTest < ActionDispatch::IntegrationTest
   end
 
   test "marking a task done defaults to the tasks page" do
-    task = RecurringTask.create!(
+    task = Projects::Task::Recurring.create!(
       account: @account,
       name: "Default navigation task",
       recurrence: "once",
@@ -105,10 +105,10 @@ class DashboardIntegrationTest < ActionDispatch::IntegrationTest
 
   test "dashboard orders the combined task list and caps it at five" do
     create_project_task("Project overdue", due_date: Date.current - 1.day)
-    RecurringTask.create!(account: @account, name: "Recurring oldest", recurrence: "once", next_due_date: Date.current - 2.days)
+    Projects::Task::Recurring.create!(account: @account, name: "Recurring oldest", recurrence: "once", next_due_date: Date.current - 2.days)
     create_project_task("High today", due_date: Date.current, priority: "high")
     create_project_task("Low today", due_date: Date.current, priority: "low")
-    RecurringTask.create!(account: @account, name: "Recurring tomorrow", recurrence: "once", next_due_date: Date.current + 1.day)
+    Projects::Task::Recurring.create!(account: @account, name: "Recurring tomorrow", recurrence: "once", next_due_date: Date.current + 1.day)
     create_project_task("Undated task", due_date: nil, priority: "high")
 
     get root_path

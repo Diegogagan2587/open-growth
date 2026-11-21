@@ -9,9 +9,9 @@ module Projects
     belongs_to :user, foreign_key: :owner_id
     has_many :dashboard_task_deferrals,
       as: :task,
-      class_name: "Dashboard::TaskDeferral",
+      class_name: "Projects::Task::Deferral",
       dependent: :destroy
-    has_many :comments, class_name: "Projects::TaskComment", dependent: :destroy
+    has_many :comments, class_name: "Projects::Task::Comment", dependent: :destroy
     has_many :project_docs, through: :project
     has_many :project_links, through: :project
     has_many :project_meetings, through: :project

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-class Dashboard::TaskDeferral < ApplicationRecord
+class Projects::Task::Deferral < ApplicationRecord
   self.table_name = "dashboard_task_deferrals"
 
-  TASK_TYPES = %w[RecurringTask Projects::Task].freeze
+  TASK_TYPES = [ Projects::Task::Recurring.polymorphic_name, Projects::Task.polymorphic_name ].freeze
 
   belongs_to :account
   belongs_to :user

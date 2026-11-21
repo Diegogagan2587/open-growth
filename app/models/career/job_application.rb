@@ -39,5 +39,14 @@ module Career
     scope :needs_action, lambda {
       joins(:tasks).merge(Projects::Task.pending).distinct
     }
+
+    def suggested_actions
+      existing_keys = tasks.pending
+        .where("metadata ->> 'source' = ?", "career_template")
+        .pluck(Arel.sql("metadata ->> 'template_key'"))
+        .compact
+
+      TaskTemplates.for_status(status).reject { |template| existing_keys.include?(template.key) }
+    end
   end
 end
