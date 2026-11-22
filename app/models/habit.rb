@@ -58,7 +58,7 @@ class Habit < ApplicationRecord
   end
 
   def completion_rate(today)
-    dates = ([(today - 29.days), starts_on].max..today).select { |date| scheduled_on?(date) }
+    dates = ([ (today - 29.days), starts_on ].max..today).select { |date| scheduled_on?(date) }
     return 0 if dates.empty?
 
     (100.0 * dates.count { |date| completed_on?(date) } / dates.size).round
