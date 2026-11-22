@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_16_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_21_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -171,21 +171,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000002) do
   create_table "categories", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
-    t.text "description"
-    t.string "icon"
     t.string "name"
     t.datetime "updated_at", null: false
+    t.text "description"
+    t.string "icon"
     t.index ["account_id"], name: "index_categories_on_account_id"
   end
 
   create_table "dashboard_task_deferrals", force: :cascade do |t|
     t.bigint "account_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "deferred_at", null: false
-    t.bigint "task_id", null: false
-    t.string "task_type", null: false
-    t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.string "task_type", null: false
+    t.bigint "task_id", null: false
+    t.datetime "deferred_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["account_id", "user_id", "task_type", "task_id"], name: "index_dashboard_task_deferrals_on_account_user_task", unique: true
     t.index ["account_id"], name: "index_dashboard_task_deferrals_on_account_id"
     t.index ["user_id"], name: "index_dashboard_task_deferrals_on_user_id"
@@ -259,18 +259,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000002) do
   end
 
   create_table "financial_accounts", force: :cascade do |t|
-    t.string "account_group", default: "asset", null: false
     t.bigint "account_id", null: false
     t.string "account_type", null: false
-    t.datetime "archived_at"
     t.datetime "created_at", null: false
-    t.decimal "credit_limit", precision: 12, scale: 2
-    t.bigint "legacy_liability_id"
     t.string "name", null: false
     t.text "notes"
     t.decimal "opening_balance", precision: 12, scale: 2, default: "0.0", null: false
     t.string "status", default: "active", null: false
     t.datetime "updated_at", null: false
+    t.string "account_group", default: "asset", null: false
+    t.decimal "credit_limit", precision: 12, scale: 2
+    t.datetime "archived_at"
+    t.bigint "legacy_liability_id"
     t.index ["account_id", "account_group", "name"], name: "index_financial_accounts_on_group_and_name", unique: true
     t.index ["account_id"], name: "index_financial_accounts_on_account_id"
     t.index ["legacy_liability_id"], name: "index_financial_accounts_on_legacy_liability_id", unique: true, where: "(legacy_liability_id IS NOT NULL)"
@@ -279,12 +279,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000002) do
 
   create_table "financial_category_budgets", force: :cascade do |t|
     t.bigint "account_id", null: false
-    t.decimal "amount", precision: 12, scale: 2, null: false
     t.bigint "category_id", null: false
-    t.datetime "created_at", null: false
-    t.integer "custom_days"
+    t.decimal "amount", precision: 12, scale: 2, null: false
     t.string "frequency", null: false
+    t.integer "custom_days"
     t.date "starts_on", null: false
+    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id", "category_id"], name: "index_category_budgets_on_account_and_category", unique: true
     t.index ["account_id"], name: "index_financial_category_budgets_on_account_id"
@@ -379,11 +379,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000002) do
     t.integer "installment_number", null: false
     t.bigint "interest_entry_id"
     t.bigint "legacy_loan_payment_schedule_id"
-    t.boolean "manual_due_date", default: false, null: false
     t.bigint "payment_entry_id"
     t.bigint "planned_transaction_id"
     t.string "resolution", default: "scheduled", null: false
     t.datetime "updated_at", null: false
+    t.boolean "manual_due_date", default: false, null: false
     t.index ["account_id"], name: "index_financial_loan_installments_on_account_id"
     t.index ["financial_loan_id", "installment_number"], name: "index_loan_installments_on_number", unique: true
     t.index ["financial_loan_id"], name: "index_financial_loan_installments_on_financial_loan_id"
@@ -399,8 +399,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000002) do
     t.bigint "destination_asset_id"
     t.bigint "destination_liability_id"
     t.decimal "different_payment_amount", precision: 12, scale: 2
-    t.string "different_payment_position", default: "final", null: false
-    t.date "first_payment_date"
     t.bigint "interest_category_id"
     t.decimal "interest_rate"
     t.bigint "legacy_income_event_id"
@@ -415,8 +413,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000002) do
     t.decimal "principal_amount", precision: 12, scale: 2, null: false
     t.string "repayment_basis"
     t.datetime "updated_at", null: false
-    t.bigint "disbursement_fee_entry_id"
+    t.string "different_payment_position", default: "final", null: false
+    t.date "first_payment_date"
     t.decimal "disbursement_fee_amount", precision: 12, scale: 2, default: "0.0", null: false
+    t.bigint "disbursement_fee_entry_id"
     t.index ["account_id"], name: "index_financial_loans_on_account_id"
     t.index ["destination_asset_id"], name: "index_financial_loans_on_destination_asset_id"
     t.index ["destination_liability_id"], name: "index_financial_loans_on_destination_liability_id"
@@ -426,17 +426,104 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000002) do
     t.index ["liability_id"], name: "index_financial_loans_on_liability_id"
   end
 
+  create_table "habit_check_ins", force: :cascade do |t|
+    t.bigint "habit_id", null: false
+    t.date "on_date", null: false
+    t.boolean "done", default: false, null: false
+    t.decimal "amount", precision: 10, scale: 2
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.decimal "target_amount", precision: 10, scale: 2
+    t.integer "target_sets"
+    t.integer "target_reps"
+    t.index ["habit_id", "on_date"], name: "index_habit_check_ins_on_habit_id_and_on_date", unique: true
+    t.index ["habit_id"], name: "index_habit_check_ins_on_habit_id"
+  end
+
+  create_table "habit_level_goals", force: :cascade do |t|
+    t.bigint "skill_id", null: false
+    t.bigint "habit_id"
+    t.integer "level", null: false
+    t.string "description", null: false
+    t.string "metric"
+    t.decimal "target", precision: 10, scale: 2
+    t.date "achieved_on"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["habit_id"], name: "index_habit_level_goals_on_habit_id"
+    t.index ["skill_id"], name: "index_habit_level_goals_on_skill_id"
+  end
+
+  create_table "habit_schedule_versions", force: :cascade do |t|
+    t.bigint "habit_id", null: false
+    t.date "effective_on", null: false
+    t.integer "weekdays", default: [], null: false, array: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["habit_id", "effective_on"], name: "index_habit_schedule_versions_on_habit_id_and_effective_on", unique: true
+    t.index ["habit_id"], name: "index_habit_schedule_versions_on_habit_id"
+  end
+
+  create_table "habit_sets", force: :cascade do |t|
+    t.bigint "habit_check_in_id", null: false
+    t.integer "position", null: false
+    t.integer "reps", null: false
+    t.decimal "weight", precision: 10, scale: 2
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["habit_check_in_id", "position"], name: "index_habit_sets_on_habit_check_in_id_and_position", unique: true
+    t.index ["habit_check_in_id"], name: "index_habit_sets_on_habit_check_in_id"
+  end
+
+  create_table "habit_skill_assignments", force: :cascade do |t|
+    t.bigint "habit_id", null: false
+    t.bigint "skill_id"
+    t.date "effective_on", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["habit_id", "effective_on"], name: "index_habit_skill_assignments_on_habit_id_and_effective_on", unique: true
+    t.index ["habit_id"], name: "index_habit_skill_assignments_on_habit_id"
+    t.index ["skill_id"], name: "index_habit_skill_assignments_on_skill_id"
+  end
+
+  create_table "habit_skills", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "user_id", null: false
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_habit_skills_on_account_id"
+    t.index ["user_id"], name: "index_habit_skills_on_user_id"
+  end
+
+  create_table "habits", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "user_id", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.string "kind", default: "simple", null: false
+    t.string "unit"
+    t.decimal "target", precision: 10, scale: 2
+    t.integer "target_sets"
+    t.integer "target_reps"
+    t.time "scheduled_time"
+    t.date "starts_on", null: false
+    t.date "archived_on"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_habits_on_account_id"
+    t.index ["user_id"], name: "index_habits_on_user_id"
+  end
+
   create_table "income_events", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.decimal "actual_ending_balance_at_close", precision: 12, scale: 2
     t.bigint "budget_period_id"
     t.datetime "closed_at"
     t.datetime "created_at", null: false
-    t.boolean "custom_ordered", default: false, null: false
     t.string "description", null: false
     t.decimal "expected_amount", precision: 10, scale: 2, null: false
     t.date "expected_date", null: false
-    t.decimal "global_balance_override", precision: 12, scale: 2
     t.string "income_type", default: "regular", null: false
     t.decimal "interest_rate", precision: 6, scale: 3
     t.boolean "interest_rate_estimated", default: false, null: false
@@ -455,8 +542,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000002) do
     t.bigint "regular_income_destination_asset_id"
     t.bigint "regular_income_destination_liability_id"
     t.string "status", default: "pending", null: false
-    t.string "status_before_cancellation"
     t.datetime "updated_at", null: false
+    t.boolean "custom_ordered", default: false, null: false
+    t.decimal "global_balance_override", precision: 12, scale: 2
+    t.string "status_before_cancellation"
     t.index ["account_id", "expected_date", "id"], name: "index_income_events_on_plan_chronology"
     t.index ["account_id"], name: "index_income_events_on_account_id"
     t.index ["budget_period_id"], name: "index_income_events_on_budget_period_id"
@@ -843,6 +932,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000002) do
   add_foreign_key "financial_loans", "financial_accounts", column: "destination_liability_id"
   add_foreign_key "financial_loans", "financial_accounts", column: "liability_id"
   add_foreign_key "financial_loans", "financial_entries", column: "disbursement_fee_entry_id"
+  add_foreign_key "habit_check_ins", "habits"
+  add_foreign_key "habit_level_goals", "habit_skills", column: "skill_id"
+  add_foreign_key "habit_level_goals", "habits"
+  add_foreign_key "habit_schedule_versions", "habits"
+  add_foreign_key "habit_sets", "habit_check_ins"
+  add_foreign_key "habit_skill_assignments", "habit_skills", column: "skill_id"
+  add_foreign_key "habit_skill_assignments", "habits"
+  add_foreign_key "habit_skills", "accounts"
+  add_foreign_key "habit_skills", "users"
+  add_foreign_key "habits", "accounts"
+  add_foreign_key "habits", "users"
   add_foreign_key "income_events", "accounts"
   add_foreign_key "income_events", "budget_periods"
   add_foreign_key "income_events", "financial_accounts", column: "loan_disbursement_destination_asset_id"
@@ -890,6 +990,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000002) do
   add_foreign_key "shopping_items", "financial_entries"
   add_foreign_key "shopping_items", "planned_expenses"
   add_foreign_key "task_areas", "accounts"
+  add_foreign_key "task_comments", "tasks"
+  add_foreign_key "task_comments", "users"
   add_foreign_key "tasks", "accounts"
   add_foreign_key "tasks", "projects"
   add_foreign_key "tasks", "users", column: "owner_id"

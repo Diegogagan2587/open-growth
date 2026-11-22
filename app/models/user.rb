@@ -11,7 +11,9 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_many :account_memberships, dependent: :destroy
   has_many :accounts, through: :account_memberships
-  has_many :dashboard_task_deferrals, class_name: "Dashboard::TaskDeferral", dependent: :destroy
+  has_many :dashboard_task_deferrals, class_name: "Projects::Task::Deferral", dependent: :destroy
+  has_many :habits, dependent: :destroy
+  has_many :habit_skills, class_name: "Habit::Skill", dependent: :destroy
   has_many :reporting_usage_events, class_name: "Reporting::UsageEvent", dependent: :restrict_with_error
 
   def system_admin?

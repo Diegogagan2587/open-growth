@@ -23,7 +23,8 @@ default: &default
 development:
   primary:
     <<: *default
-    url: postgresql://postgres:postgres@localhost:5433/open_budget_production_clone
+    #url: postgresql://postgres:postgres@localhost:5433/open_budget_production_clone
+    database: diego_app_development
   queue:
     <<: *default
     database: diego_app_development_queue

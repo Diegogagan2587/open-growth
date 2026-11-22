@@ -1,13 +1,15 @@
 # frozen_string_literal: true
 
-class RecurringTask < ApplicationRecord
+class Projects::Task::Recurring < ApplicationRecord
+  self.table_name = "recurring_tasks"
+
   RECURRENCE_VALUES = %w[none once daily weekly biweekly monthly].freeze
 
   belongs_to :account
-  belongs_to :task_area, optional: true
+  belongs_to :task_area, class_name: "Projects::Task::Area", inverse_of: :recurring_tasks, optional: true
   has_many :dashboard_task_deferrals,
     as: :task,
-    class_name: "Dashboard::TaskDeferral",
+    class_name: "Projects::Task::Deferral",
     dependent: :destroy
 
   validates :name, presence: true
@@ -17,9 +19,15 @@ class RecurringTask < ApplicationRecord
 
   scope :for_account, ->(account) { where(account: account) }
   scope :pending, -> { where.not(next_due_date: nil) }
+  scope :visible_on_dashboard, -> { pending.where("last_done_at IS NULL OR next_due_date <= ?", Date.current) }
   scope :overdue, -> { where("next_due_date < ?", Date.current) }
   scope :due_on_or_before, ->(date) { where("next_due_date <= ?", date) }
   scope :by_next_due, -> { order(Arel.sql("next_due_date IS NULL"), :next_due_date, :position, :created_at) }
+
+  # Preserve the existing form parameter names and submit labels.
+  def self.model_name
+    @model_name ||= ActiveModel::Name.new(self, nil, "RecurringTask")
+  end
 
   def mark_done!
     now = Time.current

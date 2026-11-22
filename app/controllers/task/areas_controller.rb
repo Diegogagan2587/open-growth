@@ -5,18 +5,18 @@ module Task
     before_action :set_task_area, only: [ :show, :edit, :update, :destroy ]
 
     def index
-      @task_areas = TaskArea.for_account(Current.account).order(:name)
+      @task_areas = Projects::Task::Area.for_account(Current.account).order(:name)
     end
 
     def show
     end
 
     def new
-      @task_area = TaskArea.new
+      @task_area = Projects::Task::Area.new
     end
 
     def create
-      @task_area = TaskArea.for_account(Current.account).new(task_area_params)
+      @task_area = Projects::Task::Area.for_account(Current.account).new(task_area_params)
       @task_area.account = Current.account
 
       if @task_area.save
@@ -45,7 +45,7 @@ module Task
     private
 
     def set_task_area
-      @task_area = TaskArea.for_account(Current.account).find(params[:id])
+      @task_area = Projects::Task::Area.for_account(Current.account).find(params[:id])
     end
 
     def task_area_params

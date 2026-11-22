@@ -18,6 +18,13 @@ Rails.application.routes.draw do
   get "settings/finance/categories/:id/edit", to: redirect { |params, _request| "/finance/categories/#{params[:id]}/edit" }, as: :edit_settings_finance_category
   resources :passwords, param: :token
   get "dashboard/index"
+  resources :habits, except: :destroy do
+    member { patch :archive }
+    resources :check_ins, only: [ :create, :update, :destroy ], controller: "habit_check_ins"
+  end
+  resources :habit_skills, except: :destroy do
+    resources :level_goals, only: [ :create, :update, :destroy ], controller: "habit_level_goals"
+  end
   post "dashboard/task_deferrals", to: "dashboard/task_deferrals#create", as: :dashboard_task_deferrals
   # resources :budget_line_items
   # resources :categoryfs

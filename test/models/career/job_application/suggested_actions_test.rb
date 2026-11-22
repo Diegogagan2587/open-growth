@@ -1,6 +1,6 @@
 require "test_helper"
 
-class Career::JobApplications::NextActionsServiceTest < ActiveSupport::TestCase
+class Career::JobApplication::SuggestedActionsTest < ActiveSupport::TestCase
   setup do
     @account = accounts(:one)
     @user = users(:one)
@@ -14,7 +14,7 @@ class Career::JobApplications::NextActionsServiceTest < ActiveSupport::TestCase
   end
 
   test "returns templates for the current status" do
-    suggestions = Career::JobApplications::NextActionsService.call(job_application: @job_application)
+    suggestions = @job_application.suggested_actions
 
     assert suggestions.any?
     assert suggestions.any? { |item| item.key == "send_follow_up" }
@@ -31,7 +31,7 @@ class Career::JobApplications::NextActionsServiceTest < ActiveSupport::TestCase
       metadata: { source: "career_template", template_key: "send_follow_up" }
     )
 
-    suggestions = Career::JobApplications::NextActionsService.call(job_application: @job_application)
+    suggestions = @job_application.suggested_actions
 
     assert suggestions.none? { |item| item.key == "send_follow_up" }
   end
@@ -47,7 +47,7 @@ class Career::JobApplications::NextActionsServiceTest < ActiveSupport::TestCase
       metadata: { source: "career_template", template_key: "send_follow_up" }
     )
 
-    suggestions = Career::JobApplications::NextActionsService.call(job_application: @job_application)
+    suggestions = @job_application.suggested_actions
 
     assert suggestions.any? { |item| item.key == "send_follow_up" }
   end
