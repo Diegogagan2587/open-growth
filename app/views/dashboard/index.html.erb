@@ -4,6 +4,11 @@
     <p class="max-w-2xl text-sm text-muted-foreground sm:text-base"><%= t("dashboard.next_steps_description") %></p>
   </header>
 
+  <section class="space-y-2">
+    <div class="flex items-center justify-between"><h2 class="text-base font-semibold"><%= t("habits.today") %></h2><%= link_to t("habits.title"), habits_path, class: "text-sm text-primary hover:underline" %></div>
+    <% if @due_habits.any? %><div class="grid gap-3 md:grid-cols-2"><% @due_habits.each do |habit| %><%= render "habits/habit_card", habit: habit, today: @habit_today, dashboard: true %><% end %></div><% else %><p class="text-sm text-muted-foreground"><%= t("habits.nothing_due") %></p><% end %>
+  </section>
+
   <% if @pending_tasks.any? %>
     <section class="space-y-2">
       <div class="flex items-center justify-between gap-3">
