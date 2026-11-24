@@ -1,6 +1,6 @@
 class Financial::PlannedTransactionsController < ApplicationController
   before_action :set_plan, only: [ :index, :create ]
-  before_action :set_planned_transaction, only: [ :update, :destroy, :apply, :move ]
+  before_action :set_planned_transaction, only: [ :update, :destroy, :apply, :move, :skip ]
 
   def index
     @planned_transactions = @plan ? @plan.planned_transactions.by_position : Financial::PlannedTransaction.for_account(Current.account).unassigned.order(:planned_for, :created_at)
@@ -57,6 +57,14 @@ class Financial::PlannedTransactionsController < ApplicationController
     redirect_back fallback_location: finance_planned_transactions_path,
       notice: ("Transaction moved" if result.success?),
       alert: (result.error_message unless result.success?)
+  end
+
+  def skip
+    if @planned_transaction.pending? && @planned_transaction.skip
+      redirect_back fallback_location: root_path, notice: "Planned transaction dismissed"
+    else
+      redirect_back fallback_location: root_path, alert: "Only pending planned transactions can be dismissed"
+    end
   end
 
   private
