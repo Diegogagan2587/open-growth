@@ -34,7 +34,7 @@ class Financial::PlannedTransaction < PlannedExpense
   end
 
   def reduces_plan_balance?
-    budget_consuming? || commits_plan_funds?
+    !execution_status.in?(DISMISSED_EXECUTION_STATUSES) && (budget_consuming? || commits_plan_funds?)
   end
 
   def payment_timing
