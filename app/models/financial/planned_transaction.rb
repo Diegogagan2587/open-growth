@@ -33,6 +33,10 @@ class Financial::PlannedTransaction < PlannedExpense
     pending? && update(execution_status: SKIPPED_EXECUTION_STATUS)
   end
 
+  def reduces_plan_balance?
+    budget_consuming? || commits_plan_funds?
+  end
+
   def payment_timing
     return if due_date.blank? || actual_payment_date.blank?
     return :early if actual_payment_date < due_date
