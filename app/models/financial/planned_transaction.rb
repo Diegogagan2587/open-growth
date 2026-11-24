@@ -1,6 +1,8 @@
 class Financial::PlannedTransaction < PlannedExpense
   KINDS = %w[outflow liability_charge transfer liability_payment].freeze
   EXECUTION_STATUSES = %w[pending applied cancelled skipped].freeze
+  DISMISSED_EXECUTION_STATUSES = %w[cancelled skipped].freeze
+  SKIPPED_EXECUTION_STATUS = "skipped"
   IMPORTANCES = %w[low normal high essential].freeze
 
   belongs_to :income_event, optional: true
@@ -21,6 +23,14 @@ class Financial::PlannedTransaction < PlannedExpense
 
   def actual_payment_date
     financial_entry&.entry_date
+  end
+
+  def pending?
+    execution_status == "pending"
+  end
+
+  def skip
+    pending? && update(execution_status: SKIPPED_EXECUTION_STATUS)
   end
 
   def payment_timing
