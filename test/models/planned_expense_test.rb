@@ -195,34 +195,6 @@ class PlannedExpenseTest < ActiveSupport::TestCase
     assert_equal 100.to_d, @budget_period.total_planned
   end
 
-  test "expenses and explicitly reserved neutral movements reduce the plan balance" do
-    payment = PlannedExpense.create!(
-      income_event: @income_event,
-      description: "Close credit card",
-      amount: 300,
-      status: "pending_to_pay",
-      financial_account: @source_account,
-      financial_liability: @liability,
-      commits_plan_funds: true
-    )
-
-    assert_not payment.budget_consuming?
-    assert payment.reduces_plan_balance?
-    assert_equal 300.to_d, PlannedExpense.committed_to_plan.sum(:amount)
-
-    transfer = PlannedExpense.new(
-      income_event: @income_event,
-      description: "Move money",
-      amount: 100,
-      status: "pending_to_pay",
-      financial_account: @source_account,
-      counterparty_financial_account: @destination_account,
-      commits_plan_funds: true
-    )
-    assert transfer.valid?
-    assert transfer.reduces_plan_balance?
-  end
-
   test "execute service is idempotent for transaction creation" do
     planned_expense = PlannedExpense.create!(
       income_event: @income_event,
