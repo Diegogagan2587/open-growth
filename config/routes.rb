@@ -65,6 +65,7 @@ Rails.application.routes.draw do
       member do
         patch :apply
         patch :move
+        patch :skip
       end
     end
     resources :loans, controller: "/financial/loans" do
