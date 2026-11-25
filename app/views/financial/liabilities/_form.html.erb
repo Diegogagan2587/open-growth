@@ -1,12 +1,12 @@
-<% form_url = @financial_liability.persisted? ? finance_financial_liability_path(@financial_liability) : finance_financial_liabilities_path %>
-<% form_method = @financial_liability.persisted? ? :patch : :post %>
+<% form_url = financial_liability.persisted? ? finance_financial_liability_path(financial_liability) : finance_financial_liabilities_path %>
+<% form_method = financial_liability.persisted? ? :patch : :post %>
 
-<%= form_with model: @financial_liability, url: form_url, method: form_method, local: true do |form| %>
-  <% if @financial_liability.errors.any? %>
+<%= form_with model: financial_liability, url: form_url, method: form_method, local: true do |form| %>
+  <% if financial_liability.errors.any? %>
     <div class="bg-danger-soft border border-danger-soft text-danger px-4 py-3 rounded mb-4">
-      <h2 class="font-bold"><%= pluralize(@financial_liability.errors.count, "error") %> prohibited this record from being saved:</h2>
+      <h2 class="font-bold"><%= pluralize(financial_liability.errors.count, "error") %> prohibited this record from being saved:</h2>
       <ul class="list-disc list-inside">
-        <% @financial_liability.errors.full_messages.each do |message| %>
+        <% financial_liability.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
       </ul>
@@ -45,6 +45,6 @@
 
   <div class="mb-4">
     <%= form.submit class: "px-4 py-2 bg-primary text-white rounded hover:bg-primary" %>
-    <%= link_to "Cancel", @financial_liability.persisted? ? finance_financial_liability_path(@financial_liability) : finance_financial_liabilities_path, class: "px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80 ml-2" %>
+    <%= link_to "Cancel", financial_liability.persisted? ? finance_financial_liability_path(financial_liability) : finance_financial_liabilities_path, class: "px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80 ml-2" %>
   </div>
 <% end %>
