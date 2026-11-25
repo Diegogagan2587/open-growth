@@ -1,9 +1,9 @@
-<%= form_with model: @profile, url: career_profile_path, method: :patch, class: "space-y-6" do |f| %>
-  <% if @profile.errors.any? %>
+<%= form_with model: profile, url: career_profile_path, method: :patch, class: "space-y-6" do |f| %>
+  <% if profile.errors.any? %>
     <div class="rounded-md border border-danger-soft bg-danger-soft p-4 text-danger">
-      <p class="font-semibold"><%= pluralize(@profile.errors.count, "error") %> prevented this profile from being saved:</p>
+      <p class="font-semibold"><%= pluralize(profile.errors.count, "error") %> prevented this profile from being saved:</p>
       <ul class="mt-2 list-inside list-disc">
-        <% @profile.errors.full_messages.each do |message| %>
+        <% profile.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
       </ul>
