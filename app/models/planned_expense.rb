@@ -165,10 +165,6 @@ class PlannedExpense < ApplicationRecord
     !(source_present && destination_present) && !(source_present && liability_present)
   end
 
-  def reduces_plan_balance?
-    budget_consuming? || commits_plan_funds?
-  end
-
   def classification_label
     return category.name if category.present?
     return "Transfer" if transfer?

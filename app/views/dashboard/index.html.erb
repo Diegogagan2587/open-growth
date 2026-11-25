@@ -46,11 +46,12 @@
                 <li class="flex min-w-0 flex-col gap-1 border-b border-border pb-2 last:border-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                   <div class="min-w-0">
                     <div class="break-words text-sm font-medium text-foreground"><%= transaction.description %></div>
-                    <div class="text-xs text-muted-foreground"><%= due_date < Date.current ? "Overdue" : "Due" %> <%= l(due_date, format: :short) %></div>
+                    <div class="text-xs text-muted-foreground"><%= due_date < Date.current ? "Overdue" : "Due" %> <%= l(due_date, format: :long) %></div>
                   </div>
                   <div class="flex min-w-0 items-center justify-between gap-3 sm:shrink-0 sm:flex-col sm:items-end sm:gap-0">
                     <div class="text-sm font-semibold text-foreground"><%= number_to_currency(transaction.amount) %></div>
                     <%= link_to "Review", transaction.plan ? finance_plan_path(transaction.plan) : finance_planned_transactions_path, class: "text-xs text-accent hover:underline" %>
+                    <%= button_to "Dismiss", skip_finance_planned_transaction_path(transaction), method: :patch, class: "text-xs text-muted-foreground hover:text-foreground", form: { data: { turbo_confirm: "Dismiss this planned transaction? It will remain in the plan history but won't appear in follow-up." } } %>
                   </div>
                 </li>
               <% end %>
@@ -68,7 +69,7 @@
                 <li class="flex min-w-0 flex-col gap-1 border-b border-border pb-2 last:border-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                   <div class="min-w-0">
                     <div class="break-words text-sm font-medium text-foreground"><%= source.description %></div>
-                    <div class="text-xs text-muted-foreground"><%= source.expected_date < Date.current ? "Overdue" : "Expected" %> <%= l(source.expected_date, format: :short) %></div>
+                    <div class="text-xs text-muted-foreground"><%= source.expected_date < Date.current ? "Overdue" : "Expected" %> <%= l(source.expected_date, format: :long) %></div>
                   </div>
                   <div class="flex min-w-0 items-center justify-between gap-3 sm:shrink-0 sm:flex-col sm:items-end sm:gap-0">
                     <div class="text-sm font-semibold text-foreground"><%= number_to_currency(source.expected_amount) %></div>

@@ -26,6 +26,47 @@ class Financial::PlannedTransactionTest < ActiveSupport::TestCase
     assert_includes Financial::PlannedTransaction.unassigned, transaction
   end
 
+  test "expenses and explicitly reserved neutral movements reduce the plan balance" do
+    account = Account.create!(name: "Balance tenant")
+    category = Category.create!(account:, name: "Bills")
+    checking = Financial::Asset.create!(account:, name: "Checking", account_type: "checking", status: "active", opening_balance: 500)
+    savings = Financial::Asset.create!(account:, name: "Savings", account_type: "savings", status: "active", opening_balance: 0)
+    card = Financial::Liability.create!(account:, name: "Card", liability_type: "credit_card", status: "active", opening_balance: 100)
+    plan = Financial::Plan.create!(account:, name: "Balance", planned_for: Date.current, expected_amount: 1)
+    expense = create_transaction(account:, plan:, category:, checking:, description: "Groceries")
+    payment = create_transaction(account:, plan:, checking:, card:, description: "Close credit card")
+    transfer = create_transaction(account:, plan:, checking:, savings:, description: "Move money")
+    payment.update!(commits_plan_funds: true)
+    transfer.update!(commits_plan_funds: true)
+
+    assert expense.reduces_plan_balance?
+    assert_not payment.budget_consuming?
+    assert payment.reduces_plan_balance?
+    assert_not transfer.budget_consuming?
+    assert transfer.reduces_plan_balance?
+    assert_equal 50.to_d, Financial::PlannedTransaction.committed_to_plan.sum(:amount)
+  ensure
+    Current.account = nil
+  end
+
+  test "skipping a pending transaction removes its plan balance impact" do
+    account = Account.create!(name: "Skip tenant")
+    category = Category.create!(account:, name: "Bills")
+    checking = Financial::Asset.create!(account:, name: "Checking", account_type: "checking", status: "active", opening_balance: 500)
+    plan = Financial::Plan.create!(account:, name: "Skip", planned_for: Date.current, expected_amount: 1)
+    transaction = create_transaction(account:, plan:, category:, checking:, description: "Old bill")
+
+    assert transaction.pending?
+    assert transaction.reduces_plan_balance?
+    assert transaction.skip
+    assert_equal "skipped", transaction.execution_status
+    assert_not transaction.pending?
+    assert_not transaction.reduces_plan_balance?
+    assert_not transaction.skip
+  ensure
+    Current.account = nil
+  end
+
   test "derives payment timing from preserved due and actual dates" do
     account = Account.create!(name: "Timing Tenant")
     category = Category.create!(account:, name: "Bills")
