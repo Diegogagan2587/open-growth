@@ -10,8 +10,8 @@
       aria-autocomplete="list"
       aria-expanded="false"
       aria-controls="<%= listbox_id %>"
-      <%= "required" if @required %>
-      <%= "disabled" if @disabled %>
+      <% if @required %>required<% end %>
+      <% if @disabled %>disabled<% end %>
       class="<%= [BASE_CLASSES, @extra_class].compact.join(" ") %>"
       data-searchable-select-target="input"
       data-action="input->searchable-select#filter focus->searchable-select#open click->searchable-select#selectInput keydown->searchable-select#navigate"
