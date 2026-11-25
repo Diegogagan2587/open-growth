@@ -1,8 +1,8 @@
-<%= form_with model: @job_application, url: (@job_application.persisted? ? career_job_application_path(@job_application) : career_job_applications_path), class: "space-y-6" do |f| %>
+<%= form_with model: job_application, url: (job_application.persisted? ? career_job_application_path(job_application) : career_job_applications_path), class: "space-y-6" do |f| %>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
       <label class="mb-2 block text-sm font-medium text-foreground">Company name</label>
-      <%= text_field_tag "career_job_application[company_name]", @job_application.company&.name, class: "w-full rounded-md border border-input bg-background px-3 py-2 text-foreground" %>
+      <%= text_field_tag "career_job_application[company_name]", job_application.company&.name, class: "w-full rounded-md border border-input bg-background px-3 py-2 text-foreground" %>
     </div>
 
     <div>
