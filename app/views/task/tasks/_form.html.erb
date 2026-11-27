@@ -4,6 +4,7 @@
   project_options = projects.map { |project| [project.name, project.id] }
   status_options = Projects::Task::STATUSES.map { |status| [status.humanize, status] }
   priority_options = Projects::Task::PRIORITIES.map { |priority| [priority.humanize, priority] }
+  owner_options = @account_users.map { |user| [user.name, user.id] }
 %>
 
 <%= form_with model: task, url: task_task_path(task, filter_params), method: :patch, local: true, scope: :task, data: { turbo: true } do |form| %>
@@ -28,7 +29,7 @@
     <%= form.text_area :description, class: "min-h-28 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary", rows: 5 %>
   </div>
 
-  <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-3">
+  <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
     <div>
       <label class="mb-2 block text-sm font-semibold text-foreground">Status</label>
       <%= render Ui::SelectComponent.new(name: "task[status]", options: status_options, selected: task.status) %>
@@ -42,6 +43,11 @@
     <div>
       <label class="mb-2 block text-sm font-semibold text-foreground">Project</label>
       <%= render Ui::SelectComponent.new(name: "task[project_id]", options: project_options, selected: task.project_id, include_blank: "Unassigned") %>
+    </div>
+
+    <div>
+      <label class="mb-2 block text-sm font-semibold text-foreground">Owner</label>
+      <%= render Ui::SelectComponent.new(name: "task[owner_id]", options: owner_options, selected: task.owner_id) %>
     </div>
   </div>
 

@@ -31,6 +31,7 @@ class DashboardController < ApplicationController
       .limit(MAX_PENDING_TASKS)
 
     project_tasks = Projects::Task.for_account(Current.account)
+      .owned_by(Current.user)
       .pending
       .where.not(id: deferred_project_ids)
       .includes(:project)
@@ -53,6 +54,7 @@ class DashboardController < ApplicationController
       .includes(:task_area)
       .index_by(&:id)
     projects_by_id = Projects::Task.for_account(Current.account)
+      .owned_by(Current.user)
       .pending
       .where(id: deferred_records.select { |record| record.task_type == "Projects::Task" }.map(&:task_id))
       .includes(:project)

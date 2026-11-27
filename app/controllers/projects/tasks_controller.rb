@@ -3,6 +3,7 @@ module Projects
     before_action :set_project
     before_action :set_task, only: [ :show, :edit, :update, :destroy ]
     before_action :ensure_task_access, only: [ :show, :edit, :update, :destroy ]
+    before_action :set_account_users, only: [ :new, :create, :edit, :update ]
 
     def index
       @tasks = @project.tasks.order(created_at: :desc)
@@ -13,11 +14,12 @@ module Projects
 
     def new
       @task = @project.tasks.build
+      @task.user = Current.user
     end
 
     def create
       @task = @project.tasks.build(task_params)
-      @task.user = Current.user
+      @task.user = Current.user if @task.owner_id.blank?
       @task.account = Current.account
 
       if @task.save
@@ -71,7 +73,11 @@ module Projects
     end
 
     def task_params
-      params.require(:task).permit(:title, :description, :status, :priority, :due_date)
+      params.require(:task).permit(:title, :description, :status, :priority, :due_date, :owner_id)
+    end
+
+    def set_account_users
+      @account_users = Current.account.users.order(:name)
     end
   end
 end

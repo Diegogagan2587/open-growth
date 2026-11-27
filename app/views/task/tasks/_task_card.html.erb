@@ -22,6 +22,7 @@
 
         <div class="mt-3 flex flex-wrap gap-3 text-xs <%= task.overdue? ? 'text-destructive font-medium' : 'text-muted-foreground' %>">
           <span><%= task.task_number %></span>
+          <span>Owner: <%= task.user.name %></span>
           <% if task.due_date.present? %>
             <span>Due <%= l(task.due_date, format: :short) %></span>
           <% end %>

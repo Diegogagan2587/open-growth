@@ -22,7 +22,9 @@ module Projects
     validates :task_number, uniqueness: { scope: :account_id, allow_nil: true }
     validates :status, inclusion: { in: STATUSES }
     validates :priority, inclusion: { in: PRIORITIES }
+    validate :owner_belongs_to_account, if: -> { new_record? || will_save_change_to_owner_id? || will_save_change_to_account_id? }
     scope :for_account, ->(account) { where(account_id: account.id) }
+    scope :owned_by, ->(user) { where(owner_id: user.id) }
     scope :pending, -> { where(status: %w[blocked backlog in_progress in_review]) }
     scope :completed, -> { where(status: %w[done cancelled]) }
     scope :by_status, ->(status) { status.present? ? where(status: status) : all }
@@ -66,7 +68,7 @@ module Projects
     scope :newest_first, -> { order(created_at: :desc) }
 
     before_save :sync_completed_at, if: :will_save_change_to_status?
-    after_update :clear_dashboard_task_deferrals, if: :completed_status_changed?
+    after_update :clear_dashboard_task_deferrals, if: :dashboard_visibility_changed?
 
     def status_label
       I18n.t("tasks.status.#{status}", default: status)
@@ -85,6 +87,13 @@ module Projects
     end
 
     private
+
+    def owner_belongs_to_account
+      return if account.nil? || owner_id.nil?
+      return if account.account_memberships.exists?(user_id: owner_id)
+
+      errors.add(:user, "must be a member of this account")
+    end
 
     def set_account_and_task_number
       self.account = Current.account if account.nil?
@@ -120,6 +129,10 @@ module Projects
 
     def completed_status_changed?
       saved_change_to_status? && %w[done cancelled].include?(status)
+    end
+
+    def dashboard_visibility_changed?
+      saved_change_to_owner_id? || completed_status_changed?
     end
 
     def completed_status?(value)

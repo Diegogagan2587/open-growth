@@ -53,6 +53,11 @@
             <%= form.date_field :due_date, class: "w-32 border-0 bg-transparent p-0 text-sm text-foreground focus:ring-0" %>
           </label>
 
+          <label class="inline-flex h-10 items-center gap-2 rounded-lg border border-input bg-background px-3 text-sm text-foreground">
+            <span class="text-muted-foreground">Owner</span>
+            <%= form.select :owner_id, @account_users.map { |user| [user.name, user.id] }, {}, class: "max-w-32 border-0 bg-transparent p-0 pr-5 text-sm text-foreground focus:ring-0" %>
+          </label>
+
           <button type="button" data-action="quick-add-menu#toggleDetails" aria-expanded="false" aria-controls="quick-add-task-details" class="inline-flex h-10 items-center gap-2 rounded-lg border border-input bg-background px-3 text-sm font-medium text-foreground hover:bg-muted md:hidden">
             <svg aria-hidden="true" class="size-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />

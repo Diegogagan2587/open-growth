@@ -13,7 +13,7 @@ module Task
       @task_priority_options = Projects::Task::PRIORITIES
 
       # Get all standalone tasks and filter by project/priority
-      all_tasks = Projects::Task.for_account(Current.account)
+      all_tasks = Projects::Task.for_account(Current.account).includes(:user)
       all_tasks = all_tasks.by_project(params[:project_id])
       all_tasks = all_tasks.by_priority(params[:priority])
 
