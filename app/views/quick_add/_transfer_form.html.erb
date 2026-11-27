@@ -3,7 +3,7 @@
     <div class="border-b border-border pb-3">
       <%= label_tag "transfer_amount", t("quick_add.transfer_form.amount"), class: "block text-xs font-medium text-muted-foreground" %>
       <%= number_field_tag "transfer[amount]",
-        @transfer&.amount,
+        transfer&.amount,
         id: "transfer_amount",
         inputmode: "decimal",
         placeholder: "0.00",
@@ -21,7 +21,7 @@
         <%= render Ui::SelectComponent.new(
           name: "transfer[from_type]",
           options: quick_add_account_options(Current.account),
-          selected: @transfer_from_type,
+          selected: transfer_from_type,
           include_blank: t("quick_add.transfer_form.select_from"),
           required: true,
           aria_label: t("quick_add.transfer_form.from_account"),
@@ -34,7 +34,7 @@
         <%= render Ui::SelectComponent.new(
           name: "transfer[to_type]",
           options: quick_add_account_options(Current.account),
-          selected: @transfer_to_type,
+          selected: transfer_to_type,
           include_blank: t("quick_add.transfer_form.select_to"),
           required: true,
           aria_label: t("quick_add.transfer_form.to_account"),
@@ -65,7 +65,7 @@
       <div class="grid gap-3 md:grid-cols-2">
         <div>
           <%= label_tag "transfer_description", t("quick_add.transfer_form.description"), class: "mb-1 block text-xs font-medium text-muted-foreground" %>
-          <%= render Ui::InputComponent.new(name: "transfer[description]", id: "transfer_description", placeholder: t("quick_add.transfer_form.description_placeholder"), value: @transfer&.description, autocomplete: "off") %>
+          <%= render Ui::InputComponent.new(name: "transfer[description]", id: "transfer_description", placeholder: t("quick_add.transfer_form.description_placeholder"), value: transfer&.description, autocomplete: "off") %>
         </div>
         <div>
           <%= f.label :time, t("quick_add.transfer_form.time"), class: "mb-1 block text-xs font-medium text-muted-foreground" %>

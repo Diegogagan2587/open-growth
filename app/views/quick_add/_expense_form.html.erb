@@ -3,7 +3,7 @@
     <div class="border-b border-border pb-3">
       <%= f.label :amount, t("quick_add.expense_form.amount"), class: "block text-xs font-medium text-muted-foreground" %>
       <%= number_field_tag "expense[amount]",
-        @expense&.amount,
+        expense&.amount,
         id: "amount",
         inputmode: "decimal",
         placeholder: "0.00",
@@ -17,7 +17,7 @@
 
     <div>
       <%= f.label :description, t("quick_add.expense_form.description"), class: "sr-only" %>
-      <%= render Ui::InputComponent.new(name: "expense[description]", id: "description", placeholder: t("quick_add.expense_form.description_placeholder"), value: @expense&.description, required: true, autocomplete: "off", css_class: "!h-12 rounded-none border-x-0 border-b border-t-0 border-input bg-transparent px-0 text-lg shadow-none focus-visible:border-ring focus-visible:ring-0") %>
+      <%= render Ui::InputComponent.new(name: "expense[description]", id: "description", placeholder: t("quick_add.expense_form.description_placeholder"), value: expense&.description, required: true, autocomplete: "off", css_class: "!h-12 rounded-none border-x-0 border-b border-t-0 border-input bg-transparent px-0 text-lg shadow-none focus-visible:border-ring focus-visible:ring-0") %>
     </div>
 
     <div class="grid grid-cols-2 gap-2 sm:gap-3">
@@ -39,7 +39,7 @@
         <%= render Ui::SelectComponent.new(
           name: "expense[category_id]",
           options: Current.account&.categories&.map { |category| [category.selection_label, category.id] } || [],
-          selected: @expense&.category_id,
+          selected: expense&.category_id,
           include_blank: t("quick_add.expense_form.select_category"),
           required: true,
           aria_label: t("quick_add.expense_form.category"),
@@ -55,7 +55,7 @@
           <path stroke-linecap="round" d="M16 3v4M8 3v4M3 10h18" />
         </svg>
         <span class="sr-only"><%= t("quick_add.expense_form.date") %></span>
-        <%= date_field_tag "expense[date]", @expense&.date || Date.current, id: "expense_date", required: true, class: "w-32 border-0 bg-transparent p-0 text-sm text-foreground focus:ring-0" %>
+        <%= date_field_tag "expense[date]", expense&.date || Date.current, id: "expense_date", required: true, class: "w-32 border-0 bg-transparent p-0 text-sm text-foreground focus:ring-0" %>
       </label>
 
       <button type="button" data-action="quick-add-menu#toggleDetails" aria-expanded="false" aria-controls="quick-add-expense-details" class="inline-flex h-10 items-center gap-2 rounded-lg border border-input bg-background px-3 text-sm font-medium text-foreground hover:bg-muted md:hidden">
@@ -73,7 +73,7 @@
           <%= render Ui::SelectComponent.new(
             name: "expense[income_event_id]",
             options: (Current.account&.income_events&.by_date || []).map { |ie| [ "#{ie.description} (#{ie.expected_date.strftime('%Y-%m-%d')})", ie.id ] },
-            selected: @expense&.income_event_id,
+            selected: expense&.income_event_id,
             include_blank: t("quick_add.expense_form.none"),
             aria_label: t("quick_add.expense_form.income_event"),
             searchable: true

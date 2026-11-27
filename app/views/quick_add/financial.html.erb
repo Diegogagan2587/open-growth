@@ -35,15 +35,15 @@
         </div>
 
         <div id="expense-panel" role="tabpanel" data-quick-add-tabs-target="panel" class="space-y-4">
-          <%= render "quick_add/expense_form" %>
+          <%= render "quick_add/expense_form", expense: @expense %>
         </div>
 
         <div id="income-panel" role="tabpanel" data-quick-add-tabs-target="panel" class="hidden space-y-4">
-          <%= render "quick_add/income_form" %>
+          <%= render "quick_add/income_form", income: @income %>
         </div>
 
         <div id="transfer-panel" role="tabpanel" data-quick-add-tabs-target="panel" class="hidden space-y-4">
-          <%= render "quick_add/transfer_form" %>
+          <%= render "quick_add/transfer_form", transfer: @transfer, transfer_from_type: @transfer_from_type, transfer_to_type: @transfer_to_type %>
         </div>
       </div>
     </div>
