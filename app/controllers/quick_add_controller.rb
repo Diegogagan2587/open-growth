@@ -163,7 +163,7 @@ class QuickAddController < ApplicationController
   end
 
   def task_params
-    params.require(:task).permit(:title, :description, :priority, :due_date)
+    params.require(:task).permit(:title, :description, :priority, :due_date, :owner_id)
   end
 
   def doc_params
