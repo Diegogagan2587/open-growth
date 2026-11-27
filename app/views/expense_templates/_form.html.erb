@@ -1,9 +1,9 @@
-<%= form_with model: @expense_template, local: true do |form| %>
-  <% if @expense_template.errors.any? %>
+<%= form_with model: expense_template, local: true do |form| %>
+  <% if expense_template.errors.any? %>
     <div class="bg-danger-soft border border-danger-soft text-danger px-4 py-3 rounded mb-4">
-      <h2 class="font-bold"><%= pluralize(@expense_template.errors.count, "error") %> prohibited this expense template from being saved:</h2>
+      <h2 class="font-bold"><%= pluralize(expense_template.errors.count, "error") %> prohibited this expense template from being saved:</h2>
       <ul class="list-disc list-inside">
-        <% @expense_template.errors.full_messages.each do |message| %>
+        <% expense_template.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
       </ul>
@@ -42,6 +42,6 @@
 
   <div class="mb-4">
     <%= form.submit class: "btn btn-primary" %>
-    <%= link_to "Cancel", @expense_template.persisted? ? @expense_template : expense_templates_path, class: "px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80 ml-2" %>
+    <%= link_to "Cancel", expense_template.persisted? ? expense_template : expense_templates_path, class: "px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80 ml-2" %>
   </div>
 <% end %>
