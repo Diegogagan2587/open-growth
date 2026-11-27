@@ -52,7 +52,7 @@
 
   <div class="mb-4">
     <%= form.submit class: "px-4 py-2 bg-primary text-white rounded hover:bg-primary" %>
-    <%= link_to "Cancel", @shopping_item.persisted? ? @shopping_item : shopping_items_path, class: "px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80 ml-2" %>
+    <%= link_to "Cancel", shopping_item.persisted? ? shopping_item : shopping_items_path, class: "px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80 ml-2" %>
   </div>
 <% end %>
 

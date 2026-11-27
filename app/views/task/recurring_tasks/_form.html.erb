@@ -22,7 +22,7 @@
 
   <div class="mb-4">
     <%= form.label :task_area_id, t("task.recurring_tasks.form.area"), class: "block text-sm font-medium text-foreground mb-1" %>
-    <%= form.select :task_area_id, options_from_collection_for_select(@task_areas, :id, :name, recurring_task.task_area_id), { include_blank: t("task.recurring_tasks.form.no_area") }, class: "border rounded px-3 py-2 w-full" %>
+    <%= form.select :task_area_id, options_from_collection_for_select(task_areas, :id, :name, recurring_task.task_area_id), { include_blank: t("task.recurring_tasks.form.no_area") }, class: "border rounded px-3 py-2 w-full" %>
   </div>
 
   <div class="mb-4">
