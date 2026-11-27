@@ -56,7 +56,7 @@
   </div>
 <% end %>
 
-<script>
+<script nonce="<%= request.content_security_policy_nonce %>">
   document.addEventListener('DOMContentLoaded', function() {
     const itemTypeSelect = document.querySelector('#shopping_item_item_type');
     const recurringFields = document.getElementById('recurring-fields');

@@ -10,7 +10,7 @@
 
     <%= yield :head %>
 
-    <script>
+    <script nonce="<%= request.content_security_policy_nonce %>">
       (() => {
         try {
           const paletteKey = "theme_palette"
@@ -56,7 +56,7 @@
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
-    <script>
+    <script nonce="<%= request.content_security_policy_nonce %>">
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => navigator.serviceWorker.register("/service-worker"))
       }
