@@ -1,9 +1,9 @@
-<%= form_with model: [@budget_period, @income_event].compact, local: true, data: { controller: "income-event-form", income_event_form_loan_value: @income_event.loan? } do |form| %>
-  <% if @income_event.errors.any? %>
+<%= form_with model: [budget_period, income_event].compact, local: true, data: { controller: "income-event-form", income_event_form_loan_value: income_event.loan? } do |form| %>
+  <% if income_event.errors.any? %>
     <div class="bg-danger-soft border border-danger-soft text-danger px-4 py-3 rounded mb-4">
-      <h2 class="font-bold"><%= pluralize(@income_event.errors.count, "error") %> prohibited this income event from being saved:</h2>
+      <h2 class="font-bold"><%= pluralize(income_event.errors.count, "error") %> prohibited this income event from being saved:</h2>
       <ul class="list-disc list-inside">
-        <% @income_event.errors.full_messages.each do |message| %>
+        <% income_event.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
       </ul>
@@ -38,9 +38,9 @@
   <div class="mb-4">
     <%= form.label :destination_selection, "Destination Account", class: "block text-sm font-medium text-foreground mb-1" %>
     <% destination_options = grouped_options_for_select({
-      "Asset Accounts" => (@financial_assets || []).map { |asset| [asset.name, "asset:#{asset.id}"] },
-      "Liability Accounts" => (@financial_liabilities || []).map { |liability| [liability.name, "liability:#{liability.id}"] }
-    }, @income_event.destination_selection) %>
+      "Asset Accounts" => (financial_assets || []).map { |asset| [asset.name, "asset:#{asset.id}"] },
+      "Liability Accounts" => (financial_liabilities || []).map { |liability| [liability.name, "liability:#{liability.id}"] }
+    }, income_event.destination_selection) %>
     <%= form.select :destination_selection, destination_options, { include_blank: "Select destination account" }, { class: "border rounded px-3 py-2 w-full" } %>
     <p class="mt-1 text-xs text-muted-foreground">For regular income this is where money is credited. For loans this is disbursement destination.</p>
   </div>
@@ -75,7 +75,7 @@
       </div>
       <div>
         <%= form.label :loan_liability_id, "Loan Origin Liability", class: "block text-sm font-medium text-foreground mb-1" %>
-        <%= form.collection_select :loan_liability_id, (@financial_liabilities || []), :id, :name, { include_blank: "Select liability account" }, { class: "border rounded px-3 py-2 w-full" } %>
+        <%= form.collection_select :loan_liability_id, (financial_liabilities || []), :id, :name, { include_blank: "Select liability account" }, { class: "border rounded px-3 py-2 w-full" } %>
       </div>
     </div>
     <div class="mt-4">
@@ -92,6 +92,6 @@
 
   <div class="mb-4">
     <%= form.submit class: "px-4 py-2 bg-primary text-white rounded hover:bg-primary" %>
-    <%= link_to "Cancel", @income_event.persisted? ? @income_event : income_events_path, class: "px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80 ml-2" %>
+    <%= link_to "Cancel", income_event.persisted? ? income_event : income_events_path, class: "px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80 ml-2" %>
   </div>
 <% end %>
