@@ -1,6 +1,6 @@
-<% templates_json = (@expense_templates || []).map { |t| { id: t.id, category_id: t.category_id, description: t.description, total_amount: t.total_amount.to_f, notes: t.notes, saved: t.total_saved.to_f } }.to_json.html_safe %>
-<%= form_with model: [@income_event, @planned_expense], local: true, class: "space-y-6", data: { controller: "template-selector", template_selector_templates_value: templates_json, template_selector_edit_mode_value: @planned_expense.persisted? } do |form| %>
-  <% if @planned_expense.errors.any? %>
+<% templates_json = (expense_templates || []).map { |t| { id: t.id, category_id: t.category_id, description: t.description, total_amount: t.total_amount.to_f, notes: t.notes, saved: t.total_saved.to_f } }.to_json.html_safe %>
+<%= form_with model: [income_event, planned_expense], local: true, class: "space-y-6", data: { controller: "template-selector", template_selector_templates_value: templates_json, template_selector_edit_mode_value: planned_expense.persisted? } do |form| %>
+  <% if planned_expense.errors.any? %>
     <div class="bg-danger-soft border-l-4 border-red-500 text-danger p-4 rounded mb-6">
       <div class="flex">
         <div class="flex-shrink-0">
@@ -10,10 +10,10 @@
         </div>
         <div class="ml-3">
           <h3 class="text-sm font-medium text-danger">
-            <%= @planned_expense.errors.count == 1 ? I18n.t("errors_prohibited", scope: "planned_expenses") : I18n.t("errors_prohibited_other", scope: "planned_expenses", count: @planned_expense.errors.count) %>
+            <%= planned_expense.errors.count == 1 ? I18n.t("errors_prohibited", scope: "planned_expenses") : I18n.t("errors_prohibited_other", scope: "planned_expenses", count: planned_expense.errors.count) %>
           </h3>
           <ul class="mt-2 text-sm text-danger list-disc list-inside">
-            <% @planned_expense.errors.full_messages.each do |message| %>
+            <% planned_expense.errors.full_messages.each do |message| %>
               <li><%= message %></li>
             <% end %>
           </ul>
@@ -30,27 +30,27 @@
       </svg>
       Template Selection
     </h3>
-    <% if (@expense_templates || []).any? %>
+    <% if (expense_templates || []).any? %>
       <div class="space-y-3">
-        <label class="flex items-center p-4 bg-card rounded-lg border-2 cursor-pointer hover:border-indigo-300 transition-colors <%= 'border-indigo-500' unless @planned_expense.expense_template_id.present? %>">
-          <%= radio_button_tag :use_template, "no", !@planned_expense.expense_template_id.present?, id: "use_template_no", class: "text-indigo-600 focus:ring-primary", data: { action: "change->template-selector#toggle" } %>
+        <label class="flex items-center p-4 bg-card rounded-lg border-2 cursor-pointer hover:border-indigo-300 transition-colors <%= 'border-indigo-500' unless planned_expense.expense_template_id.present? %>">
+          <%= radio_button_tag :use_template, "no", !planned_expense.expense_template_id.present?, id: "use_template_no", class: "text-indigo-600 focus:ring-primary", data: { action: "change->template-selector#toggle" } %>
           <div class="ml-3">
             <p class="font-medium text-foreground">Create new planned expense</p>
             <p class="text-sm text-muted-foreground">Start from scratch</p>
           </div>
         </label>
-        <label class="flex items-center p-4 bg-card rounded-lg border-2 cursor-pointer hover:border-indigo-300 transition-colors <%= 'border-indigo-500' if @planned_expense.expense_template_id.present? %>">
-          <%= radio_button_tag :use_template, "yes", @planned_expense.expense_template_id.present?, id: "use_template_yes", class: "text-indigo-600 focus:ring-primary", data: { action: "change->template-selector#toggle" } %>
+        <label class="flex items-center p-4 bg-card rounded-lg border-2 cursor-pointer hover:border-indigo-300 transition-colors <%= 'border-indigo-500' if planned_expense.expense_template_id.present? %>">
+          <%= radio_button_tag :use_template, "yes", planned_expense.expense_template_id.present?, id: "use_template_yes", class: "text-indigo-600 focus:ring-primary", data: { action: "change->template-selector#toggle" } %>
           <div class="ml-3">
             <p class="font-medium text-foreground">Use template</p>
-            <% template_count = (@expense_templates || []).count %>
+            <% template_count = (expense_templates || []).count %>
             <p class="text-sm text-muted-foreground"><%= template_count == 1 ? I18n.t("existing_templates", scope: "planned_expenses.form", count: template_count) : I18n.t("existing_templates_other", scope: "planned_expenses.form", count: template_count) %></p>
           </div>
         </label>
       </div>
-      <div data-template-selector-target="selection" class="mt-4" style="<%= 'display: none;' unless @planned_expense.expense_template_id.present? %>">
+      <div data-template-selector-target="selection" class="mt-4" style="<%= 'display: none;' unless planned_expense.expense_template_id.present? %>">
         <label class="block text-sm font-medium text-foreground mb-2">Select Template</label>
-        <%= form.collection_select :expense_template_id, (@expense_templates || []), :id, :name, { include_blank: "Choose a template..." }, { class: "block w-full rounded-lg border-input shadow-sm focus:border-primary focus:ring-primary", data: { template_selector_target: "select", action: "change->template-selector#selectTemplate" } } %>
+        <%= form.collection_select :expense_template_id, (expense_templates || []), :id, :name, { include_blank: "Choose a template..." }, { class: "block w-full rounded-lg border-input shadow-sm focus:border-primary focus:ring-primary", data: { template_selector_target: "select", action: "change->template-selector#selectTemplate" } } %>
         <div data-template-selector-target="info" class="mt-4 p-4 bg-card rounded-lg border border-indigo-200"></div>
       </div>
     <% else %>
@@ -76,12 +76,12 @@
     </h3>
     <div class="bg-card rounded-lg p-4 border border-purple-200">
       <p class="text-sm text-muted-foreground mb-3">
-        <strong>Current:</strong> <%= @income_event.description %> - <%= number_to_currency(@income_event.expected_amount) %>
-        (Expected: <%= @income_event.expected_date.strftime("%b %d, %Y") %>)
+        <strong>Current:</strong> <%= income_event.description %> - <%= number_to_currency(income_event.expected_amount) %>
+        (Expected: <%= income_event.expected_date.strftime("%b %d, %Y") %>)
       </p>
       <div>
         <%= form.label :income_event_id, "Assign to Income Event", class: "block text-sm font-medium text-foreground mb-2" %>
-        <%= form.collection_select :income_event_id, @income_events, :id, lambda { |ie| "#{ie.description} - #{number_to_currency(ie.expected_amount)} (Expected: #{ie.expected_date.strftime('%b %d, %Y')})" }, { selected: @income_event.id }, { class: "block w-full rounded-lg border-input shadow-sm focus:border-primary focus:ring-primary" } %>
+        <%= form.collection_select :income_event_id, income_events, :id, lambda { |ie| "#{ie.description} - #{number_to_currency(ie.expected_amount)} (Expected: #{ie.expected_date.strftime('%b %d, %Y')})" }, { selected: income_event.id }, { class: "block w-full rounded-lg border-input shadow-sm focus:border-primary focus:ring-primary" } %>
         <p class="mt-1 text-xs text-muted-foreground">Change the income event to reassign this planned expense</p>
       </div>
     </div>
@@ -96,8 +96,8 @@
       Financial Routing
     </h3>
     <% account_option_groups = {
-      "Asset Accounts" => (@financial_accounts || []).map { |account| [account.name, "asset:#{account.id}"] },
-      "Liability Accounts" => (@financial_liabilities || []).map { |liability| [liability.name, "liability:#{liability.id}"] }
+      "Asset Accounts" => (financial_accounts || []).map { |account| [account.name, "asset:#{account.id}"] },
+      "Liability Accounts" => (financial_liabilities || []).map { |liability| [liability.name, "liability:#{liability.id}"] }
     } %>
     <% source_account_options = grouped_options_for_select(account_option_groups, @planned_expense.source_selection) %>
     <% destination_account_options = grouped_options_for_select(account_option_groups, @planned_expense.destination_selection) %>
@@ -186,7 +186,7 @@
 
   <!-- Form Actions -->
   <div class="flex items-center justify-end gap-4 pt-6 border-t border-border">
-    <%= link_to income_event_planned_expenses_path(@income_event), class: "px-6 py-3 border border-input rounded-lg text-foreground hover:bg-muted/35 transition-colors font-medium" do %>
+    <%= link_to income_event_planned_expenses_path(income_event), class: "px-6 py-3 border border-input rounded-lg text-foreground hover:bg-muted/35 transition-colors font-medium" do %>
       Cancel
     <% end %>
     <%= form.submit "Save Planned Expense", class: "px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-lg shadow-md hover:shadow-lg hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 font-medium" %>

@@ -1,4 +1,4 @@
-<% templates_json = (@expense_templates || []).map { |template| { id: template.id, category_id: template.category_id, description: template.description, total_amount: template.total_amount.to_f, notes: template.notes, saved: template.total_saved.to_f } }.to_json %>
+<% templates_json = (expense_templates || []).map { |template| { id: template.id, category_id: template.category_id, description: template.description, total_amount: template.total_amount.to_f, notes: template.notes, saved: template.total_saved.to_f } }.to_json %>
 <%= form_with model: [income_event, planned_expense],
     url: income_event_planned_expenses_path(income_event, kind: "expense"),
     local: true,
@@ -9,13 +9,13 @@
     <p class="mt-1 text-sm text-muted-foreground">This amount will reduce the income event's remaining budget.</p>
   </div>
 
-  <% if (@expense_templates || []).any? %>
+  <% if (expense_templates || []).any? %>
     <div>
       <%= form.label :expense_template_id, "Template (optional)", class: "mb-2 block text-sm font-medium text-foreground" %>
       <%= render Ui::SelectComponent.new(
         name: "planned_expense[expense_template_id]",
         id: "planned_expense_expense_template_id",
-        options: @expense_templates.map { |template| [template.name, template.id] },
+        options: expense_templates.map { |template| [template.name, template.id] },
         selected: planned_expense.expense_template_id,
         include_blank: "Start without a template",
         data: { template_selector_target: "select", action: "change->template-selector#selectTemplate" }
@@ -37,12 +37,12 @@
 
     <div>
       <%= form.label :category_id, "Category", class: "mb-2 block text-sm font-medium text-foreground" %>
-      <%= render Ui::SelectComponent.new(name: "planned_expense[category_id]", id: "planned_expense_category_id", options: @categories.map { |category| [category.selection_label, category.id] }, selected: planned_expense.category_id, include_blank: "Select a category", required: true, data: { template_selector_target: "categorySelect" }) %>
+      <%= render Ui::SelectComponent.new(name: "planned_expense[category_id]", id: "planned_expense_category_id", options: categories.map { |category| [category.selection_label, category.id] }, selected: planned_expense.category_id, include_blank: "Select a category", required: true, data: { template_selector_target: "categorySelect" }) %>
     </div>
 
     <div>
       <%= form.label :source_selection, "Source account", class: "mb-2 block text-sm font-medium text-foreground" %>
-      <% source_options = @financial_accounts.map { |account| ["#{account.name} · Asset", "asset:#{account.id}"] } + @financial_liabilities.map { |liability| ["#{liability.name} · Liability", "liability:#{liability.id}"] } %>
+      <% source_options = financial_accounts.map { |account| ["#{account.name} · Asset", "asset:#{account.id}"] } + financial_liabilities.map { |liability| ["#{liability.name} · Liability", "liability:#{liability.id}"] } %>
       <%= render Ui::SelectComponent.new(name: "planned_expense[source_selection]", id: "planned_expense_source_selection", options: source_options, selected: planned_expense.source_selection, include_blank: "Select a source account") %>
     </div>
 

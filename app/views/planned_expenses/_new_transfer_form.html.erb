@@ -10,12 +10,12 @@
   <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
     <div>
       <%= form.label :source_selection, "Source asset", class: "mb-2 block text-sm font-medium text-foreground" %>
-      <%= render Ui::SelectComponent.new(name: "planned_expense[source_selection]", id: "planned_expense_source_selection", options: @financial_accounts.map { |account| [account.name, "asset:#{account.id}"] }, selected: planned_expense.source_selection, include_blank: "Select source asset", required: true) %>
+      <%= render Ui::SelectComponent.new(name: "planned_expense[source_selection]", id: "planned_expense_source_selection", options: financial_accounts.map { |account| [account.name, "asset:#{account.id}"] }, selected: planned_expense.source_selection, include_blank: "Select source asset", required: true) %>
     </div>
 
     <div>
       <%= form.label :destination_selection, "Destination", class: "mb-2 block text-sm font-medium text-foreground" %>
-      <% destination_options = @financial_accounts.map { |account| ["#{account.name} · Asset", "asset:#{account.id}"] } + @financial_liabilities.map { |liability| ["#{liability.name} · Card or liability", "liability:#{liability.id}"] } %>
+      <% destination_options = financial_accounts.map { |account| ["#{account.name} · Asset", "asset:#{account.id}"] } + financial_liabilities.map { |liability| ["#{liability.name} · Card or liability", "liability:#{liability.id}"] } %>
       <%= render Ui::SelectComponent.new(name: "planned_expense[destination_selection]", id: "planned_expense_destination_selection", options: destination_options, selected: planned_expense.destination_selection, include_blank: "Select destination", required: true) %>
     </div>
 

@@ -43,5 +43,9 @@
   <%= render "creation_errors", planned_expense: @planned_expense %>
   <%= render @transaction_kind == "transfer" ? "new_transfer_form" : "new_expense_form",
       income_event: @income_event,
-      planned_expense: @planned_expense %>
+      planned_expense: @planned_expense,
+      financial_accounts: @financial_accounts,
+      financial_liabilities: @financial_liabilities,
+      expense_templates: @expense_templates,
+      categories: @categories %>
 </div>

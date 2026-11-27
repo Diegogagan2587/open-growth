@@ -1,8 +1,8 @@
-<% income_events_json = (@income_events || []).map { |ie| { id: ie.id, description: ie.description, expected_amount: ie.expected_amount.to_f, expected_date: ie.expected_date.iso8601 } }.to_json.html_safe %>
-<% form_model = @expense.persisted? ? @expense : [@budget_period, @expense].compact %>
-<% form_url = expense_path(@expense) if @expense.persisted? %>
+<% income_events_json = (income_events || []).map { |ie| { id: ie.id, description: ie.description, expected_amount: ie.expected_amount.to_f, expected_date: ie.expected_date.iso8601 } }.to_json.html_safe %>
+<% form_model = expense.persisted? ? expense : [budget_period, expense].compact %>
+<% form_url = expense_path(expense) if expense.persisted? %>
 <%= form_with model: form_model, scope: :expense, url: form_url, local: true, class: "space-y-6", data: { controller: "expense-form", expense_form_income_events_value: income_events_json, expense_form_locale_value: I18n.locale.to_s } do |form| %>
-  <% if @expense.errors.any? %>
+  <% if expense.errors.any? %>
     <div class="bg-danger-soft border-l-4 border-red-500 text-danger p-4 rounded mb-6">
       <div class="flex">
         <div class="flex-shrink-0">
@@ -12,10 +12,10 @@
         </div>
         <div class="ml-3">
           <h3 class="text-sm font-medium text-danger">
-            <%= pluralize(@expense.errors.count, "error") %> prohibited this expense from being saved:
+            <%= pluralize(expense.errors.count, "error") %> prohibited this expense from being saved:
           </h3>
           <ul class="mt-2 text-sm text-danger list-disc list-inside">
-            <% @expense.errors.full_messages.each do |message| %>
+            <% expense.errors.full_messages.each do |message| %>
               <li><%= message %></li>
             <% end %>
           </ul>
@@ -55,8 +55,8 @@
     </div>
 
     <% account_option_groups = {
-      "Asset Accounts" => (@financial_accounts || []).map { |asset| ["#{asset.name} (#{asset.account_type.humanize})", "asset:#{asset.id}"] },
-      "Liability Accounts" => (@financial_liabilities || []).map { |liability| ["#{liability.name} (#{liability.liability_type.humanize})", "liability:#{liability.id}"] }
+      "Asset Accounts" => (financial_accounts || []).map { |asset| ["#{asset.name} (#{asset.account_type.humanize})", "asset:#{asset.id}"] },
+      "Liability Accounts" => (financial_liabilities || []).map { |liability| ["#{liability.name} (#{liability.liability_type.humanize})", "liability:#{liability.id}"] }
     } %>
     <% source_options = grouped_options_for_select(account_option_groups, @expense.source_selection) %>
     <% destination_options = grouped_options_for_select(account_option_groups, @expense.destination_selection) %>
@@ -76,7 +76,7 @@
     <!-- Income Event (Third) - Filtered by Date -->
     <div class="mt-6" data-expense-form-target="incomeEventContainer">
       <%= form.label :income_event_id, "Evento de ingreso", class: "block text-sm font-medium text-foreground mb-2" %>
-      <%= form.collection_select :income_event_id, (@income_events || []), :id, lambda { |ie| "#{ie.description} - #{number_to_currency(ie.expected_amount)} (#{ie.expected_date.strftime('%d %b %Y')})" }, { include_blank: "Ninguno (sin asignar)", selected: @expense.persisted? ? @expense.income_event_id : nil }, { class: "block w-full rounded-lg border-input shadow-sm focus:border-primary focus:ring-primary", data: { expense_form_target: "incomeEventSelect" } } %>
+      <%= form.collection_select :income_event_id, (income_events || []), :id, lambda { |ie| "#{ie.description} - #{number_to_currency(ie.expected_amount)} (#{ie.expected_date.strftime('%d %b %Y')})" }, { include_blank: "Ninguno (sin asignar)", selected: expense.persisted? ? expense.income_event_id : nil }, { class: "block w-full rounded-lg border-input shadow-sm focus:border-primary focus:ring-primary", data: { expense_form_target: "incomeEventSelect" } } %>
       <p class="mt-1 text-xs text-muted-foreground">Opcional - Se filtrará por mes según la fecha seleccionada</p>
       <p class="mt-1 text-xs text-accent hidden" data-expense-form-target="message"></p>
     </div>
@@ -95,7 +95,7 @@
       <!-- Budget Period -->
       <div>
         <%= form.label :budget_period_id, "Periodo presupuestario", class: "block text-sm font-medium text-foreground mb-2" %>
-        <%= form.collection_select :budget_period_id, BudgetPeriod.all, :id, :name, { selected: @budget_period&.id || (@expense.persisted? ? @expense.budget_period_id : nil) }, { class: "block w-full rounded-lg border-input shadow-sm focus:border-primary focus:ring-primary" } %>
+        <%= form.collection_select :budget_period_id, BudgetPeriod.all, :id, :name, { selected: budget_period&.id || (expense.persisted? ? expense.budget_period_id : nil) }, { class: "block w-full rounded-lg border-input shadow-sm focus:border-primary focus:ring-primary" } %>
         <p class="mt-1 text-xs text-muted-foreground">Requerido - Puedes cambiarlo si es necesario</p>
       </div>
 
@@ -118,7 +118,7 @@
   <!-- Form Actions -->
   <div class="flex items-center justify-end gap-4 pt-6 border-t border-border">
     <%= render Ui::ButtonComponent.new(
-      href: @budget_period ? @budget_period : expenses_path,
+      href: budget_period ? budget_period : expenses_path,
       label: "Cancelar",
       variant: "ghost"
     ) %>

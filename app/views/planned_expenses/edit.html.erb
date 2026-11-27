@@ -2,4 +2,4 @@
 
 <p class="mb-4 text-muted-foreground">Income Event: <%= @income_event.description %> - <%= number_to_currency(@income_event.expected_amount) %></p>
 
-<%= render "form", income_event: @income_event, planned_expense: @planned_expense, expense_templates: @expense_templates %>
+<%= render "form", income_event: @income_event, planned_expense: @planned_expense, expense_templates: @expense_templates, income_events: @income_events, financial_accounts: @financial_accounts, financial_liabilities: @financial_liabilities %>
