@@ -4,6 +4,7 @@
   project_options = projects.map { |project| [project.name, project.id] }
   status_options = Projects::Task::STATUSES.map { |status| [status.humanize, status] }
   priority_options = Projects::Task::PRIORITIES.map { |priority| [priority.humanize, priority] }
+  owner_options = @account_users.map { |user| [user.name, user.id] }
 %>
 
 <%= form_with model: task, url: task_task_path(task, filter_params), method: :patch, local: true, scope: :task, data: { turbo: true } do |form| %>

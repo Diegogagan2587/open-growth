@@ -4,6 +4,7 @@ module Task
   class TasksController < ApplicationController
     before_action :set_task, only: [ :show, :edit, :update ]
     before_action :set_projects, only: [ :edit, :update ]
+    before_action :set_account_users, only: [ :edit, :update ]
 
     def edit
       respond_to do |format|
@@ -64,8 +65,12 @@ module Task
       @projects = Projects::Project.for_account(Current.account).order(:name)
     end
 
+    def set_account_users
+      @account_users = Current.account.users.order(:name)
+    end
+
     def task_params
-      params.require(:task).permit(:title, :description, :status, :priority, :due_date, :project_id)
+      params.require(:task).permit(:title, :description, :status, :priority, :due_date, :project_id, :owner_id)
     end
 
     def task_filter_params
