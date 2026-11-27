@@ -21,6 +21,7 @@ module Projects
     validates :task_number, uniqueness: { scope: :account_id, allow_nil: true }
     validates :status, inclusion: { in: STATUSES }
     validates :priority, inclusion: { in: PRIORITIES }
+    validate :owner_belongs_to_account, if: -> { new_record? || will_save_change_to_owner_id? || will_save_change_to_account_id? }
     scope :for_account, ->(account) { where(account_id: account.id) }
     scope :owned_by, ->(user) { where(owner_id: user.id) }
     scope :pending, -> { where(status: %w[blocked backlog in_progress in_review]) }
@@ -85,6 +86,13 @@ module Projects
     end
 
     private
+
+    def owner_belongs_to_account
+      return if account.nil? || owner_id.nil?
+      return if account.account_memberships.exists?(user_id: owner_id)
+
+      errors.add(:user, "must be a member of this account")
+    end
 
     def set_account_and_task_number
       self.account = Current.account if account.nil?
