@@ -22,6 +22,7 @@ module Projects
     validates :status, inclusion: { in: STATUSES }
     validates :priority, inclusion: { in: PRIORITIES }
     scope :for_account, ->(account) { where(account_id: account.id) }
+    scope :owned_by, ->(user) { where(owner_id: user.id) }
     scope :pending, -> { where(status: %w[blocked backlog in_progress in_review]) }
     scope :completed, -> { where(status: %w[done cancelled]) }
     scope :by_status, ->(status) { status.present? ? where(status: status) : all }
