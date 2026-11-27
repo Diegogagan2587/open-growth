@@ -1,9 +1,9 @@
-<%= form_with model: @shopping_item, local: true do |form| %>
-  <% if @shopping_item.errors.any? %>
+<%= form_with model: shopping_item, local: true do |form| %>
+  <% if shopping_item.errors.any? %>
     <div class="bg-danger-soft border border-danger-soft text-danger px-4 py-3 rounded mb-4">
-      <h2 class="font-bold"><%= pluralize(@shopping_item.errors.count, "error") %> prohibited this shopping item from being saved:</h2>
+      <h2 class="font-bold"><%= pluralize(shopping_item.errors.count, "error") %> prohibited this shopping item from being saved:</h2>
       <ul class="list-disc list-inside">
-        <% @shopping_item.errors.full_messages.each do |message| %>
+        <% shopping_item.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
       </ul>
@@ -17,7 +17,7 @@
 
   <div class="mb-4">
     <%= form.label :category_id, "Category", class: "block text-sm font-medium text-foreground mb-1" %>
-    <%= form.collection_select :category_id, @categories, :id, :selection_label, { prompt: "Select a category (optional)" }, { class: "border rounded px-3 py-2 w-full" } %>
+    <%= form.collection_select :category_id, categories, :id, :selection_label, { prompt: "Select a category (optional)" }, { class: "border rounded px-3 py-2 w-full" } %>
   </div>
 
   <div class="mb-4">
@@ -35,7 +35,7 @@
     <%= form.select :item_type, [["One Time", "one_time"], ["Recurring", "recurring"]], {}, { class: "border rounded px-3 py-2 w-full" } %>
   </div>
 
-  <div class="mb-4" id="recurring-fields" style="<%= @shopping_item.item_type == 'recurring' ? '' : 'display: none;' %>">
+  <div class="mb-4" id="recurring-fields" style="<%= shopping_item.item_type == 'recurring' ? '' : 'display: none;' %>">
     <%= form.label :frequency, class: "block text-sm font-medium text-foreground mb-1" %>
     <%= form.text_field :frequency, class: "border rounded px-3 py-2 w-full", placeholder: "e.g., weekly, monthly" %>
   </div>
